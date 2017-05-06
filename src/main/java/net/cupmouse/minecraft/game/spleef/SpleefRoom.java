@@ -37,6 +37,16 @@ public final class SpleefRoom implements GameRoom {
         return Optional.ofNullable(clock);
     }
 
+    public Optional<SpleefPlayer> getSpleefPlayer(Player player) {
+        for (SpleefPlayer spleefPlayer : players.values()) {
+            if (spleefPlayer.spongePlayer == player) {
+                return Optional.of(spleefPlayer);
+            }
+        }
+
+        return Optional.empty();
+    }
+
     @Override
     public boolean isPlayerPlaying(Player player) {
         for (SpleefPlayer spleefPlayer : players.values()) {
@@ -54,8 +64,9 @@ public final class SpleefRoom implements GameRoom {
             // すでにプレイ中
             return false;
         }
-        // TODO 最大人数チェック
-        if (false) {
+        if (stageSettings.getSpawnLocations().size() >= players.size()) {
+            // ステージのプレイ最大人数を超えているので参加不可
+            return false;
         }
 
         // プレイヤーを参加させる
@@ -68,13 +79,21 @@ public final class SpleefRoom implements GameRoom {
 
     @Override
     public boolean tryLeaveRoom(Player player) {
-        if (players.values().remove(player)) {
-            // プレイヤーはこの部屋にいて、削除された。
+        Optional<SpleefPlayer> optional = getSpleefPlayer(player);
+
+        // プレイヤーはこの部屋にいて、削除されたか。
+        if (optional.isPresent() && players.values().remove(optional.get())) {
+
+            if (players.size() < 2) {
+                // プレイヤーが足りないならゲームを終了する
+                resetClockAndFinishGame();
+            }
 
             return true;
-        }
+        } else {
 
-        return false;
+            return false;
+        }
     }
 
     /**
@@ -82,6 +101,11 @@ public final class SpleefRoom implements GameRoom {
      */
     void finishGame() {
 
+    }
+
+    private void resetClockAndFinishGame() {
+        clock.reset();
+        finishGame();
     }
 
     public class SpleefRoomMessageChannel implements MessageChannel {

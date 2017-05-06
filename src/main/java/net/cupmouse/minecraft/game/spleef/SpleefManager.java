@@ -2,17 +2,16 @@ package net.cupmouse.minecraft.game.spleef;
 
 import net.cupmouse.minecraft.game.manager.GameManager;
 
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.Set;
-import java.util.UUID;
+import java.util.Map;
 
-public class SpleefManager implements GameManager{
+public class SpleefManager implements GameManager<SpleefRoom> {
 
-
-    private HashMap<Integer, SpleefRoom> rooms;
+    private Map<Integer, SpleefRoom> rooms = new HashMap<>();
 
     @Override
-    public Set getRooms() {
-        return rooms;
+    public Collection<SpleefRoom> getRooms() {
+        return rooms.values();
     }
 }
