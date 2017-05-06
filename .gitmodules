@@ -1,0 +1,3 @@
+[submodule "CMcCore"]
+	path = CMcCore
+	url = ./CMcCore

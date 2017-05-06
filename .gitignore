@@ -1,0 +1,12 @@
+# Output
+/out
+/build
+
+# Intellij
+/.idea
+
+# Gradle
+/.gradle
+
+# Security reason
+*.sql
