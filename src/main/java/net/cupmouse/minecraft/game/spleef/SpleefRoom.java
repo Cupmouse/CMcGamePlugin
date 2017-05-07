@@ -22,6 +22,12 @@ import java.util.stream.Collectors;
  * 　主に、下2つの処理のためにある。
  * Finish game - 結果が決まって終了する。Stopさせて、プレイヤーの移動をして、その後、結果発表。
  * Abort game - 結果が決まったかどうかにかかわらず、ゲームを終了させる。プレイヤーの移動をする。結果発表はしない。
+ *
+ * ↓hold
+ * ↓countdown ←カウントダウン始まってる
+ * ↓ready←もう参加できない
+ * ↓start
+ * ↓finish/abort
  */
 public final class SpleefRoom implements GameRoom {
 
@@ -79,12 +85,21 @@ public final class SpleefRoom implements GameRoom {
     // 外部向け処理
 
     /**
+     * ゲームの開催を試みる
      *
      * @return
      */
     public boolean tryHoldGame() {
-        if (this.state == GameRoomState.PREPARED) {
-            this.clock.setClock(new SpleefClockCountdown());
+        if (state == GameRoomState.PREPARED) {
+            if (players.size() >= stageSettings.spawnLocations.size()) {
+                // すでに最高人数揃っているならすぐスタートカウントダウン
+                ready();
+            } else {
+                // 揃っていないならプレイヤー待ちカウントダウン
+                startCountdown();
+            }
+            this.clock.setClock(new SpleefClockWaitMorePlayer());
+            this.clock.start();
 
             return true;
         }
@@ -108,11 +123,12 @@ public final class SpleefRoom implements GameRoom {
         }
 
         // プレイヤーを参加させる
-        players.put(0, new SpleefPlayer(player, 0));
+        int spawnId = stageSettings.spawnLocations.size();
+        players.put(spawnId, new SpleefPlayer(player, spawnId));
         // TODO メッセージチャンネルをセットするが、解除を忘れないように
         player.setMessageChannel(messageChannel);
 
-        // プレイヤー人数が、ちょうど最低人数に達したら、カウントダウンを開始する。
+        // プレイヤー人数が、ちょうど最低人数に達したら、プレイヤー待ちカウントダウンを開始する。
         if (players.size() == stageSettings.minimumPlayerCount) {
             startCountdown();
         }
@@ -154,6 +170,7 @@ public final class SpleefRoom implements GameRoom {
     public void finishGame() {
         stopGame();
         messageChannel.send(Text.of(TextColors.AQUA, "ゲーム終了！"));
+
         // TODO プレイヤーの移動と結果発表
         clock.setClock(new SpleefClockPrepare());
         clock.start();
@@ -169,6 +186,16 @@ public final class SpleefRoom implements GameRoom {
      * カウントダウンを開始する
      */
     void startCountdown() {
+        this.state = GameRoomState.WAITING_PLAYERS;
+        this.clock.setClock(new SpleefClockWaitMorePlayer());
+        this.clock.start();
+    }
+
+    /**
+     * ゲームスタートへカウントダウンを開始する
+     */
+    void ready() {
+        this.state = GameRoomState.READY;
         this.clock.setClock(new SpleefClockCountdown());
         clock.start();
     }
@@ -177,8 +204,8 @@ public final class SpleefRoom implements GameRoom {
      * 内部的にゲームを終了させる
      */
     void stopGame() {
-        this.clock.cancel();
         this.state = GameRoomState.FINISHED;
+        this.clock.cancel();
     }
 
     /**
