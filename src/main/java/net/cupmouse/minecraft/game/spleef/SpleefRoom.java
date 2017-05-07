@@ -3,6 +3,8 @@ package net.cupmouse.minecraft.game.spleef;
 import net.cupmouse.minecraft.game.manager.GameRoom;
 import net.cupmouse.minecraft.game.manager.GameRoomState;
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.item.ItemTypes;
+import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.channel.MessageChannel;
 import org.spongepowered.api.text.channel.MessageReceiver;
@@ -53,10 +55,6 @@ public final class SpleefRoom implements GameRoom {
         return state;
     }
 
-    void setState(GameRoomState state) {
-        this.state = state;
-    }
-
     public Optional<SpleefClockManager> getClock() {
         return Optional.ofNullable(clock);
     }
@@ -83,29 +81,6 @@ public final class SpleefRoom implements GameRoom {
     }
 
     // 外部向け処理
-
-    /**
-     * ゲームの開催を試みる
-     *
-     * @return
-     */
-    public boolean tryHoldGame() {
-        if (state == GameRoomState.PREPARED) {
-            if (players.size() >= stageSettings.spawnLocations.size()) {
-                // すでに最高人数揃っているならすぐスタートカウントダウン
-                ready();
-            } else {
-                // 揃っていないならプレイヤー待ちカウントダウン
-                startCountdown();
-            }
-            this.clock.setClock(new SpleefClockWaitMorePlayer());
-            this.clock.start();
-
-            return true;
-        }
-
-        return false;
-    }
 
     @Override
     public boolean tryJoinRoom(Player player) {
@@ -183,11 +158,42 @@ public final class SpleefRoom implements GameRoom {
     }
 
     /**
+     * ゲームの開催を試みる
+     *
+     * @return
+     */
+    boolean tryHoldNextGame() {
+        if (state == GameRoomState.PREPARED) {
+            if (players.size() >= stageSettings.spawnLocations.size()) {
+                // すでに最高人数揃っているならすぐスタートカウントダウン
+                ready();
+                return true;
+            } else if (players.size() >= stageSettings.minimumPlayerCount) {
+                // でなくても、最低人数揃っているならプレイヤー待ちカウントダウン
+                startCountdown();
+                return true;
+            } else {
+                // そうでもないなら開催できないのでプレイヤー待ち！
+
+                waitPlayers();
+                return false;
+            }
+        }
+
+        return false;
+    }
+
+    void waitPlayers() {
+        this.state = GameRoomState.WAITING_PLAYERS;
+        this.clock.cancel();
+    }
+
+    /**
      * カウントダウンを開始する
      */
     void startCountdown() {
         this.state = GameRoomState.WAITING_PLAYERS;
-        this.clock.setClock(new SpleefClockWaitMorePlayer());
+        this.clock.setClock(new SpleefClockWaitCountdown());
         this.clock.start();
     }
 
@@ -196,8 +202,20 @@ public final class SpleefRoom implements GameRoom {
      */
     void ready() {
         this.state = GameRoomState.READY;
-        this.clock.setClock(new SpleefClockCountdown());
-        clock.start();
+
+        // プレイヤーに必要物資を配る
+        for (SpleefPlayer spleefPlayer : this.players.values()) {
+            spleefPlayer.spongePlayer.getInventory().offer(ItemStack.of(ItemTypes.IRON_SHOVEL, 1));
+        }
+
+        this.clock.setClock(new SpleefClockReadyCountdown());
+        this.clock.start();
+    }
+
+    void startGame() {
+        this.state = GameRoomState.IN_PROGRESS;
+        this.clock.setClock(new SpleefClockGame(stageSettings.defaultGameTime));
+        this.clock.start();
     }
 
     /**

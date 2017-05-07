@@ -4,6 +4,12 @@ import org.spongepowered.api.text.Text;
 
 public class SpleefClockGame implements SpleefClock {
 
+    private int gameTime;
+
+    public SpleefClockGame(int gameTime) {
+        this.gameTime = gameTime;
+    }
+
     @Override
     public void clockTick(SpleefRoom room, int ctickLeft) {
 
@@ -23,5 +29,10 @@ public class SpleefClockGame implements SpleefClock {
             // それ以上のときは１分づつカウントダウン
             room.messageChannel.send(Text.of("あと残り" + ctickLeft + "秒"));
         }
+    }
+
+    @Override
+    public int getInitialClockTick() {
+        return gameTime;
     }
 }

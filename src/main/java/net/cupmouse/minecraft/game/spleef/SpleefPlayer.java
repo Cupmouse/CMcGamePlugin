@@ -2,7 +2,7 @@ package net.cupmouse.minecraft.game.spleef;
 
 import org.spongepowered.api.entity.living.player.Player;
 
-public class SpleefPlayer {
+public final class SpleefPlayer {
 
     public final Player spongePlayer;
     public final int spawnLocationNumber;

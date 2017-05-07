@@ -12,7 +12,7 @@ import org.spongepowered.api.world.World;
 
 import java.util.Optional;
 
-public class SpleefSpawn {
+public final class SpleefSpawn {
 
     public final WorldTag worldTag;
     public final Vector3d position;

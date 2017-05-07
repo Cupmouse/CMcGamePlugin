@@ -37,7 +37,7 @@ public final class SpleefClockManager implements Runnable {
             throw new IllegalStateException();
         }
 
-        this.ctickLeft = room.stageSettings.defaultGameTime;
+        this.ctickLeft = clock.getInitialClockTick();
         // 初回だけ一回実行してほしいので、一秒減らす
         this.prevTickTimeMilli = System.currentTimeMillis() - 1;
 

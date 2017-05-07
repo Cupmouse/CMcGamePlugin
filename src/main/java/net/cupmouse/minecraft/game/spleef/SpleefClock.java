@@ -13,4 +13,5 @@ public interface SpleefClock {
      */
     void clockTick(SpleefRoom room, int ctickLeft);
 
+    int getInitialClockTick();
 }
