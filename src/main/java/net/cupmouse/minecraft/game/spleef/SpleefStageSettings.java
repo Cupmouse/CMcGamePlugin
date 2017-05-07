@@ -1,41 +1,42 @@
 package net.cupmouse.minecraft.game.spleef;
 
-import com.flowpowered.math.vector.Vector3d;
-import net.cupmouse.minecraft.Utilities;
-import net.cupmouse.minecraft.worlds.WorldTag;
 import ninja.leaping.configurate.ConfigurationNode;
-import org.spongepowered.api.Sponge;
-import org.spongepowered.api.command.CommandManager;
-import org.spongepowered.api.world.Location;
-import org.spongepowered.api.world.World;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class SpleefStageSettings {
 
-    private List<LocationTaggedWorld> spawnLocations;
+    public final List<SpleefSpawn> spawnLocations;
+    public final int defaultGameTime;
+    public final int minimumPlayerCount;
 
-    public SpleefStageSettings() {
-        this.spawnLocations = new ArrayList<>();
-    }
-
-    private SpleefStageSettings(List<LocationTaggedWorld> spawnLocations) {
+    private SpleefStageSettings(List<SpleefSpawn> spawnLocations, int defaultGameTime) {
         this.spawnLocations = spawnLocations;
-    }
-
-    public List<LocationTaggedWorld> getSpawnLocations() {
-        return spawnLocations;
+        this.defaultGameTime = defaultGameTime;
     }
 
     public static SpleefStageSettings loadFromConfig(ConfigurationNode node) {
         ConfigurationNode nodeSpawns = node.getNode("spawns");
 
-        ArrayList<LocationTaggedWorld> spawnLocations = nodeSpawns.getChildrenList().stream()
-                .map(LocationTaggedWorld::loadFromConfig)
-                .collect(Collectors.toCollection(ArrayList::new));
+        // 変更不可のリスト
+        List<SpleefSpawn> spawnLocations = Collections.unmodifiableList(
+                nodeSpawns.getChildrenList().stream()
+                .map(SpleefSpawn::loadFromConfig)
+                .collect(Collectors.toCollection(ArrayList::new))
+        );
 
-        // ロケーションに回転も必要１
-        return new SpleefStageSettings(spawnLocations);
+        int defaultGameTime = node.getNode("default_game_time").getInt();
+
+        return new SpleefStageSettings(spawnLocations, defaultGameTime);
+    }
+
+    public static SpleefStageSettings createWorking() {
+        // 変更可能なリスト
+        SpleefStageSettings settings = new SpleefStageSettings(
+                new ArrayList<>(),
+                0);
+
+        return settings;
     }
 }

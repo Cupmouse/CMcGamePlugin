@@ -9,19 +9,24 @@ import java.util.concurrent.TimeUnit;
 /**
  * Runnableですが、時計は自分で管理するので、外からSpongeスケジューラに登録しないでください。
  */
-public final class SpleefGameClock implements Runnable {
+public final class SpleefClockManager implements Runnable {
 
     private final SpleefRoom room;
-    private final int gameTime;
     // これは実際の時間
     private long prevTickTimeMilli;
-    // これはマインクラフトのティックから生み出される時間、Clock Tickと呼ぶ。よって実際の時間とは少しずれる
-    private int ctickLeft;
     private Task task;
 
-    SpleefGameClock(SpleefRoom room, int gameTime) {
+    private SpleefClock clock;
+    // これはマインクラフトのティックから生み出される時間、Clock Tickと呼ぶ。よって実際の時間とは少しずれる
+    // 現実時間と比べると小数点繰り上げになる
+    private int ctickLeft;
+
+    SpleefClockManager(SpleefRoom room) {
         this.room = room;
-        this.gameTime = gameTime;
+    }
+
+    public int getClockTickLeft() {
+        return ctickLeft;
     }
 
     /**
@@ -32,8 +37,10 @@ public final class SpleefGameClock implements Runnable {
             throw new IllegalStateException();
         }
 
-        this.ctickLeft = gameTime;
-        this.prevTickTimeMilli = System.currentTimeMillis();
+        this.ctickLeft = room.stageSettings.defaultGameTime;
+        // 初回だけ一回実行してほしいので、一秒減らす
+        this.prevTickTimeMilli = System.currentTimeMillis() - 1;
+
         this.task = Sponge.getScheduler().createTaskBuilder()
                 .interval(1, TimeUnit.SECONDS)
                 .execute(this).submit(CMcCore.getPlugin());
@@ -42,10 +49,29 @@ public final class SpleefGameClock implements Runnable {
     /**
      * この関数は、時計をリセットするだけです。ゲームには何も影響を与えないので注意してください。
      * また、時計はサーバースレッドで動いているので、時計を更新中にこの関数を実行することはできないので安心してください。
+     * 設定された時計は削除されます。
      */
-    void reset() {
+    void cancel() {
+        if (task == null) {
+            return;
+        }
+
         this.task.cancel();
         this.task = null;
+    }
+
+    /**
+     * 時計を設定しますが、実行しません。{@link #start()}で実行します。
+     * また、今動いている時計は{@link #cancel()}が自動で呼ばれ停止した後、削除されます。
+     * @param clock
+     */
+    void setClock(SpleefClock clock) {
+        cancel();
+        this.clock = clock;
+    }
+
+    public SpleefClock getClock() {
+        return clock;
     }
 
     @Override
@@ -62,7 +88,10 @@ public final class SpleefGameClock implements Runnable {
         if (elapsedMilliAfterPrevTick >= 1000) {
             // 経過した秒だけ実行する。
             for (int i = 0; i < elapsedMilliAfterPrevTick / 1000; i++) {
-                clockTick();
+                clock.clockTick(room, ctickLeft);
+
+                // 1減らす
+                ctickLeft--;
             }
 
             // 更に、ここで不用意にそのままの時間を設定してはならない。もし、2.5秒経過していてrunが呼ばれたとしたら
@@ -72,29 +101,6 @@ public final class SpleefGameClock implements Runnable {
         } else {
             // 一秒に満たしていなかったらやめる
             return;
-        }
-    }
-
-    /**
-     * ↑の処理によってこの関数では現実世界の時間の経過を気にせずにClock Tickだけで物事をすすめる事ができる。
-     */
-    private void clockTick() {
-        ctickLeft--;
-
-        if (ctickLeft <= 0) {
-            // ゲームを終了する
-            room.finishGame();
-            // 時計をリセット
-            reset();
-        } else if (ctickLeft <= 10) {
-            // 十秒以内で毎秒カウントダウン
-
-        } else if (ctickLeft <= 30) {
-            if (ctickLeft % 10 == 0) {
-                // 30秒以内なら10秒づつカウントダウン
-            }
-        } else if (ctickLeft % 60 == 0) {
-            // それ以上のときは１分づつカウントダウン
         }
     }
 }

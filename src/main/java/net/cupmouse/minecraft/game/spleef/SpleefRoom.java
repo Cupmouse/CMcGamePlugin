@@ -9,31 +9,49 @@ import org.spongepowered.api.text.channel.MessageReceiver;
 import org.spongepowered.api.text.channel.MutableMessageChannel;
 import org.spongepowered.api.text.channel.impl.SimpleMutableMessageChannel;
 import org.spongepowered.api.text.chat.ChatType;
+import org.spongepowered.api.text.format.TextColors;
 
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Hold game - ゲーム自体のカウントダウンを始める
+ * Start game - ゲーム自体を開始する。試合開始。プレー開始。
+ * Stop game - 内部的にゲーム自体を終了させる。それ以外のことはしない。プレイヤーを移動もしない。
+ * 　主に、下2つの処理のためにある。
+ * Finish game - 結果が決まって終了する。Stopさせて、プレイヤーの移動をして、その後、結果発表。
+ * Abort game - 結果が決まったかどうかにかかわらず、ゲームを終了させる。プレイヤーの移動をする。結果発表はしない。
+ */
 public final class SpleefRoom implements GameRoom {
 
-    private final SpleefStageSettings stageSettings;
+    public final int roomNumber;
+    public final SpleefStageSettings stageSettings;
+    public final SpleefRoomMessageChannel messageChannel;
 
     private Map<Integer, SpleefPlayer> players = new HashMap<>();
-    private SpleefGameClock clock;
+    private SpleefClockManager clock;
+    private GameRoomState state;
 
-    public SpleefRoom(SpleefStageSettings stageSettings) {
+    public SpleefRoom(int roomNumber, SpleefStageSettings stageSettings) {
+        this.roomNumber = roomNumber;
         this.stageSettings = stageSettings;
+        this.messageChannel = new SpleefRoomMessageChannel();
 
-        // tODO
-        this.clock = new SpleefGameClock(this, 0);
+        this.clock = new SpleefClockManager(this);
+        this.state = GameRoomState.WAITING_PLAYERS;
     }
 
     @Override
     public GameRoomState getState() {
-        return GameRoomState.CLOSED;
+        return state;
     }
 
-    public Optional<SpleefGameClock> getClock() {
+    void setState(GameRoomState state) {
+        this.state = state;
+    }
+
+    public Optional<SpleefClockManager> getClock() {
         return Optional.ofNullable(clock);
     }
 
@@ -58,20 +76,46 @@ public final class SpleefRoom implements GameRoom {
         return false;
     }
 
+    // 外部向け処理
+
+    /**
+     *
+     * @return
+     */
+    public boolean tryHoldGame() {
+        if (this.state == GameRoomState.PREPARED) {
+            this.clock.setClock(new SpleefClockCountdown());
+
+            return true;
+        }
+
+        return false;
+    }
+
     @Override
     public boolean tryJoinRoom(Player player) {
+        if (state != GameRoomState.WAITING_PLAYERS) {
+            // プレイヤーを募集していないので無理
+            return false;
+        }
         if (isPlayerPlaying(player)) {
             // すでにプレイ中
             return false;
         }
-        if (stageSettings.getSpawnLocations().size() >= players.size()) {
+        if (stageSettings.spawnLocations.size() >= players.size()) {
             // ステージのプレイ最大人数を超えているので参加不可
             return false;
         }
 
         // プレイヤーを参加させる
         players.put(0, new SpleefPlayer(player, 0));
+        // TODO メッセージチャンネルをセットするが、解除を忘れないように
+        player.setMessageChannel(messageChannel);
 
+        // プレイヤー人数が、ちょうど最低人数に達したら、カウントダウンを開始する。
+        if (players.size() == stageSettings.minimumPlayerCount) {
+            startCountdown();
+        }
 
         return false;
     }
@@ -86,7 +130,7 @@ public final class SpleefRoom implements GameRoom {
 
             if (players.size() < 2) {
                 // プレイヤーが足りないならゲームを終了する
-                resetClockAndFinishGame();
+                abortGame();
             }
 
             return true;
@@ -97,15 +141,74 @@ public final class SpleefRoom implements GameRoom {
     }
 
     /**
-     * ゲームを正常に終了させる。
+     * どのような状態でもゲームを終了させる
      */
-    void finishGame() {
-
+    public void abortGame() {
+        stopGame();
+        // プレイヤーの移動
     }
 
-    private void resetClockAndFinishGame() {
-        clock.reset();
-        finishGame();
+    /**
+     * ゲームを正常に終了させる。
+     */
+    public void finishGame() {
+        stopGame();
+        messageChannel.send(Text.of(TextColors.AQUA, "ゲーム終了！"));
+        // TODO プレイヤーの移動と結果発表
+        clock.setClock(new SpleefClockPrepare());
+        clock.start();
+    }
+
+    // 内部向け処理
+
+    void prepareGame() {
+        // TODO ステージの整備
+    }
+
+    /**
+     * カウントダウンを開始する
+     */
+    void startCountdown() {
+        this.clock.setClock(new SpleefClockCountdown());
+        clock.start();
+    }
+
+    /**
+     * 内部的にゲームを終了させる
+     */
+    void stopGame() {
+        this.clock.cancel();
+        this.state = GameRoomState.FINISHED;
+    }
+
+    /**
+     * ルームを入室不可にする
+     */
+    public void closeRoom() {
+        switch (state) {
+            case WAITING_PLAYERS:
+
+                break;
+            case READY:
+            case IN_PROGRESS:
+                // すでにゲームが始まっているときは、中止する
+                abortGame();
+                break;
+            case FINISHED:
+                // 終了していて結果発表中ならプレイヤーの移動
+
+                break;
+            default:
+                // その他は何もしない
+                break;
+        }
+
+        // もしかしたら動いているかもしれないので、時計を一応止めておく
+        this.clock.cancel();
+        // これをしないと、いつまでもルーム入室中になる
+        this.players.clear();
+
+        // TODO プレイヤーの移動
     }
 
     public class SpleefRoomMessageChannel implements MessageChannel {
@@ -141,7 +244,7 @@ public final class SpleefRoom implements GameRoom {
         @Override
         public Optional<Text> transformMessage(@Nullable Object sender, MessageReceiver recipient, Text original, ChatType type) {
             // TODO
-            return Optional.of(original);
+            return Optional.of(Text.of(TextColors.AQUA, "[S] ", original));
         }
 
         @Override
