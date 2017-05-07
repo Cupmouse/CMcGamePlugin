@@ -10,10 +10,11 @@ import ninja.leaping.configurate.objectmapping.serialize.TypeSerializers;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 public final class SpleefManager implements GameManager<SpleefRoom> {
 
-    private Map<Integer, SpleefRoom> rooms = new HashMap<>();
+    private Map<String, SpleefRoom> rooms = new HashMap<>();
 
     @Override
     public Collection<SpleefRoom> getRooms() {
@@ -28,5 +29,9 @@ public final class SpleefManager implements GameManager<SpleefRoom> {
         defaultSerializers
                 .registerType(TypeToken.of(SpleefAreaSquare.class), new SpleefAreaSquare.Serializer());
         defaultSerializers.registerType(TypeToken.of(SpleefStageSettings.class), new SpleefStageSettings.Serializer());
+    }
+
+    public Optional<SpleefRoom> getRoomOfStageId(String stageId) {
+        return Optional.ofNullable(rooms.get(stageId));
     }
 }

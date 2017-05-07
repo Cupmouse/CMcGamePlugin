@@ -8,6 +8,10 @@ import net.cupmouse.minecraft.PongPingModule;
 import net.cupmouse.minecraft.beam.BeamModule;
 import net.cupmouse.minecraft.db.DatabaseModule;
 import net.cupmouse.minecraft.game.data.user.GameUserDataModule;
+import net.cupmouse.minecraft.game.manager.GameManager;
+import net.cupmouse.minecraft.game.manager.GameRoom;
+import net.cupmouse.minecraft.game.spleef.SpleefManager;
+import net.cupmouse.minecraft.game.spleef.SpleefPlayer;
 import net.cupmouse.minecraft.worlds.WorldTagModule;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
@@ -36,6 +40,8 @@ public class CMcGamePlugin {
     private HoconConfigurationLoader gameConfigLoader;
     private static CommentedConfigurationNode gameConfigNode;
 
+    private static SpleefManager spleef;
+
     @Inject
     public CMcGamePlugin(Logger logger, @ConfigDir(sharedRoot = false) Path configDir) {
         PluginModule[] moduleArray = {
@@ -44,7 +50,8 @@ public class CMcGamePlugin {
                 new WorldTagModule(),
                 new PongPingModule(),
                 this.userm = new GameUserDataModule(),
-                new BeamModule()
+                new BeamModule(),
+                this.spleef = new SpleefManager()
         };
 
         core = new CMcCore(this, logger, configDir, moduleArray);
@@ -52,6 +59,10 @@ public class CMcGamePlugin {
 
     public static CommentedConfigurationNode getGameConfigNode() {
         return gameConfigNode;
+    }
+
+    public static SpleefManager getSpleef() {
+        return spleef;
     }
 
     public GameUserDataModule getUserm() {

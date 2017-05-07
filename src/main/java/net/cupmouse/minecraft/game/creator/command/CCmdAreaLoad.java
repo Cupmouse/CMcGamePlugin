@@ -1,5 +1,8 @@
 package net.cupmouse.minecraft.game.creator.command;
 
+import net.cupmouse.minecraft.game.GameType;
+import net.cupmouse.minecraft.game.manager.GameManager;
+import net.cupmouse.minecraft.game.manager.GameRoom;
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
@@ -10,24 +13,12 @@ import org.spongepowered.api.command.spec.CommandExecutor;
 import org.spongepowered.api.command.spec.CommandSpec;
 import org.spongepowered.api.text.Text;
 
-import java.util.Optional;
-
-public class CCmdAreaLoad implements CommandExecutor {
+public class CCmdAreaLoad {
 
     public static final CommandCallable CALLABLE = CommandSpec.builder()
-            .arguments(
-                    GenericArguments.onlyOne(GenericArguments.choices(Text.of("game_type"))),
-                    GenericArguments.onlyOne(GenericArguments.string(Text.of("area_lookup_id"))))
-            .executor(new CCmdAreaLoad())
+            .child(CCmdAreaLoadSpleef.CALLABLE, GameType.SPLEEF.aliases)
             .build();
 
-    @Override
-    public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
-        args.
-        String areaLookupId = args.<String>getOne("area_lookup_id").get();
-
-
-
-        return null;
+    private CCmdAreaLoad() {
     }
 }
