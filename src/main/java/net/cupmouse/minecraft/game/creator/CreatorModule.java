@@ -19,7 +19,7 @@ import org.spongepowered.api.text.Text;
 import java.util.HashMap;
 import java.util.Map;
 
-public class CreatorModule implements PluginModule {
+public final class CreatorModule implements PluginModule {
 
     public static final String TEXT_DEFAULT_DESCRIPTION = "THIS IS FOR LIMITED PEOPLE ONLY. " +
             "IF YOU NEED HELP WITH THIS COMMAND, " +

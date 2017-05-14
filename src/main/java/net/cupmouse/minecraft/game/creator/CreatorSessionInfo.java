@@ -1,8 +1,8 @@
 package net.cupmouse.minecraft.game.creator;
 
-import net.cupmouse.minecraft.game.spleef.SpleefArea;
+import net.cupmouse.minecraft.worlds.WorldTagArea;
 
-public class CreatorSessionInfo {
+public final class CreatorSessionInfo {
 
-    public SpleefArea spleefArea;
+    public WorldTagArea worldTagArea;
 }

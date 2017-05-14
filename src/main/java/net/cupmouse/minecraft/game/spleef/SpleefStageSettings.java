@@ -1,6 +1,8 @@
 package net.cupmouse.minecraft.game.spleef;
 
 import com.google.common.reflect.TypeToken;
+import net.cupmouse.minecraft.worlds.WorldTagArea;
+import net.cupmouse.minecraft.worlds.WorldTagLocation;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import ninja.leaping.configurate.objectmapping.serialize.TypeSerializer;
@@ -11,13 +13,13 @@ import java.util.stream.Collectors;
 public final class SpleefStageSettings {
 
     public final String stageId;
-    public final SpleefArea groundArea;
-    public final SpleefArea fightingArea;
-    public final List<SpleefSpawn> spawnLocations;
+    public final WorldTagArea groundArea;
+    public final WorldTagArea fightingArea;
+    public final List<WorldTagLocation> spawnLocations;
     public final int defaultGameTime;
     public final int minimumPlayerCount;
 
-    private SpleefStageSettings(String stageId, SpleefArea groundArea, SpleefArea fightingArea, List<SpleefSpawn> spawnLocations,
+    private SpleefStageSettings(String stageId, WorldTagArea groundArea, WorldTagArea fightingArea, List<WorldTagLocation> spawnLocations,
                                 int defaultGameTime, int minimumPlayerCount) {
         this.stageId = stageId;
         this.groundArea = groundArea;
@@ -47,15 +49,15 @@ public final class SpleefStageSettings {
         public SpleefStageSettings deserialize(TypeToken<?> type, ConfigurationNode value) throws ObjectMappingException {
             String stageId = value.getNode("stage_id").getString();
 
-            SpleefArea groundArea = value.getNode("ground_area").getValue(TypeToken.of(SpleefArea.class));
-            SpleefArea fightingArea = value.getNode("fighting_area").getValue(TypeToken.of(SpleefArea.class));
+            WorldTagArea groundArea = value.getNode("ground_area").getValue(TypeToken.of(WorldTagArea.class));
+            WorldTagArea fightingArea = value.getNode("fighting_area").getValue(TypeToken.of(WorldTagArea.class));
 
             ConfigurationNode nodeSpawns = value.getNode("spawns");
 
             // 変更不可のリスト
-            List<SpleefSpawn> spawnLocations = Collections.unmodifiableList(
+            List<WorldTagLocation> spawnLocations = Collections.unmodifiableList(
                     nodeSpawns.getChildrenList().stream()
-                            .map(SpleefSpawn::loadFromConfig)
+                            .map(WorldTagLocation::loadFromConfig)
                             .collect(Collectors.toCollection(ArrayList::new))
             );
 

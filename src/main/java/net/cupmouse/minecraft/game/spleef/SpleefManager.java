@@ -2,8 +2,7 @@ package net.cupmouse.minecraft.game.spleef;
 
 import com.google.common.reflect.TypeToken;
 import net.cupmouse.minecraft.game.manager.GameManager;
-import net.cupmouse.minecraft.worlds.WorldTag;
-import net.cupmouse.minecraft.worlds.WorldTagModule;
+import net.cupmouse.minecraft.worlds.WorldTagAreaSquare;
 import ninja.leaping.configurate.objectmapping.serialize.TypeSerializerCollection;
 import ninja.leaping.configurate.objectmapping.serialize.TypeSerializers;
 
@@ -27,7 +26,7 @@ public final class SpleefManager implements GameManager<SpleefRoom> {
         TypeSerializerCollection defaultSerializers = TypeSerializers.getDefaultSerializers();
 
         defaultSerializers
-                .registerType(TypeToken.of(SpleefAreaSquare.class), new SpleefAreaSquare.Serializer());
+                .registerType(TypeToken.of(WorldTagAreaSquare.class), new WorldTagAreaSquare.Serializer());
         defaultSerializers.registerType(TypeToken.of(SpleefStageSettings.class), new SpleefStageSettings.Serializer());
     }
 

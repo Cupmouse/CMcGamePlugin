@@ -12,11 +12,12 @@ import org.spongepowered.api.text.Text;
 
 import static net.cupmouse.minecraft.game.creator.CreatorModule.TEXT_DEFAULT_DESCRIPTION;
 
-public class CCmdArea {
+public final class CCmdArea {
 
-    private static final CommandCallable CALLABLE = CommandSpec.builder()
-            .arguments()
+    public static final CommandCallable CALLABLE = CommandSpec.builder()
             .child(CCmdAreaLoad.CALLABLE)
             .build();
 
+    private CCmdArea() {
+    }
 }
