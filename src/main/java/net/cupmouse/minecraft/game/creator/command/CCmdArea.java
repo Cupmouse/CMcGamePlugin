@@ -15,7 +15,8 @@ import static net.cupmouse.minecraft.game.creator.CreatorModule.TEXT_DEFAULT_DES
 public final class CCmdArea {
 
     public static final CommandCallable CALLABLE = CommandSpec.builder()
-            .child(CCmdAreaLoad.CALLABLE)
+            .child(CCmdAreaLoad.CALLABLE, "load", "l")
+            .child(CCmdAreaShow.CALLABLE, "show", "s")
             .build();
 
     private CCmdArea() {

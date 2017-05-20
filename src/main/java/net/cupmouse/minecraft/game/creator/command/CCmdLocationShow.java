@@ -19,10 +19,15 @@ import org.spongepowered.api.command.spec.CommandSpec;
 import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.EntityType;
 import org.spongepowered.api.entity.EntityTypes;
+import org.spongepowered.api.entity.living.ArmorStand;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.event.cause.entity.spawn.EntitySpawnCause;
 import org.spongepowered.api.event.cause.entity.spawn.SpawnTypes;
+import org.spongepowered.api.item.ItemTypes;
+import org.spongepowered.api.item.inventory.InventoryProperty;
+import org.spongepowered.api.item.inventory.ItemStack;
+import org.spongepowered.api.item.inventory.property.ArmorSlotType;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.world.World;
@@ -32,15 +37,16 @@ import java.util.HashMap;
 import static org.spongepowered.api.command.args.GenericArguments.choices;
 import static org.spongepowered.api.command.args.GenericArguments.onlyOne;
 
-public class CCmdLocationShow implements CommandExecutor {
+public final class CCmdLocationShow implements CommandExecutor {
 
-    public static CommandCallable CALLABLE = CommandSpec.builder()
+    public static final CommandCallable CALLABLE = CommandSpec.builder()
             .arguments(onlyOne(choices(Text.of("method"), new HashMap<String, String>() {{
                 put("teleport", "teleport");
                 put("t", "t");
                 put("armorstand", "armorstand");
                 put("a", "a");
             }})))
+            .executor(new CCmdLocationShow())
             .build();
 
 
@@ -49,8 +55,7 @@ public class CCmdLocationShow implements CommandExecutor {
         CreatorSessionInfo session = CreatorModule.getOrCreateSession(src);
 
         if (session.worldTagLoc == null) {
-            src.sendMessage(Text.of(TextColors.RED, "✗ロケーションがロードされていません。"));
-            return CommandResult.empty();
+            throw new CommandException(Text.of(TextColors.RED, "✗ロケーションがロードされていません。"), false);
         }
 
         String method = args.<String>getOne("method").get();
@@ -66,11 +71,17 @@ public class CCmdLocationShow implements CommandExecutor {
 
             Entity armorEnt= world.createEntity(EntityTypes.ARMOR_STAND, session.worldTagLoc.position);
             session.worldTagLoc.teleportHere(armorEnt);
+
+            if (session.worldTagLoc instanceof WorldTagRocation) {
+                // 方向もあるなら、革のヘルメットを被らせる。
+                ((ArmorStand) armorEnt).setHelmet(ItemStack.of(ItemTypes.LEATHER_HELMET, 1));
+            }
+
             EntitySpawnCause spawnCause = EntitySpawnCause.builder().type(SpawnTypes.CUSTOM).build();
 
             world.spawnEntity(armorEnt, Cause.source(spawnCause).build());
 
-            // 20秒後にすべて消す
+            // 20秒後に消す
             Sponge.getScheduler().createTaskBuilder()
                     .delayTicks(20 * 20)
                     .execute((Runnable) armorEnt::remove)

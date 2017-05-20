@@ -43,7 +43,7 @@ import static org.spongepowered.api.command.args.GenericArguments.onlyOne;
 
 public final class CCmdAreaShow implements CommandExecutor {
 
-    public static CommandCallable CALLABLE = CommandSpec.builder()
+    public static final CommandCallable CALLABLE = CommandSpec.builder()
             .arguments(
                     onlyOne(choices(Text.of("method"), new HashMap<String, String>() {{
                         put("glow", "glow");
@@ -64,6 +64,7 @@ public final class CCmdAreaShow implements CommandExecutor {
                         put("o", "o");
                     }}))
             )
+            .executor(new CCmdAreaShow())
             .build();
 
     private CCmdAreaShow() {

@@ -14,16 +14,14 @@ import java.util.stream.Collectors;
 
 public final class SpleefStageSettings {
 
-    public final String stageId;
     public final WorldTagArea groundArea;
     public final WorldTagArea fightingArea;
     public final List<WorldTagRocation> spawnRocations;
     public final int defaultGameTime;
     public final int minimumPlayerCount;
 
-    private SpleefStageSettings(String stageId, WorldTagArea groundArea, WorldTagArea fightingArea,
+    private SpleefStageSettings(WorldTagArea groundArea, WorldTagArea fightingArea,
                                 List<WorldTagRocation> spawnRocations, int defaultGameTime, int minimumPlayerCount) {
-        this.stageId = stageId;
         this.groundArea = groundArea;
         this.fightingArea = fightingArea;
         this.spawnRocations = spawnRocations;
@@ -35,11 +33,10 @@ public final class SpleefStageSettings {
      * 新しいステージを作るときに使うものです。
      * @return
      */
-    public static SpleefStageSettings creator(String stageId) {
+    public static SpleefStageSettings creator() {
         // TODO
         // 変更可能なリスト
-        SpleefStageSettings settings = new SpleefStageSettings(
-                stageId, null, null, new ArrayList<>(),
+        SpleefStageSettings settings = new SpleefStageSettings(null, null, new ArrayList<>(),
                 30, 1);
 
         return settings;
@@ -50,8 +47,6 @@ public final class SpleefStageSettings {
         @Override
         public SpleefStageSettings deserialize(TypeToken<?> type, ConfigurationNode value)
                 throws ObjectMappingException {
-            String stageId = value.getNode("stage_id").getString();
-
             WorldTagArea groundArea = value.getNode("ground_area").getValue(TypeToken.of(WorldTagArea.class));
             WorldTagArea fightingArea = value.getNode("fighting_area").getValue(TypeToken.of(WorldTagArea.class));
 
@@ -63,15 +58,13 @@ public final class SpleefStageSettings {
             int defaultGameTime = value.getNode("default_game_time").getInt();
             int minimumPlayerCount = value.getNode("minimumPlayerCount").getInt();
 
-            return new SpleefStageSettings(stageId, groundArea, fightingArea,
+            return new SpleefStageSettings(groundArea, fightingArea,
                     spawnRocations, defaultGameTime, minimumPlayerCount);
         }
 
         @Override
         public void serialize(TypeToken<?> type, SpleefStageSettings obj, ConfigurationNode value)
                 throws ObjectMappingException {
-            value.getNode("stage_id").setValue(obj.stageId);
-
             value.getNode("ground_area").setValue(TypeToken.of(WorldTagArea.class), obj.groundArea);
             value.getNode("fighting_area").setValue(TypeToken.of(WorldTagArea.class), obj.fightingArea);
 

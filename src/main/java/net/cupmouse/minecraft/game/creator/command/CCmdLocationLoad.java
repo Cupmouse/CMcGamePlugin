@@ -2,40 +2,35 @@ package net.cupmouse.minecraft.game.creator.command;
 
 import net.cupmouse.minecraft.game.CMcGamePlugin;
 import net.cupmouse.minecraft.game.GameType;
-import net.cupmouse.minecraft.game.creator.CreatorModule;
-import net.cupmouse.minecraft.worlds.WorldTagArea;
 import net.cupmouse.minecraft.game.spleef.SpleefRoom;
+import net.cupmouse.minecraft.worlds.WorldTagLocation;
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.CommandContext;
-import org.spongepowered.api.command.args.GenericArguments;
 import org.spongepowered.api.command.spec.CommandExecutor;
 import org.spongepowered.api.command.spec.CommandSpec;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static net.cupmouse.minecraft.game.creator.command.CCmdArguments.gameType;
 import static org.spongepowered.api.command.args.GenericArguments.allOf;
 import static org.spongepowered.api.command.args.GenericArguments.onlyOne;
 import static org.spongepowered.api.command.args.GenericArguments.string;
 
-public final class CCmdAreaLoad implements CommandExecutor {
+public final class CCmdLocationLoad implements CommandExecutor {
 
     public static final CommandCallable CALLABLE = CommandSpec.builder()
             .arguments(onlyOne(gameType(Text.of("game_type"))),
                     allOf(string(Text.of("lookup_id"))))
-            .executor(new CCmdAreaLoad())
+            .executor(new CCmdLocationLoad())
             .build();
 
-    private CCmdAreaLoad() {
+    private CCmdLocationLoad() {
     }
 
     @Override
@@ -43,46 +38,50 @@ public final class CCmdAreaLoad implements CommandExecutor {
         GameType gameType = args.<GameType>getOne("game_type").get();
         ArrayList<String> lookupId = new ArrayList<>(args.<String>getAll("lookup_id"));
 
-        WorldTagArea selectedArea = null;
+        WorldTagLocation selectedLoc = null;
 
-        if (gameType == GameType.SPLEEF && lookupId.size() == 2) {
-            // SPLEEFの場合、引数は２個
+        if (gameType == GameType.SPLEEF && lookupId.size() >= 2) {
+            // SPLEEFの場合、引数は必ず２個以上
 
-            String stageId = lookupId.get(0);
-            String areaId = lookupId.get(1);
+            // 第一引数は必ずステージ名
+            String stageName = lookupId.get(1);
+            // 第二引数も必ずロケーション名
+            String locationId = lookupId.get(2);
 
-            Optional<SpleefRoom> roomOpt = CMcGamePlugin.getSpleef().getRoomOfStageId(stageId);
+            Optional<SpleefRoom> roomOptional = CMcGamePlugin.getSpleef().getRoomOfStageId(stageName);
 
-            if (!roomOpt.isPresent()) {
+            if (roomOptional.isPresent()) {
                 src.sendMessage(Text.of(TextColors.RED, "✗そのようなステージIDは見つかりませんでした。"));
                 return CommandResult.empty();
             }
 
-            if (areaId.equals("f")) {
-                // Fighting Area
+            SpleefRoom spleefRoom = roomOptional.get();
 
-                selectedArea = roomOpt.get().stageSettings.fightingArea;
+            if (lookupId.size() == 2) {
+                // 引数が２個のとき
 
-            } else if (areaId.equals("g")) {
-                // Ground Area
 
-                selectedArea = roomOpt.get().stageSettings.groundArea;
+            } else if (lookupId.size() == 3) {
+                // 引数が３個のとき
+
+                if (locationId.equals("spawn")) {
+                    selectedLoc = spleefRoom.stageSettings.spawnRocations.get(Integer.parseInt(lookupId.get(2)));
+                }
             }
-
+            // 引数が二個以上ないとIDがないこととして処理する
         }
 
-        if (selectedArea == null) {
-            src.sendMessage(Text.of(TextColors.RED, "✗そのようなゲームもしくはエリアIDは見つかりませんでした。"));
+        if (selectedLoc != null) {
 
-            return CommandResult.empty();
-        } else {
-            // セッションに設定する
-
-            CreatorModule.getOrCreateSession(src).worldTagArea = selectedArea;
-
-            src.sendMessage(Text.of(TextColors.GREEN, "✓入力されたエリアIDのエリアをロードしました。"));
-
+            src.sendMessage(Text.of(TextColors.AQUA,
+                    "✓入力されたロケーションIDのロケーションをロードしました。"));
             return CommandResult.success();
+        } else {
+
+            src.sendMessage(Text.of(TextColors.RED,
+                    "✗そのようなゲームもしくはロケーションIDが見つかりませんでした。"));
+            return CommandResult.empty();
         }
+
     }
 }
