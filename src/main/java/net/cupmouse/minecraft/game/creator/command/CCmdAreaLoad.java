@@ -57,24 +57,20 @@ public final class CCmdAreaLoad implements CommandExecutor {
 
                 Optional<SpleefRoom> roomOpt = CMcGamePlugin.getSpleef().getRoomOfStageId(stageId);
 
-                if (roomOpt.isPresent()) {
-
-                    switch (areaId) {
-                        case "f":
-                            // Fighting Area
-
-                            selectedArea = roomOpt.get().stageSettings.fightingArea;
-                            break;
-                        case "g":
-                            // Ground Area
-
-                            selectedArea = roomOpt.get().stageSettings.groundArea;
-                            break;
-                    }
-
-                } else {
+                if (!roomOpt.isPresent()) {
                     src.sendMessage(Text.of(TextColors.RED, "✗そのようなステージIDは見つかりませんでした。"));
                     return CommandResult.empty();
+                }
+
+                if (areaId.equals("f")) {
+                    // Fighting Area
+
+                    selectedArea = roomOpt.get().stageSettings.fightingArea;
+
+                } else if (areaId.equals("g")) {
+                    // Ground Area
+
+                    selectedArea = roomOpt.get().stageSettings.groundArea;
                 }
 
                 break;
