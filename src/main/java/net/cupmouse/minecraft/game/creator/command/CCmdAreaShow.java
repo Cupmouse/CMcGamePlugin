@@ -4,6 +4,7 @@ import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.Maps;
 import net.cupmouse.minecraft.CMcCore;
 import net.cupmouse.minecraft.game.creator.CreatorModule;
+import net.cupmouse.minecraft.game.creator.CreatorSessionInfo;
 import net.cupmouse.minecraft.worlds.BlockLocSequence;
 import net.cupmouse.minecraft.worlds.WorldTagModule;
 import org.spongepowered.api.Sponge;
@@ -46,14 +47,21 @@ public final class CCmdAreaShow implements CommandExecutor {
             .arguments(
                     onlyOne(choices(Text.of("method"), new HashMap<String, String>() {{
                         put("glow", "glow");
+                        put("g", "g");
                         put("armorstand", "armorstand");
+                        put("a", "a");
                         put("fireworks", "fireworks");
+                        put("f", "f");
                         put("fakeblocks", "fakeblocks");
+                        put("b", "b");
                         put("resetfake", "resetfake");
+                        put("rb", "rb");
                     }})),
                     onlyOne(choices(Text.of("place"), new HashMap<String, String>() {{
                         put("corner", "corner");
+                        put("c", "c");
                         put("outline", "outline");
+                        put("o", "o");
                     }}))
             )
             .build();
@@ -68,13 +76,21 @@ public final class CCmdAreaShow implements CommandExecutor {
 
         BlockLocSequence sequence;
 
+        CreatorSessionInfo session = CreatorModule.getOrCreateSession(src);
+        if (session.worldTagArea == null) {
+            src.sendMessage(Text.of(TextColors.RED, "✗エリアがロードされていません。"));
+            return CommandResult.empty();
+        }
+
         switch (place) {
             case "corner":
-                sequence = CreatorModule.getOrCreateSession(src).worldTagArea.getCornerBlocks();
+            case "c":
+            default:
+                sequence = session.worldTagArea.getCornerBlocks();
                 break;
             case "outline":
-            default:
-                sequence = CreatorModule.getOrCreateSession(src).worldTagArea.getOutlineBlocks();
+            case "o":
+                sequence = session.worldTagArea.getOutlineBlocks();
                 break;
         }
 
@@ -88,7 +104,7 @@ public final class CCmdAreaShow implements CommandExecutor {
 
         World world = worldOptional.get();
 
-        if (method.equals("glow")) {
+        if (method.equals("glow") || method.equals("g")) {
             Set<Entity> spawnedEntities = new HashSet<>();
 
             for (Vector3i blockLoc : sequence.blockLocs) {
@@ -115,7 +131,7 @@ public final class CCmdAreaShow implements CommandExecutor {
                     spawnedEntity.remove();
                 }
             }).submit(CMcCore.getPlugin());
-        } else if (method.equals("armorstand")) {
+        } else if (method.equals("armorstand") || method.equals("a")) {
             Iterator<Vector3i> iterator = sequence.blockLocs.iterator();
 
             Entity armorEnt = world.createEntity(EntityTypes.ARMOR_STAND, iterator.next());
@@ -135,7 +151,7 @@ public final class CCmdAreaShow implements CommandExecutor {
                         armorEnt.setLocation(new Location<>(world, iterator.next()));
                     })
                     .submit(CMcCore.getPlugin());
-        } else if (method.equals("fireworks")) {
+        } else if (method.equals("fireworks") || method.equals("f")) {
             for (Vector3i blockLoc : sequence.blockLocs) {
                 Entity fireworkEnt = world.createEntity(EntityTypes.FIREWORK, blockLoc);
                 FireworkEffect fireworkEffect = FireworkEffect.builder().color(Color.GREEN).trail(true).build();
@@ -146,11 +162,11 @@ public final class CCmdAreaShow implements CommandExecutor {
                 EntitySpawnCause spawnCause = EntitySpawnCause.builder().type(SpawnTypes.CUSTOM).build();
                 world.spawnEntity(fireworkEnt, Cause.source(spawnCause).build());
             }
-        } else if (method.equals("fakeblocks")) {
+        } else if (method.equals("fakeblocks") || method.equals("b")) {
             for (Vector3i blockLoc : sequence.blockLocs) {
                 world.sendBlockChange(blockLoc, BlockState.builder().blockType(BlockTypes.DEADBUSH).build());
             }
-        } else if (method.equals("resetfake")) {
+        } else if (method.equals("resetfake") || method.equals("rb")) {
             for (Vector3i blockLoc : sequence.blockLocs) {
                 world.resetBlockChange(blockLoc);
             }

@@ -10,16 +10,20 @@ import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.CommandContext;
+import org.spongepowered.api.command.args.GenericArguments;
 import org.spongepowered.api.command.spec.CommandExecutor;
 import org.spongepowered.api.command.spec.CommandSpec;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static net.cupmouse.minecraft.game.creator.command.CCmdArguments.gameType;
+import static org.spongepowered.api.command.args.GenericArguments.allOf;
 import static org.spongepowered.api.command.args.GenericArguments.onlyOne;
 import static org.spongepowered.api.command.args.GenericArguments.string;
 
@@ -27,11 +31,8 @@ public final class CCmdAreaLoad implements CommandExecutor {
 
     public static final CommandCallable CALLABLE = CommandSpec.builder()
             .arguments(onlyOne(gameType(Text.of("game_type"))),
-                    onlyOne(string(Text.of("lookup_id"))))
+                    allOf(string(Text.of("lookup_id"))))
             .build();
-
-    private static final Pattern SPLEEF_LOOKUP_ID_REGEX =
-            Pattern.compile("^([a-zA-Z\\d]+)[.]([a-zA-Z\\d]+)$");
 
     private CCmdAreaLoad() {
     }
@@ -39,41 +40,34 @@ public final class CCmdAreaLoad implements CommandExecutor {
     @Override
     public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
         GameType gameType = args.<GameType>getOne("game_type").get();
-        String lookupId = args.<String>getOne("lookup_id").get();
+        ArrayList<String> lookupId = new ArrayList<>(args.<String>getAll("lookup_id"));
 
         WorldTagArea selectedArea = null;
 
-        switch (gameType) {
-            case SPLEEF:
-                Matcher matcher = SPLEEF_LOOKUP_ID_REGEX.matcher(lookupId);
+        if (gameType == GameType.SPLEEF && lookupId.size() == 2) {
+            // SPLEEFの場合、引数は２個
 
-                if (!matcher.find()) {
-                    // マッチしなかったら、IDとして存在しない処理となる。
-                    break;
-                }
+            String stageId = lookupId.get(0);
+            String areaId = lookupId.get(1);
 
-                String stageId = matcher.group(1);
-                String areaId = matcher.group(2);
+            Optional<SpleefRoom> roomOpt = CMcGamePlugin.getSpleef().getRoomOfStageId(stageId);
 
-                Optional<SpleefRoom> roomOpt = CMcGamePlugin.getSpleef().getRoomOfStageId(stageId);
+            if (!roomOpt.isPresent()) {
+                src.sendMessage(Text.of(TextColors.RED, "✗そのようなステージIDは見つかりませんでした。"));
+                return CommandResult.empty();
+            }
 
-                if (!roomOpt.isPresent()) {
-                    src.sendMessage(Text.of(TextColors.RED, "✗そのようなステージIDは見つかりませんでした。"));
-                    return CommandResult.empty();
-                }
+            if (areaId.equals("f")) {
+                // Fighting Area
 
-                if (areaId.equals("f")) {
-                    // Fighting Area
+                selectedArea = roomOpt.get().stageSettings.fightingArea;
 
-                    selectedArea = roomOpt.get().stageSettings.fightingArea;
+            } else if (areaId.equals("g")) {
+                // Ground Area
 
-                } else if (areaId.equals("g")) {
-                    // Ground Area
+                selectedArea = roomOpt.get().stageSettings.groundArea;
+            }
 
-                    selectedArea = roomOpt.get().stageSettings.groundArea;
-                }
-
-                break;
         }
 
         if (selectedArea == null) {

@@ -3,32 +3,32 @@ package net.cupmouse.minecraft.game.creator.command;
 import net.cupmouse.minecraft.game.CMcGamePlugin;
 import net.cupmouse.minecraft.game.GameType;
 import net.cupmouse.minecraft.game.spleef.SpleefRoom;
+import net.cupmouse.minecraft.worlds.WorldTagLocation;
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.CommandContext;
-import org.spongepowered.api.command.args.GenericArguments;
 import org.spongepowered.api.command.spec.CommandExecutor;
 import org.spongepowered.api.command.spec.CommandSpec;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
+import static net.cupmouse.minecraft.game.creator.command.CCmdArguments.gameType;
+import static org.spongepowered.api.command.args.GenericArguments.allOf;
+import static org.spongepowered.api.command.args.GenericArguments.onlyOne;
+import static org.spongepowered.api.command.args.GenericArguments.string;
 
 public final class CCmdLocation implements CommandExecutor {
 
     public static CommandCallable CALLABLE = CommandSpec.builder()
-            .arguments(GenericArguments.onlyOne(CCmdArguments.gameType(Text.of("game_type"))),
-                    GenericArguments.onlyOne(GenericArguments.string(Text.of("lookup_id"))))
+            .arguments(onlyOne(gameType(Text.of("game_type"))),
+                    allOf(string(Text.of("lookup_id"))))
             .executor(new CCmdLocation())
             .build();
-
-    private static final Pattern SPLEEF_LOOKUP_ID_REGEX
-            = Pattern.compile("^([a-zA-Z\\d]+)[.](a-zA-Z\\d+)$");
 
     private CCmdLocation() {
     }
@@ -36,38 +36,52 @@ public final class CCmdLocation implements CommandExecutor {
     @Override
     public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
         GameType gameType = args.<GameType>getOne("game_type").get();
-        String lookupId = args.<String>getOne("lookup_id").get();
+        ArrayList<String> lookupId = new ArrayList<>(args.<String>getAll("lookup_id"));
 
-        switch (gameType) {
-            case SPLEEF:
-                Matcher matcher = SPLEEF_LOOKUP_ID_REGEX.matcher(lookupId);
-                if (!matcher.find()) {
-                    break;
-                }
-                String stageName = matcher.group(1);
+        WorldTagLocation selectedLoc = null;
 
-                Optional<SpleefRoom> roomOptional = CMcGamePlugin.getSpleef().getRoomOfStageId(stageName);
+        if (gameType == GameType.SPLEEF && lookupId.size() >= 2) {
+            // SPLEEFの場合、引数は必ず２個以上
 
-                if (roomOptional.isPresent()) {
-                    src.sendMessage(Text.of(TextColors.RED, "✗そのようなステージIDは見つかりませんでした。"));
-                    return CommandResult.empty();
-                }
+            // 第一引数は必ずステージ名
+            String stageName = lookupId.get(1);
+            // 第二引数も必ずロケーション名
+            String locationId = lookupId.get(2);
 
-                SpleefRoom spleefRoom = roomOptional.get();
+            Optional<SpleefRoom> roomOptional = CMcGamePlugin.getSpleef().getRoomOfStageId(stageName);
+
+            if (roomOptional.isPresent()) {
+                src.sendMessage(Text.of(TextColors.RED, "✗そのようなステージIDは見つかりませんでした。"));
+                return CommandResult.empty();
+            }
+
+            SpleefRoom spleefRoom = roomOptional.get();
+
+            if (lookupId.size() == 2) {
+                // 引数が２個のとき
 
 
-                String locationId = matcher.group(2);
+            } else if (lookupId.size() == 3) {
+                // 引数が３個のとき
 
                 if (locationId.equals("spawn")) {
-                    spleefRoom.stageSettings.spawnLocations.get()
+                    selectedLoc = spleefRoom.stageSettings.spawnRocations.get(Integer.parseInt(lookupId.get(2)));
                 }
-
-                spleefRoom.stageSettings.spawnLocations
-
-
-                break;
+            }
+            // 引数が二個以上ないとIDがないこととして処理する
         }
 
-        return CommandResult.success();
+        if (selectedLoc != null) {
+
+            src.sendMessage(Text.of(TextColors.AQUA,
+                    "✓入力されたロケーションIDのロケーションをロードしました。"));
+            return CommandResult.success();
+        } else {
+
+            src.sendMessage(Text.of(TextColors.RED,
+                    "✗そのようなゲームもしくはロケーションIDが見つかりませんでした。"));
+            return CommandResult.empty();
+        }
+
     }
 }

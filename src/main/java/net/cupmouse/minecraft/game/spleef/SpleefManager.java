@@ -25,8 +25,6 @@ public final class SpleefManager implements GameManager<SpleefRoom> {
         // シリアライザ－登録
         TypeSerializerCollection defaultSerializers = TypeSerializers.getDefaultSerializers();
 
-        defaultSerializers
-                .registerType(TypeToken.of(WorldTagAreaSquare.class), new WorldTagAreaSquare.Serializer());
         defaultSerializers.registerType(TypeToken.of(SpleefStageSettings.class), new SpleefStageSettings.Serializer());
     }
 

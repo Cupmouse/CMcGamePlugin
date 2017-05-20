@@ -92,13 +92,13 @@ public final class SpleefRoom implements GameRoom {
             // すでにプレイ中
             return false;
         }
-        if (stageSettings.spawnLocations.size() >= players.size()) {
+        if (stageSettings.spawnRocations.size() >= players.size()) {
             // ステージのプレイ最大人数を超えているので参加不可
             return false;
         }
 
         // プレイヤーを参加させる
-        int spawnId = stageSettings.spawnLocations.size();
+        int spawnId = stageSettings.spawnRocations.size();
         players.put(spawnId, new SpleefPlayer(player, spawnId));
         // TODO メッセージチャンネルをセットするが、解除を忘れないように
         player.setMessageChannel(messageChannel);
@@ -164,7 +164,7 @@ public final class SpleefRoom implements GameRoom {
      */
     boolean tryHoldNextGame() {
         if (state == GameRoomState.PREPARED) {
-            if (players.size() >= stageSettings.spawnLocations.size()) {
+            if (players.size() >= stageSettings.spawnRocations.size()) {
                 // すでに最高人数揃っているならすぐスタートカウントダウン
                 ready();
                 return true;
