@@ -90,7 +90,6 @@ public final class SpleefRoom implements GameRoom {
 
     @Override
     public void tryJoinRoom(Player player) throws GameRoomException {
-        // TODO TextMessageExceptionでもいいのでは？
         if (state != GameRoomState.WAITING_PLAYERS) {
             // プレイヤーを募集していないので無理
             throw new GameRoomException(Text.of(""));

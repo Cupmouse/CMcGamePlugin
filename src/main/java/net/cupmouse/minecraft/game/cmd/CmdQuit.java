@@ -1,6 +1,7 @@
 package net.cupmouse.minecraft.game.cmd;
 
 import net.cupmouse.minecraft.game.CMcGamePlugin;
+import net.cupmouse.minecraft.game.manager.GameRoomException;
 import net.cupmouse.minecraft.game.spleef.SpleefRoom;
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
@@ -12,6 +13,7 @@ import org.spongepowered.api.command.spec.CommandExecutor;
 import org.spongepowered.api.command.spec.CommandSpec;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.format.TextColor;
 import org.spongepowered.api.text.format.TextColors;
 
 import java.util.Optional;
@@ -38,12 +40,15 @@ public class CmdQuit implements CommandExecutor {
         if (roomPlayerJoin.isPresent()) {
             SpleefRoom spleefRoom = roomPlayerJoin.get();
 
-            if (spleefRoom.tryLeaveRoom(player)) {
-                return CommandResult.success();
-            } else {
+            try {
+                spleefRoom.tryLeaveRoom(player);
+            } catch (GameRoomException e) {
                 throw new CommandException(
-                        Text.of(TextColors.RED, "✗何らかの原因で退出することができませんでした。"), false);
+                        Text.of(TextColors.RED, "✗何らかの原因で退出することができませんでした。")
+                        , e, false);
             }
+
+            return CommandResult.success();
         } else {
             throw new CommandException(Text.of(TextColors.RED, "✗あなたはどの部屋にも入室していません。"), false);
         }
