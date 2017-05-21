@@ -10,7 +10,7 @@ public final class CreatorSessionInfo {
 
     public WorldTagArea loadedArea;
 
-    public WorldTagLocation worldTagLoc;
+    public WorldTagPosition loadedPos;
 
     public Location<World> firstLoc;
 

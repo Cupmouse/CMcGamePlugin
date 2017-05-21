@@ -1,15 +1,12 @@
 package net.cupmouse.minecraft.game.creator.command;
 
+import net.cupmouse.minecraft.game.GameType;
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.spec.CommandSpec;
 
-public final class CCmdLocation {
+public class CCmdPositionSet {
 
     public static final CommandCallable CALLABLE = CommandSpec.builder()
-            .child(CCmdLocationLoad.CALLABLE, "load", "l")
-            .child(CCmdLocationShow.CALLABLE, "show", "show")
+            .child(CCmdPositionSetSpleef.CALLABLE, GameType.SPLEEF.aliases)
             .build();
-
-    private CCmdLocation() {
-    }
 }

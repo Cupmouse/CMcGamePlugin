@@ -4,15 +4,11 @@ import net.cupmouse.minecraft.CMcCore;
 import net.cupmouse.minecraft.PluginModule;
 import net.cupmouse.minecraft.game.CMcGamePlugin;
 import net.cupmouse.minecraft.game.creator.command.CCmdArea;
-import net.cupmouse.minecraft.game.creator.command.CCmdLocation;
-import net.cupmouse.minecraft.game.creator.command.CommandElementGameType;
+import net.cupmouse.minecraft.game.creator.command.CCmdPosition;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandSource;
-import org.spongepowered.api.command.args.CommandElement;
-import org.spongepowered.api.command.args.GenericArguments;
 import org.spongepowered.api.command.spec.CommandSpec;
 import org.spongepowered.api.data.key.Keys;
-import org.spongepowered.api.data.type.HandType;
 import org.spongepowered.api.data.type.HandTypes;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
@@ -21,7 +17,6 @@ import org.spongepowered.api.event.filter.cause.First;
 import org.spongepowered.api.event.network.ClientConnectionEvent;
 import org.spongepowered.api.item.ItemTypes;
 import org.spongepowered.api.item.inventory.ItemStack;
-import org.spongepowered.api.text.LiteralText;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
@@ -55,7 +50,7 @@ public final class CreatorModule implements PluginModule {
                 .description(Text.of(TEXT_DEFAULT_DESCRIPTION))
                 .permission("cmc.game.creator")
                 .child(CCmdArea.CALLABLE, "area", "a")
-                .child(CCmdLocation.CALLABLE, "location", "loc", "l")
+                .child(CCmdPosition.CALLABLE, "location", "loc", "l")
                 .build(), "gc");
 
         CMcCore.getLogger().warn("=========================================");
