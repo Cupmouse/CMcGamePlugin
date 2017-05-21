@@ -27,7 +27,7 @@ public class CommandElementSpleefStageId extends CommandElement {
     protected Object parseValue(CommandSource source, CommandArgs args) throws ArgumentParseException {
         String next = args.next();
 
-        Optional<SpleefRoom> roomOptional = CMcGamePlugin.getSpleef().getRoomOfStageId(next);
+        Optional<SpleefRoom> roomOptional = CMcGamePlugin.getSpleef().getStage(next);
 
         if (!roomOptional.isPresent()) {
             throw new ArgumentParseException(

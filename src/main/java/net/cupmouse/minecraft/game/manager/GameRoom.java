@@ -8,7 +8,7 @@ public interface GameRoom {
 
     boolean isPlayerPlaying(Player player);
 
-    void tryJoinRoom(Player player) throws GameRoomException;
+    void tryJoinRoom(Player player) throws GameException;
 
     /**
      * 与えられたプレイヤーがゲームに参加している場合は、ルームから退出させる。
@@ -17,5 +17,5 @@ public interface GameRoom {
      * @param player
      * @return 参加していた場合はtrue、参加していなかった場合はfalse
      */
-    void tryLeaveRoom(Player player) throws GameRoomException;
+    void tryLeaveRoom(Player player) throws GameException;
 }

@@ -1,7 +1,7 @@
 package net.cupmouse.minecraft.game.spleef;
 
 import net.cupmouse.minecraft.game.manager.GameRoom;
-import net.cupmouse.minecraft.game.manager.GameRoomException;
+import net.cupmouse.minecraft.game.manager.GameException;
 import net.cupmouse.minecraft.game.manager.GameRoomState;
 import net.cupmouse.minecraft.worlds.WorldTagRocation;
 import org.spongepowered.api.entity.living.player.Player;
@@ -37,18 +37,15 @@ import java.util.stream.Collectors;
  */
 public final class SpleefRoom implements GameRoom {
 
-    public final int roomNumber;
-    public final SpleefStageSettings stageSettings;
+    public final SpleefStage stage;
     public final SpleefRoomMessageChannel messageChannel;
 
     private Map<Integer, SpleefPlayer> players = new HashMap<>();
     private SpleefClockManager clock;
     private GameRoomState state;
 
-    public SpleefRoom(SpleefStageSettings stageSettings) {
-        // TODO number
-        this.roomNumber = 0;
-        this.stageSettings = stageSettings;
+    public SpleefRoom(SpleefStage stage) {
+        this.stage = stage;
         this.messageChannel = new SpleefRoomMessageChannel();
 
         this.clock = new SpleefClockManager(this);
@@ -92,28 +89,28 @@ public final class SpleefRoom implements GameRoom {
     // 外部向け処理
 
     @Override
-    public void tryJoinRoom(Player player) throws GameRoomException {
+    public void tryJoinRoom(Player player) throws GameException {
         if (state != GameRoomState.WAITING_PLAYERS) {
             // プレイヤーを募集していないので無理
-            throw new GameRoomException(Text.of(""));
+            throw new GameException(Text.of(""));
         }
         if (isPlayerPlaying(player)) {
             // すでにプレイ中
-            throw new GameRoomException(
+            throw new GameException(
                     Text.of(TextColors.RED, "✗あなたはすでに参加しています。"));
         }
-        if (stageSettings.getSpawnRocations().size() >= players.size()) {
+        if (stage.getSpawnRocations().size() <= players.size()) {
             // ステージのプレイ最大人数を超えているので参加不可
-            throw new GameRoomException(
+            throw new GameException(
                     Text.of(TextColors.RED, "✗部屋の最大人数に達しています。参加できませんでした。"));
         }
 
         // プレイヤーを参加させる
-        int spawnId = stageSettings.getSpawnRocations().size();
+        int spawnId = players.size();
         // テレポートできるか確かめてから
-        WorldTagRocation spawnRoc = stageSettings.getSpawnRocations().get(spawnId);
+        WorldTagRocation spawnRoc = stage.getSpawnRocations().get(spawnId);
         if (!spawnRoc.teleportHere(player)) {
-            throw new GameRoomException(
+            throw new GameException(
                     Text.of(TextColors.RED, "✗テレポートできませんでした。参加できませんでした。"));
         }
 
@@ -125,27 +122,27 @@ public final class SpleefRoom implements GameRoom {
         // 全員にプレイヤーが入室したことを通知
         messageChannel.send(
                 Text.of(TextColors.AQUA, player.getName(), "が入室しました(" + players.size() + "/"
-                        + stageSettings.getMinimumPlayerCount() + "-"
-                        + stageSettings.getSpawnRocations().size() + ")")
+                        + stage.getMinimumPlayerCount() + "-"
+                        + stage.getSpawnRocations().size() + ")")
                 , ChatTypes.SYSTEM);
 
         // プレイヤー人数が、ちょうど最低人数に達したら、プレイヤー待ちカウントダウンを開始する。
-        if (players.size() == stageSettings.getMinimumPlayerCount()) {
+        if (players.size() == stage.getMinimumPlayerCount()) {
             startCountdown();
         }
     }
 
 
     @Override
-    public void tryLeaveRoom(Player player) throws GameRoomException {
+    public void tryLeaveRoom(Player player) throws GameException {
         Optional<SpleefPlayer> optional = getSpleefPlayer(player);
 
         // プレイヤーはこの部屋にいて、削除されたか。
         if (optional.isPresent() && players.values().remove(optional.get())) {
             messageChannel.send(
                     Text.of(TextColors.GRAY, player.getName(), "が退出しました(" + players.size() + "/"
-                            + stageSettings.getMinimumPlayerCount() + "-"
-                            + stageSettings.getSpawnRocations().size() + ")")
+                            + stage.getMinimumPlayerCount() + "-"
+                            + stage.getSpawnRocations().size() + ")")
                     , ChatTypes.SYSTEM);
 
             if (players.size() < 2) {
@@ -153,7 +150,7 @@ public final class SpleefRoom implements GameRoom {
                 abortGame();
             }
         } else {
-            throw new GameRoomException(Text.of(TextColors.RED, "✗部屋へ入室していません。"));
+            throw new GameException(Text.of(TextColors.RED, "✗部屋へ入室していません。"));
         }
     }
 
@@ -189,11 +186,11 @@ public final class SpleefRoom implements GameRoom {
      */
     boolean tryHoldNextGame() {
         if (state == GameRoomState.PREPARED) {
-            if (players.size() >= stageSettings.getSpawnRocations().size()) {
+            if (players.size() >= stage.getSpawnRocations().size()) {
                 // すでに最高人数揃っているならすぐスタートカウントダウン
                 ready();
                 return true;
-            } else if (players.size() >= stageSettings.getMinimumPlayerCount()) {
+            } else if (players.size() >= stage.getMinimumPlayerCount()) {
                 // でなくても、最低人数揃っているならプレイヤー待ちカウントダウン
                 startCountdown();
                 return true;
@@ -239,7 +236,7 @@ public final class SpleefRoom implements GameRoom {
 
     void startGame() {
         this.state = GameRoomState.IN_PROGRESS;
-        this.clock.setClock(new SpleefClockGame(stageSettings.getDefaultGameTime()));
+        this.clock.setClock(new SpleefClockGame(stage.getDefaultGameTime()));
         this.clock.start();
     }
 

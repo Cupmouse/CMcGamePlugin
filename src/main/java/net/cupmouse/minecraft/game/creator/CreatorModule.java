@@ -1,9 +1,11 @@
 package net.cupmouse.minecraft.game.creator;
 
+import io.netty.internal.tcnative.SessionTicketKey;
 import net.cupmouse.minecraft.CMcCore;
 import net.cupmouse.minecraft.PluginModule;
 import net.cupmouse.minecraft.game.CMcGamePlugin;
 import net.cupmouse.minecraft.game.GameType;
+import net.cupmouse.minecraft.game.creator.cmd.CCmdSelection;
 import net.cupmouse.minecraft.game.creator.cmd.CCmdTools;
 import net.cupmouse.minecraft.game.creator.cmd.area.CCmdArea;
 import net.cupmouse.minecraft.game.creator.cmd.position.CCmdPosition;
@@ -24,6 +26,7 @@ import org.spongepowered.api.event.network.ClientConnectionEvent;
 import org.spongepowered.api.item.ItemTypes;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.format.TextColor;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
@@ -59,6 +62,7 @@ public final class CreatorModule implements PluginModule {
                 .child(CCmdArea.CALLABLE, "area", "a")
                 .child(CCmdPosition.CALLABLE, "position", "pos", "p")
                 .child(CCmdTools.CALLABLE, "tool", "tools", "t")
+                .child(CCmdSelection.CALLABLE, "selection", "sel", "s")
                 .child(CCmdSpleef.CALLABLE, GameType.SPLEEF.aliases)
                 .build(), "gc");
 
@@ -73,6 +77,7 @@ public final class CreatorModule implements PluginModule {
 
         if (sessionInfo == null) {
             sessionInfo = new CreatorSessionInfo();
+            CreatorModule.creatorSessionMap.put(commandSource, sessionInfo);
         }
 
         return sessionInfo;
@@ -86,20 +91,11 @@ public final class CreatorModule implements PluginModule {
 
     @Listener
     public void onInteractBlock(InteractBlockEvent event, @First Player player) {
+        CreatorSessionInfo session = getOrCreateSession(player);
 
-        if (!player.get(Keys.IS_SNEAKING).orElse(false)) {
-            // 姿勢を低くした状態ならスキップ
+        if (!session.selectionEnabled) {
             return;
         }
-
-        // なんでnullの可能性があるのか不明だが、isPresentでチェック
-        Optional<Location<World>> locOpt = event.getTargetBlock().getLocation();
-
-        if (!locOpt.isPresent()) {
-            return;
-        }
-
-        Location<World> clickLoc = locOpt.get();
 
         Optional<ItemStack> optional = player.getItemInHand(HandTypes.MAIN_HAND);
 
@@ -107,44 +103,93 @@ public final class CreatorModule implements PluginModule {
             return;
         }
 
-        if (optional.get().getItem() != ItemTypes.MAGMA && optional.get().getItem() != ItemTypes.PACKED_ICE) {
-            return;
-        }
-
         ItemStack itemStack = optional.get();
 
-        // 実際に設定するロケーション
-        Location<World> locToSet;
+        if (itemStack.getItem() == ItemTypes.MAGMA || itemStack.getItem() == ItemTypes.PACKED_ICE) {
 
-        if (event instanceof InteractBlockEvent.Primary) {
-            // そのまま左クリックなら、破壊したはずのブロックを位置に登録
-            locToSet = clickLoc;
+            if (player.get(Keys.IS_SNEAKING).orElse(false)) {
+                // 姿勢を低くした状態ならスキップ
+                return;
+            }
 
-        } else if (event instanceof InteractBlockEvent.Secondary) {
-            // 右クリックでブロックを置こうとしたら、その置こうとしたところの位置を登録
+            // なんでnullの可能性があるのか不明だが、isPresentでチェック
+            Optional<Location<World>> locOpt = event.getTargetBlock().getLocation();
 
-            locToSet = clickLoc.getRelative(event.getTargetSide());
-        } else {
-            return;
+            if (!locOpt.isPresent()) {
+                return;
+            }
+
+            Location<World> clickLoc = locOpt.get();
+
+            // 実際に設定するロケーション
+            Location<World> locToSet;
+
+            if (event instanceof InteractBlockEvent.Primary) {
+                // そのまま左クリックなら、破壊したはずのブロックを位置に登録
+                locToSet = clickLoc;
+
+            } else if (event instanceof InteractBlockEvent.Secondary) {
+                // 右クリックでブロックを置こうとしたら、その置こうとしたところの位置を登録
+
+                locToSet = clickLoc.getRelative(event.getTargetSide());
+            } else {
+                return;
+            }
+
+            // アイテムによって第一ポイントか第二ポイントか変える
+            if (itemStack.getItem() == ItemTypes.MAGMA) {
+                // 以前選択していたところがあるならそのブロックをなかったコトにする
+                if (session.firstLoc != null) {
+                    player.resetBlockChange(session.firstLoc.getBlockPosition());
+                }
+
+                // 第一ポイントを決定
+                session.firstLoc = locToSet;
+
+                player.sendMessage(Text.of(TextColors.AQUA, "第1ポイントを設定しました/",
+                        locToSet.getBlockPosition().toString()));
+            } else if (itemStack.getItem() == ItemTypes.PACKED_ICE) {
+                if (session.secondLoc != null) {
+                    player.resetBlockChange(session.secondLoc.getBlockPosition());
+                }
+
+                // 第二ポイントを決定
+                session.secondLoc = locToSet;
+
+                player.sendMessage(Text.of(TextColors.AQUA, "第2ポイントを設定しました/",
+                        locToSet.getBlockPosition().toString()));
+            }
+
+            // その後溶岩と水に変化したように見せかける
+            Sponge.getScheduler().createTaskBuilder().delayTicks(1)
+                    .execute(() -> {
+                        player.sendBlockChange(locToSet.getBlockPosition(),
+                                BlockState.builder().blockType(
+                                        itemStack.getItem().getBlock().map(blockType -> {
+                                            if (blockType == BlockTypes.MAGMA) {
+                                                return BlockTypes.LAVA;
+                                            } else {
+                                                return BlockTypes.WATER;
+                                            }
+                                        }).orElse(BlockTypes.DEADBUSH)
+                                ).build()
+                        );
+                    }).submit(CMcCore.getPlugin());
+
+            event.setCancelled(true);
+
+        } else if (itemStack.getItem() == ItemTypes.WOOL) {
+            if (event instanceof InteractBlockEvent.Secondary) {
+
+                if (session.firstLoc != null) {
+                    player.resetBlockChange(session.firstLoc.getBlockPosition());
+                }
+                if (session.secondLoc != null) {
+                    player.resetBlockChange(session.secondLoc.getBlockPosition());
+                }
+
+                event.setCancelled(true);
+            }
         }
-
-        // アイテムによって第一ポイントか第二ポイントか変える
-        if (itemStack.getItem() == ItemTypes.MAGMA) {
-            // 第一ポイントを決定
-            getOrCreateSession(player).firstLoc = locToSet;
-
-            player.sendMessage(Text.of(TextColors.AQUA, "第1ポイントを設定しました/", locToSet.toString()));
-        } else if (itemStack.getItem() == ItemTypes.PACKED_ICE) {
-            // 第二ポイントを決定
-            getOrCreateSession(player).secondLoc = locToSet;
-
-            player.sendMessage(Text.of(TextColors.AQUA, "第2ポイントを設定しました/", locToSet.toString()));
-        }
-
-        Sponge.getScheduler().createTaskBuilder().delayTicks(1)
-                .execute(() -> {
-                    player.sendBlockChange(locToSet.getBlockPosition(), BlockState.builder()
-                            .blockType(itemStack.getItem().getBlock().orElse(BlockTypes.DEADBUSH)).build());
-                }).submit(CMcCore.getPlugin());
     }
 }

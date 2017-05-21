@@ -7,6 +7,7 @@ import org.spongepowered.api.command.spec.CommandSpec;
 public final class CCmdAreaLoad {
 
     public static final CommandCallable CALLABLE = CommandSpec.builder()
+            .child(CCmdAreaLoadSelected.CALLABLE, "selected", "sel", "s")
             .child(CCmdAreaLoadSpleef.CALLABLE, GameType.SPLEEF.aliases)
             .build();
 

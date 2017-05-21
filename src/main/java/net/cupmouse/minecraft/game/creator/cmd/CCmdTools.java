@@ -37,6 +37,8 @@ public class CCmdTools implements CommandExecutor {
         slot1.set(ItemStack.of(ItemTypes.MAGMA, 1));
         Inventory slot2 = iterator.next();
         slot2.set(ItemStack.of(ItemTypes.PACKED_ICE, 1));
+        Inventory slot3 = iterator.next();
+        slot3.set(ItemStack.of(ItemTypes.WOOL, 1));
 
         return CommandResult.success();
     }

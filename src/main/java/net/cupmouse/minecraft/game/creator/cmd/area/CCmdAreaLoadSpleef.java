@@ -32,12 +32,12 @@ public class CCmdAreaLoadSpleef implements CommandExecutor {
     private Map<String, Function<SpleefRoom, WorldTagArea>> loaders = new HashMap<>();
 
     private CCmdAreaLoadSpleef() {
-        Function<SpleefRoom, WorldTagArea> groundAreaLoader = spleefRoom -> spleefRoom.stageSettings.getGroundArea();
+        Function<SpleefRoom, WorldTagArea> groundAreaLoader = spleefRoom -> spleefRoom.stage.getGroundArea();
         loaders.put("ground", groundAreaLoader);
         loaders.put("g", groundAreaLoader);
 
         Function<SpleefRoom, WorldTagArea> fightingAreaLoader =
-                spleefRoom -> spleefRoom.stageSettings.getFightingArea();
+                spleefRoom -> spleefRoom.stage.getFightingArea();
         loaders.put("fighting", fightingAreaLoader);
         loaders.put("f", fightingAreaLoader);
     }

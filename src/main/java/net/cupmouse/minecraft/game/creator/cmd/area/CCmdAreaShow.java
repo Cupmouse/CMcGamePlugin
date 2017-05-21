@@ -1,5 +1,6 @@
 package net.cupmouse.minecraft.game.creator.cmd.area;
 
+import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
 import net.cupmouse.minecraft.CMcCore;
 import org.spongepowered.api.Sponge;
@@ -12,10 +13,13 @@ import org.spongepowered.api.effect.potion.PotionEffect;
 import org.spongepowered.api.effect.potion.PotionEffectTypes;
 import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.EntityTypes;
+import org.spongepowered.api.entity.living.ArmorStand;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.event.cause.entity.spawn.EntitySpawnCause;
 import org.spongepowered.api.event.cause.entity.spawn.SpawnTypes;
 import org.spongepowered.api.item.FireworkEffect;
+import org.spongepowered.api.item.ItemTypes;
+import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.util.Color;
 import org.spongepowered.api.world.Location;
@@ -27,6 +31,7 @@ import static org.spongepowered.api.command.args.GenericArguments.choices;
 
 public final class CCmdAreaShow {
 
+    private static final Vector3d V3D_HALF = new Vector3d(.5, .5, .5);
     public static final CommandCallable CALLABLE = CommandSpec.builder()
             .child(CCmdAreaShowText.CALLABLE, "text", "t")
             // GLOW
@@ -34,21 +39,17 @@ public final class CCmdAreaShow {
                 Set<Entity> spawnedEntities = new HashSet<>();
 
                 for (Vector3i blockLoc : blockLocSequence.blockLocs) {
-                    Entity fallingBlockEnt = world.createEntity(EntityTypes.FALLING_BLOCK, blockLoc);
-                    ArrayList<PotionEffect> potionEffects = new ArrayList<>();
+                    Entity shulker = world.createEntity(EntityTypes.SHULKER, blockLoc.toDouble().add(V3D_HALF));
 
-                    potionEffects.add(PotionEffect.builder()
-                            .potionType(PotionEffectTypes.GLOWING)
-                            .duration(100000)
-                            .particles(false)
-                            .build());
+                    shulker.offer(Keys.GLOWING, true);
+                    shulker.offer(Keys.INVISIBLE, true);
+                    shulker.offer(Keys.INVULNERABILITY_TICKS, 100000);
+                    shulker.offer(Keys.AI_ENABLED, false);
 
-                    fallingBlockEnt.offer(Keys.POTION_EFFECTS, potionEffects);
-                    fallingBlockEnt.offer(Keys.HAS_GRAVITY, false);
-
-                    EntitySpawnCause spawnCause = EntitySpawnCause.builder().type(SpawnTypes.CUSTOM).build();
-                    world.spawnEntity(fallingBlockEnt, Cause.source(spawnCause).build());
-                    spawnedEntities.add(fallingBlockEnt);
+                    EntitySpawnCause spawnCause = EntitySpawnCause.builder().entity(shulker)
+                            .type(SpawnTypes.CUSTOM).build();
+                    world.spawnEntity(shulker, Cause.source(spawnCause).build());
+                    spawnedEntities.add(shulker);
                 }
 
                 // ２０秒後にすべて削除する
@@ -62,9 +63,13 @@ public final class CCmdAreaShow {
             .child(CCmdAreaShowDefault.callable((world, blockLocSequence) -> {
                 Iterator<Vector3i> iterator = blockLocSequence.blockLocs.iterator();
 
-                Entity armorEnt = world.createEntity(EntityTypes.ARMOR_STAND, iterator.next());
+                Entity armorEnt = world.createEntity(EntityTypes.ARMOR_STAND,
+                        iterator.next().toDouble().add(V3D_HALF));
 
-                EntitySpawnCause spawnCause = EntitySpawnCause.builder().type(SpawnTypes.CUSTOM).build();
+                armorEnt.offer(Keys.HAS_GRAVITY, false);
+
+                EntitySpawnCause spawnCause = EntitySpawnCause.builder().entity(armorEnt)
+                        .type(SpawnTypes.CUSTOM).build();
                 world.spawnEntity(armorEnt, Cause.source(spawnCause).build());
 
                 Task armorStandTask = Sponge.getScheduler().createTaskBuilder()
@@ -74,6 +79,7 @@ public final class CCmdAreaShow {
                             if (!iterator.hasNext()) {
                                 armorEnt.remove();
                                 task.cancel();
+                                return;
                             }
 
                             armorEnt.setLocation(new Location<World>(world, iterator.next()));
@@ -84,14 +90,15 @@ public final class CCmdAreaShow {
             }), "armorstand", "a")
             // Fireworks
             .child(CCmdAreaShowDefault.callable((world, blockLocSequence) -> {
-                for (Vector3i blockLoc : blockLocSequence.blockLocs) {
-                    Entity fireworkEnt = world.createEntity(EntityTypes.FIREWORK, blockLoc);
+                for (Vector3i position : blockLocSequence.blockLocs) {
+                    Entity fireworkEnt = world.createEntity(EntityTypes.FIREWORK, position.toDouble().add(V3D_HALF));
                     FireworkEffect fireworkEffect = FireworkEffect.builder().color(Color.GREEN).trail(true).build();
                     ArrayList<FireworkEffect> effects = new ArrayList<>();
                     effects.add(fireworkEffect);
 
                     fireworkEnt.offer(Keys.FIREWORK_EFFECTS, effects);
-                    EntitySpawnCause spawnCause = EntitySpawnCause.builder().type(SpawnTypes.CUSTOM).build();
+                    EntitySpawnCause spawnCause = EntitySpawnCause.builder().entity(fireworkEnt)
+                            .type(SpawnTypes.CUSTOM).build();
                     world.spawnEntity(fireworkEnt, Cause.source(spawnCause).build());
                 }
             }), "fireworks", "f")

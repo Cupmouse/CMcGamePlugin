@@ -8,6 +8,7 @@ import net.cupmouse.minecraft.PongPingModule;
 import net.cupmouse.minecraft.beam.BeamModule;
 import net.cupmouse.minecraft.db.DatabaseModule;
 import net.cupmouse.minecraft.game.cmd.CommandModule;
+import net.cupmouse.minecraft.game.creator.CreatorModule;
 import net.cupmouse.minecraft.game.data.user.GameUserDataModule;
 import net.cupmouse.minecraft.game.spleef.SpleefManager;
 import net.cupmouse.minecraft.game.spleef.SpleefRoom;
@@ -20,6 +21,7 @@ import org.spongepowered.api.config.ConfigDir;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.game.state.GamePreInitializationEvent;
+import org.spongepowered.api.event.game.state.GameStoppedServerEvent;
 import org.spongepowered.api.plugin.Plugin;
 
 import java.io.IOException;
@@ -52,7 +54,8 @@ public class CMcGamePlugin {
                 this.userm = new GameUserDataModule(),
                 new BeamModule(),
                 this.spleef = new SpleefManager(),
-                new CommandModule()
+                new CommandModule(),
+                new CreatorModule()
         };
 
         core = new CMcCore(this, logger, configDir, moduleArray);
@@ -72,13 +75,15 @@ public class CMcGamePlugin {
 
     @Listener
     public void onPreInitialization(GamePreInitializationEvent event) {
+        core.onPreInitialization(event);
+
         this.configGamePath = CMcCore.getConfigDir().resolve("game.conf");
 
         // 設定ファイルが存在しない場合、jarファイル内のアセットフォルダからコピーする。
         if (!Files.exists(configGamePath)) {
             try {
                 Files.createDirectories(CMcCore.getConfigDir());
-                Sponge.getAssetManager().getAsset(this, "common.conf").get().copyToFile(configGamePath);
+                Sponge.getAssetManager().getAsset(this, "game.conf").get().copyToFile(configGamePath);
             } catch (IOException e) {
                 e.printStackTrace();
                 stopEternally();
@@ -95,9 +100,19 @@ public class CMcGamePlugin {
             stopEternally();
         }
 
-
-
         CMcCore.getLogger().info("ゲーム設定を読み込みました！");
+
+        core.onPrePostInitialization();
+    }
+
+    @Listener
+    public void onStoppedServer(GameStoppedServerEvent event) {
+        try {
+            this.gameConfigLoader.save(gameConfigNode);
+        } catch (IOException e) {
+            e.printStackTrace();
+            CMcCore.getLogger().warn("設定が保存できませんでした。[ゲーム設定]");
+        }
     }
 
     public static Optional<SpleefRoom> getRoomPlayerJoin(Player player) {

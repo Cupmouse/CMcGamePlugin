@@ -22,7 +22,7 @@ import static net.cupmouse.minecraft.game.creator.cmd.CCmdArguments.gameType;
 import static org.spongepowered.api.command.args.GenericArguments.allOf;
 import static org.spongepowered.api.command.args.GenericArguments.onlyOne;
 import static org.spongepowered.api.command.args.GenericArguments.string;
-
+// TODO
 public class CCmdAreaSet implements CommandExecutor {
 
     public static final CommandCallable CALLABLE = CommandSpec.builder()
@@ -58,13 +58,13 @@ public class CCmdAreaSet implements CommandExecutor {
             SpleefRoom spleefRoom = roomOpt.get();
 
             switch (areaId) {
-                case "fighing":
+                case "fighting":
                 case "f":
-                    spleefRoom.stageSettings.setFightingArea(loadedArea);
+                    spleefRoom.stage.setFightingArea(loadedArea);
                     break;
                 case "ground":
                 case "g":
-                    spleefRoom.stageSettings.setGroundArea(loadedArea);
+                    spleefRoom.stage.setGroundArea(loadedArea);
                     break;
                 default:
                     throw new CommandException(

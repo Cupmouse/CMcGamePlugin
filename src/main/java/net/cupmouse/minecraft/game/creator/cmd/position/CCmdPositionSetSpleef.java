@@ -27,7 +27,7 @@ public class CCmdPositionSetSpleef implements CommandExecutor {
 
     public static final CommandCallable CALLABLE = CommandSpec.builder()
             .arguments(onlyOne(spleefStageId(Text.of("stage_id"))),
-                    onlyOne(string(Text.of("area_id"))))
+                    onlyOne(string(Text.of("position_id"))))
             .executor(new CCmdPositionSetSpleef())
             .build();
 
@@ -76,7 +76,11 @@ public class CCmdPositionSetSpleef implements CommandExecutor {
                 spawnRoc = ((WorldTagLocation) loadedPos).convertRocation();
             }
 
-            spleefRoom.stageSettings.getSpawnRocations().set(number, spawnRoc);
+            if (spleefRoom.stage.getSpawnRocations().size() == number) {
+                spleefRoom.stage.getSpawnRocations().add(spawnRoc);
+            } else {
+                spleefRoom.stage.getSpawnRocations().set(number, spawnRoc);
+            }
         } else {
             DualConsumer<SpleefRoom, WorldTagPosition> setter = setters.get(positionId);
 

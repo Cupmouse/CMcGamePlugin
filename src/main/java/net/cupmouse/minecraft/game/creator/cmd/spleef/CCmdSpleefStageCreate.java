@@ -2,13 +2,12 @@ package net.cupmouse.minecraft.game.creator.cmd.spleef;
 
 import net.cupmouse.minecraft.game.CMcGamePlugin;
 import net.cupmouse.minecraft.game.spleef.SpleefRoom;
-import net.cupmouse.minecraft.game.spleef.SpleefStageSettings;
+import net.cupmouse.minecraft.game.spleef.SpleefStage;
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.CommandContext;
-import org.spongepowered.api.command.args.GenericArguments;
 import org.spongepowered.api.command.spec.CommandExecutor;
 import org.spongepowered.api.command.spec.CommandSpec;
 import org.spongepowered.api.text.Text;
@@ -23,8 +22,8 @@ import static org.spongepowered.api.command.args.GenericArguments.string;
 public class CCmdSpleefStageCreate implements CommandExecutor {
 
     public static final CommandCallable CALLABLE = CommandSpec.builder()
-            .arguments(onlyOne(string(Text.of("stage_id"))))
-            .arguments(onlyOne(integer(Text.of("room_number"))))
+            .arguments(onlyOne(string(Text.of("stage_id"))),
+                    onlyOne(integer(Text.of("room_number"))))
             .executor(new CCmdSpleefStageCreate())
             .build();
 
@@ -45,7 +44,7 @@ public class CCmdSpleefStageCreate implements CommandExecutor {
             throw new CommandException(Text.of(TextColors.RED, "✗そのルームIDのルームはすでに存在します。"));
         }
 
-        SpleefRoom spleefRoom = new SpleefRoom(SpleefStageSettings.creator());
+        SpleefRoom spleefRoom = new SpleefRoom(SpleefStage.creator());
 
         CMcGamePlugin.getSpleef().addRoom(stageId, roomNumber, spleefRoom);
 

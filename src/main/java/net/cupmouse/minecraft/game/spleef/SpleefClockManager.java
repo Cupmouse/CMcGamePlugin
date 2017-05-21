@@ -42,7 +42,7 @@ public final class SpleefClockManager implements Runnable {
         this.prevTickTimeMilli = System.currentTimeMillis() - 1;
 
         this.task = Sponge.getScheduler().createTaskBuilder()
-                .interval(1, TimeUnit.SECONDS)
+                .intervalTicks(1)
                 .execute(this).submit(CMcCore.getPlugin());
     }
 
@@ -81,13 +81,14 @@ public final class SpleefClockManager implements Runnable {
 
         // 前回からいくら時間が経過したか確認する
         long currentTimeMillis = System.currentTimeMillis();
-        long elapsedMilliAfterPrevTick = prevTickTimeMilli - currentTimeMillis;
+        long elapsedMilliAfterPrevTick = currentTimeMillis - prevTickTimeMilli;
         CMcCore.getLogger().debug(Long.toString(elapsedMilliAfterPrevTick));
 
         // 一秒以上の判定をする。
         if (elapsedMilliAfterPrevTick >= 1000) {
             // 経過した秒だけ実行する。
             for (int i = 0; i < elapsedMilliAfterPrevTick / 1000; i++) {
+                CMcCore.getLogger().debug("DO/" + i);
                 clock.clockTick(room, ctickLeft);
 
                 // 1減らす

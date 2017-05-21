@@ -1,20 +1,18 @@
 package net.cupmouse.minecraft.game.cmd;
 
 import net.cupmouse.minecraft.game.CMcGamePlugin;
-import net.cupmouse.minecraft.game.manager.GameRoomException;
+import net.cupmouse.minecraft.game.manager.GameException;
 import net.cupmouse.minecraft.game.spleef.SpleefRoom;
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.CommandContext;
-import org.spongepowered.api.command.args.GenericArguments;
 import org.spongepowered.api.command.spec.CommandExecutor;
 import org.spongepowered.api.command.spec.CommandSpec;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
-import sun.security.pkcs.SignerInfo;
 
 import java.util.Optional;
 
@@ -46,8 +44,8 @@ public class CmdSpleefJoin implements CommandExecutor {
 
             try {
                 spleefRoom.tryJoinRoom(player);
-            } catch (GameRoomException e) {
-                throw new CommandException(Text.of(TextColors.RED, "✗参加できませんでした。"), e, false);
+            } catch (GameException e) {
+                throw new CommandException(Text.of(TextColors.RED, "✗参加できませんでした。", e.getText()), e, false);
             }
 
             return CommandResult.success();

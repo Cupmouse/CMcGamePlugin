@@ -12,6 +12,8 @@ public final class CreatorSessionInfo {
 
     public WorldTagPosition loadedPos;
 
+    public boolean selectionEnabled;
+
     public Location<World> firstLoc;
 
     public Location<World> secondLoc;

@@ -2,7 +2,6 @@ package net.cupmouse.minecraft.game.creator.cmd.spleef;
 
 import net.cupmouse.minecraft.game.creator.cmd.CCmdArguments;
 import net.cupmouse.minecraft.game.spleef.SpleefRoom;
-import net.cupmouse.minecraft.util.CEThrowableConsumer;
 import net.cupmouse.minecraft.util.CEThrowableDualConsumer;
 import net.cupmouse.minecraft.util.CEThrowableFunction;
 import org.spongepowered.api.command.CommandCallable;
@@ -10,7 +9,6 @@ import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.CommandContext;
-import org.spongepowered.api.command.args.GenericArguments;
 import org.spongepowered.api.command.spec.CommandExecutor;
 import org.spongepowered.api.command.spec.CommandSpec;
 import org.spongepowered.api.text.Text;
@@ -18,7 +16,6 @@ import org.spongepowered.api.text.format.TextColors;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 import static org.spongepowered.api.command.args.GenericArguments.onlyOne;
 import static org.spongepowered.api.command.args.GenericArguments.optional;
@@ -40,12 +37,12 @@ public class CCmdSpleefStageOption implements CommandExecutor {
         // GETTER
 
         CEThrowableFunction<SpleefRoom, Object> defaultGameTimeGetter =
-                spleefRoom -> spleefRoom.stageSettings.getDefaultGameTime();
+                spleefRoom -> spleefRoom.stage.getDefaultGameTime();
         this.getters.put("defaultGameTime", defaultGameTimeGetter);
         this.getters.put("dgt", defaultGameTimeGetter);
 
         CEThrowableFunction<SpleefRoom, Object> minimumPlayerCountGetter =
-                spleefRoom -> spleefRoom.stageSettings.getMinimumPlayerCount();
+                spleefRoom -> spleefRoom.stage.getMinimumPlayerCount();
         this.getters.put("minimumPlayerCount", minimumPlayerCountGetter);
         this.getters.put("mpc", minimumPlayerCountGetter);
 
@@ -57,7 +54,7 @@ public class CCmdSpleefStageOption implements CommandExecutor {
                 throw new CommandException(Text.of(TextColors.RED, "✗1以上を指定してください。"));
             }
 
-            spleefRoom.stageSettings.setDefaultGameTime(integer);
+            spleefRoom.stage.setDefaultGameTime(integer);
         });
         this.setters.put("defaultGameTime", defaultGameTimeSetter);
         this.setters.put("dgt", defaultGameTimeSetter);
@@ -67,7 +64,7 @@ public class CCmdSpleefStageOption implements CommandExecutor {
                 throw new CommandException(Text.of(TextColors.RED, "✗2以上を指定してください。"), false);
             }
 
-            spleefRoom.stageSettings.setMinimumPlayerCount(integer);
+            spleefRoom.stage.setMinimumPlayerCount(integer);
         });
 
         this.setters.put("minimumPlayerCount", minimumPlayerCountSetter);

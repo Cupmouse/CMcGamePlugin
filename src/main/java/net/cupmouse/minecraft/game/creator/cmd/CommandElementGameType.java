@@ -41,7 +41,7 @@ public final class CommandElementGameType extends CommandElement {
             GameType[] values = GameType.values();
 
             for (GameType value : values) {
-                this.gametypeStringList.add(value.name());
+                this.gametypeStringList.addAll(value.aliases);
             }
         }
 

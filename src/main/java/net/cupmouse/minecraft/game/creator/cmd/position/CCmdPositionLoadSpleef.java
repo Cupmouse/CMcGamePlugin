@@ -47,7 +47,7 @@ public class CCmdPositionLoadSpleef implements CommandExecutor {
                         , false);
             }
 
-            session.loadedPos = spleefRoom.stageSettings.getSpawnRocations().get(number);
+            session.loadedPos = spleefRoom.stage.getSpawnRocations().get(number);
         } else {
             // TODO
         }

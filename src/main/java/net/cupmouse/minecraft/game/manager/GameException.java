@@ -3,20 +3,20 @@ package net.cupmouse.minecraft.game.manager;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.util.TextMessageException;
 
-public class GameRoomException extends TextMessageException {
+public class GameException extends TextMessageException {
 
-    public GameRoomException() {
+    public GameException() {
     }
 
-    public GameRoomException(Text message) {
+    public GameException(Text message) {
         super(message);
     }
 
-    public GameRoomException(Text message, Throwable throwable) {
+    public GameException(Text message, Throwable throwable) {
         super(message, throwable);
     }
 
-    public GameRoomException(Throwable throwable) {
+    public GameException(Throwable throwable) {
         super(throwable);
     }
 }

@@ -7,12 +7,10 @@ import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.CommandContext;
-import org.spongepowered.api.command.args.GenericArguments;
 import org.spongepowered.api.command.spec.CommandExecutor;
 import org.spongepowered.api.command.spec.CommandSpec;
 import org.spongepowered.api.service.pagination.PaginationList;
 import org.spongepowered.api.text.Text;
-import org.spongepowered.api.text.action.ClickAction;
 import org.spongepowered.api.text.action.TextActions;
 import org.spongepowered.api.text.format.TextColor;
 import org.spongepowered.api.text.format.TextColors;
@@ -35,7 +33,7 @@ public class CmdSpleefList implements CommandExecutor {
 
         for (SpleefRoom spleefRoom : CMcGamePlugin.getSpleef().getRooms()) {
             int playersInRoom = spleefRoom.getSpleefPlayerPlaying().size();
-            int maxPlayersInRoom = spleefRoom.stageSettings.getSpawnRocations().size();
+            int maxPlayersInRoom = spleefRoom.stage.getSpawnRocations().size();
             float occupRate = ((float) playersInRoom) / maxPlayersInRoom;
 
             TextColor color;
@@ -54,7 +52,7 @@ public class CmdSpleefList implements CommandExecutor {
             }
 
             Text joinButton = Text.builder("[参加]")
-                    .onClick(TextActions.runCommand("join " + spleefRoom.roomNumber)).build();
+                    .onClick(TextActions.runCommand("/join " + spleefRoom.roomNumber)).build();
             texts.add(Text.of(color, TextStyles.BOLD, "(" + playersInRoom + "/" + maxPlayersInRoom + ")",
                     TextStyles.RESET, " ", spleefRoom.roomNumber, " | ", joinButton));
         }

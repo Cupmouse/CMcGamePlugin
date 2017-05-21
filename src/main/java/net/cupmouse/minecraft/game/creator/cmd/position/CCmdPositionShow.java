@@ -89,7 +89,7 @@ public final class CCmdPositionShow implements CommandExecutor {
                 ((ArmorStand) armorEnt).setHelmet(ItemStack.of(ItemTypes.LEATHER_HELMET, 1));
             }
 
-            EntitySpawnCause spawnCause = EntitySpawnCause.builder().type(SpawnTypes.CUSTOM).build();
+            EntitySpawnCause spawnCause = EntitySpawnCause.builder().entity(armorEnt).type(SpawnTypes.CUSTOM).build();
 
             world.spawnEntity(armorEnt, Cause.source(spawnCause).build());
 

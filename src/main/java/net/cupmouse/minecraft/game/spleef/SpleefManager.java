@@ -1,16 +1,24 @@
 package net.cupmouse.minecraft.game.spleef;
 
 import com.google.common.reflect.TypeToken;
+import net.cupmouse.minecraft.game.CMcGamePlugin;
 import net.cupmouse.minecraft.game.manager.GameManager;
+import net.cupmouse.minecraft.game.manager.GameException;
+import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.objectmapping.serialize.TypeSerializerCollection;
 import ninja.leaping.configurate.objectmapping.serialize.TypeSerializers;
+import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.format.TextColors;
 
 import java.util.*;
 
 public final class SpleefManager implements GameManager<SpleefRoom> {
 
+    private Map<String, SpleefStage> stages = new HashMap<>();
+    private Map<SpleefStage, String> stageIds = new HashMap<>();
+
     private Map<Integer, SpleefRoom> rooms = new HashMap<>();
-    private Map<String, SpleefRoom> roomsStageId = new HashMap<>();
+    private Map<SpleefStage, SpleefRoom> roomStageMap = new HashMap<>();
 
     @Override
     public Collection<SpleefRoom> getRooms() {
@@ -27,31 +35,75 @@ public final class SpleefManager implements GameManager<SpleefRoom> {
         // シリアライザ－登録
         TypeSerializerCollection defaultSerializers = TypeSerializers.getDefaultSerializers();
 
-        defaultSerializers.registerType(TypeToken.of(SpleefStageSettings.class), new SpleefStageSettings.Serializer());
+        defaultSerializers.registerType(TypeToken.of(SpleefStage.class), new SpleefStage.Serializer());
 
-        // TODO ルームのロード
+        // ステージのロード
+        CommentedConfigurationNode nodeStages = CMcGamePlugin.getGameConfigNode().getNode("spleef", "stages");
+
+        Map<Object, ? extends CommentedConfigurationNode> childrenMap = nodeStages.getChildrenMap();
+
+        for (Map.Entry<Object, ? extends CommentedConfigurationNode> entry : childrenMap.entrySet()) {
+            SpleefStage stageSettings = entry.getValue().getValue(TypeToken.of(SpleefStage.class));
+
+            addStage((String) entry.getKey(), stageSettings);
+        }
     }
 
-    public Optional<SpleefRoom> getRoomOfStageId(String stageId) {
-        return Optional.ofNullable(rooms.get(stageId));
+    public void addStage(String stageId, SpleefStage stage) throws GameException {
+        if (stages.containsKey(stageId)) {
+            throw new GameException(Text.of(TextColors.RED, "✗ステージIDが重複しています。"));
+        }
+
+        this.stages.put(stageId, stage);
+        this.stageIds.put(stage, stageId);
+    }
+
+    @Override
+    public void onStoppingServerProxy() throws Exception {
+        CommentedConfigurationNode nodeStages = CMcGamePlugin.getGameConfigNode().getNode("spleef", "stages");
+
+        for (Map.Entry<String, SpleefStage> entry : stages.entrySet()) {
+            nodeStages.getNode(entry.getKey()).setValue(TypeToken.of(SpleefStage.class), entry.getValue());
+        }
+    }
+
+    public Optional<SpleefStage> getStage(String stageId) {
     }
 
     public Set<String> getStageIds() {
-        return roomsStageId.keySet();
+        return stages.keySet();
     }
 
-    public void addRoom(String stageId, int roomNumber, SpleefRoom spleefRoom) {
+    public Optional<SpleefRoom> getRoomOfStageId(String stageId) {
+        SpleefStage stage = stages.get(stageId);
+
+        roomStageMap
+
+        return Optional.ofNullable(roomStageMap.get(stageId));
+    }
+
+    public void addRoom(int roomNumber, SpleefRoom spleefRoom) throws GameException {
+        String stageId = stageIds.get(spleefRoom.stage);
+
+        if (stageId == null) {
+            throw new GameException(Text.of(TextColors.RED, "✗登録されていないステージです。"));
+        }
+
         this.rooms.put(roomNumber, spleefRoom);
-        this.roomsStageId.put(stageId, spleefRoom);
+        this.roomStageMap.put(spleefRoom.stage, spleefRoom);
     }
 
-    public void removeRoom(String stageId) {
-        SpleefRoom remove = this.roomsStageId.remove(stageId);
+    public void removeRoom(int roomNumber) {
+        SpleefRoom removed = rooms.remove(roomNumber);
 
-        if (remove == null) {
+        if (removed == null) {
             return;
         }
 
-        this.rooms.remove(remove.roomNumber);
+        // 部屋を閉じる
+        removed.closeRoom();
+
+        this.rooms.remove(roomNumber);
+        this.roomStageMap.remove(removed.stage);
     }
 }
