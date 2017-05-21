@@ -1,4 +1,4 @@
-package net.cupmouse.minecraft.game.creator.command;
+package net.cupmouse.minecraft.game.creator.cmd.position;
 
 import net.cupmouse.minecraft.CMcCore;
 import net.cupmouse.minecraft.game.creator.CreatorModule;

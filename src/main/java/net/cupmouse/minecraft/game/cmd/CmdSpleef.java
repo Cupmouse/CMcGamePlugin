@@ -1,12 +1,12 @@
-package net.cupmouse.minecraft.game.creator.command;
+package net.cupmouse.minecraft.game.cmd;
 
-import net.cupmouse.minecraft.game.GameType;
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.spec.CommandSpec;
 
-public class CCmdPositionSet {
+public class CmdSpleef {
 
     public static final CommandCallable CALLABLE = CommandSpec.builder()
-            .child(CCmdPositionSetSpleef.CALLABLE, GameType.SPLEEF.aliases)
+            .child(CmdSpleefJoin.CALLABLE, "join", "j")
             .build();
+
 }

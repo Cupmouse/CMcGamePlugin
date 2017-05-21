@@ -14,11 +14,11 @@ import java.util.stream.Collectors;
 
 public class SpleefStageSettings {
 
-    protected WorldTagArea groundArea;
-    protected WorldTagArea fightingArea;
-    protected List<WorldTagRocation> spawnRocations;
-    protected int defaultGameTime;
-    protected int minimumPlayerCount;
+    private WorldTagArea groundArea;
+    private WorldTagArea fightingArea;
+    private List<WorldTagRocation> spawnRocations;
+    private int defaultGameTime;
+    private int minimumPlayerCount;
 
     private SpleefStageSettings(WorldTagArea groundArea, WorldTagArea fightingArea,
                                 List<WorldTagRocation> spawnRocations, int defaultGameTime, int minimumPlayerCount) {
@@ -38,7 +38,7 @@ public class SpleefStageSettings {
         // 変更可能なリスト
         SpleefStageSettings settings = new SpleefStageSettings(
                 null, null, new ArrayList<>(),
-                30, 1);
+                30, 2);
 
         return settings;
     }

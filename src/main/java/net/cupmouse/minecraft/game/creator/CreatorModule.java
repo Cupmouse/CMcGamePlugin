@@ -3,9 +3,15 @@ package net.cupmouse.minecraft.game.creator;
 import net.cupmouse.minecraft.CMcCore;
 import net.cupmouse.minecraft.PluginModule;
 import net.cupmouse.minecraft.game.CMcGamePlugin;
-import net.cupmouse.minecraft.game.creator.command.CCmdArea;
-import net.cupmouse.minecraft.game.creator.command.CCmdPosition;
+import net.cupmouse.minecraft.game.GameType;
+import net.cupmouse.minecraft.game.creator.cmd.CCmdTools;
+import net.cupmouse.minecraft.game.creator.cmd.area.CCmdArea;
+import net.cupmouse.minecraft.game.creator.cmd.position.CCmdPosition;
+import net.cupmouse.minecraft.game.creator.cmd.spleef.CCmdSpleef;
+import net.cupmouse.minecraft.game.creator.cmd.spleef.CCmdSpleefStage;
 import org.spongepowered.api.Sponge;
+import org.spongepowered.api.block.BlockState;
+import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.spec.CommandSpec;
 import org.spongepowered.api.data.key.Keys;
@@ -18,6 +24,7 @@ import org.spongepowered.api.event.network.ClientConnectionEvent;
 import org.spongepowered.api.item.ItemTypes;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
@@ -50,7 +57,9 @@ public final class CreatorModule implements PluginModule {
                 .description(Text.of(TEXT_DEFAULT_DESCRIPTION))
                 .permission("cmc.game.creator")
                 .child(CCmdArea.CALLABLE, "area", "a")
-                .child(CCmdPosition.CALLABLE, "location", "loc", "l")
+                .child(CCmdPosition.CALLABLE, "position", "pos", "p")
+                .child(CCmdTools.CALLABLE, "tool", "tools", "t")
+                .child(CCmdSpleef.CALLABLE, GameType.SPLEEF.aliases)
                 .build(), "gc");
 
         CMcCore.getLogger().warn("=========================================");
@@ -94,34 +103,48 @@ public final class CreatorModule implements PluginModule {
 
         Optional<ItemStack> optional = player.getItemInHand(HandTypes.MAIN_HAND);
 
-        if (optional.isPresent()) {
-            ItemStack itemStack = optional.get();
-
-            if (event instanceof InteractBlockEvent.Primary) {
-                // そのまま左クリックなら、破壊したはずのブロックを位置に登録
-
-                if (itemStack.getItem() == ItemTypes.MAGMA) {
-                    // 第一ポイントを決定
-                    getOrCreateSession(player).firstLoc = clickLoc;
-                } else if (itemStack.getItem() == ItemTypes.PACKED_ICE) {
-                    // 第二ポイントを決定
-                    getOrCreateSession(player).secondLoc = clickLoc;
-                }
-            } else if (event instanceof InteractBlockEvent.Secondary) {
-                // 右クリックでブロックを置こうとしたら、その置こうとしたところの位置を登録
-
-                Location<World> placeLoc = clickLoc.getRelative(event.getTargetSide());
-
-                if (itemStack.getItem() == ItemTypes.MAGMA) {
-                    // 第一ポイントを決定
-                    getOrCreateSession(player).firstLoc = placeLoc;
-
-                } else if (itemStack.getItem() == ItemTypes.PACKED_ICE) {
-                    // 第二ポイントを決定
-                    getOrCreateSession(player).secondLoc = placeLoc;
-                }
-            }
+        if (!optional.isPresent()) {
+            return;
         }
-        // TODO fakeblock とメッセージ
+
+        if (optional.get().getItem() != ItemTypes.MAGMA && optional.get().getItem() != ItemTypes.PACKED_ICE) {
+            return;
+        }
+
+        ItemStack itemStack = optional.get();
+
+        // 実際に設定するロケーション
+        Location<World> locToSet;
+
+        if (event instanceof InteractBlockEvent.Primary) {
+            // そのまま左クリックなら、破壊したはずのブロックを位置に登録
+            locToSet = clickLoc;
+
+        } else if (event instanceof InteractBlockEvent.Secondary) {
+            // 右クリックでブロックを置こうとしたら、その置こうとしたところの位置を登録
+
+            locToSet = clickLoc.getRelative(event.getTargetSide());
+        } else {
+            return;
+        }
+
+        // アイテムによって第一ポイントか第二ポイントか変える
+        if (itemStack.getItem() == ItemTypes.MAGMA) {
+            // 第一ポイントを決定
+            getOrCreateSession(player).firstLoc = locToSet;
+
+            player.sendMessage(Text.of(TextColors.AQUA, "第1ポイントを設定しました/", locToSet.toString()));
+        } else if (itemStack.getItem() == ItemTypes.PACKED_ICE) {
+            // 第二ポイントを決定
+            getOrCreateSession(player).secondLoc = locToSet;
+
+            player.sendMessage(Text.of(TextColors.AQUA, "第2ポイントを設定しました/", locToSet.toString()));
+        }
+
+        Sponge.getScheduler().createTaskBuilder().delayTicks(1)
+                .execute(() -> {
+                    player.sendBlockChange(locToSet.getBlockPosition(), BlockState.builder()
+                            .blockType(itemStack.getItem().getBlock().orElse(BlockTypes.DEADBUSH)).build());
+                }).submit(CMcCore.getPlugin());
     }
 }

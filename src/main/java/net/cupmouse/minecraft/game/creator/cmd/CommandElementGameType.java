@@ -1,4 +1,4 @@
-package net.cupmouse.minecraft.game.creator.command;
+package net.cupmouse.minecraft.game.creator.cmd;
 
 import net.cupmouse.minecraft.game.GameType;
 import org.spongepowered.api.command.CommandSource;

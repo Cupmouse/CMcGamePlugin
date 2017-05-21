@@ -1,9 +1,7 @@
-package net.cupmouse.minecraft.game.creator.command;
+package net.cupmouse.minecraft.game.creator.cmd.area;
 
 import net.cupmouse.minecraft.game.creator.CreatorModule;
 import net.cupmouse.minecraft.game.creator.CreatorSessionInfo;
-import net.cupmouse.minecraft.worlds.BlockLocSequence;
-import net.cupmouse.minecraft.worlds.WorldTagArea;
 import net.cupmouse.minecraft.worlds.WorldTagAreaSquare;
 import net.cupmouse.minecraft.worlds.WorldTagModule;
 import org.spongepowered.api.command.CommandCallable;
@@ -11,7 +9,6 @@ import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.CommandContext;
-import org.spongepowered.api.command.args.GenericArguments;
 import org.spongepowered.api.command.spec.CommandExecutor;
 import org.spongepowered.api.command.spec.CommandSpec;
 import org.spongepowered.api.text.Text;

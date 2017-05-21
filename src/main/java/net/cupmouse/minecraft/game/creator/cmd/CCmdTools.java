@@ -1,4 +1,4 @@
-package net.cupmouse.minecraft.game.creator.command;
+package net.cupmouse.minecraft.game.creator.cmd;
 
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;

@@ -1,4 +1,4 @@
-package net.cupmouse.minecraft.game.creator.command;
+package net.cupmouse.minecraft.game.creator.cmd.position;
 
 import net.cupmouse.minecraft.game.creator.CreatorModule;
 import net.cupmouse.minecraft.game.spleef.SpleefRoom;
@@ -19,7 +19,7 @@ import org.spongepowered.api.text.format.TextColors;
 import java.util.HashMap;
 import java.util.Map;
 
-import static net.cupmouse.minecraft.game.creator.command.CCmdArguments.spleefStageId;
+import static net.cupmouse.minecraft.game.creator.cmd.CCmdArguments.spleefStageId;
 import static org.spongepowered.api.command.args.GenericArguments.onlyOne;
 import static org.spongepowered.api.command.args.GenericArguments.string;
 

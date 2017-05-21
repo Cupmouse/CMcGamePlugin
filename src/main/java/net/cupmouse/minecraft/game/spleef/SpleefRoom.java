@@ -1,7 +1,9 @@
 package net.cupmouse.minecraft.game.spleef;
 
 import net.cupmouse.minecraft.game.manager.GameRoom;
+import net.cupmouse.minecraft.game.manager.GameRoomException;
 import net.cupmouse.minecraft.game.manager.GameRoomState;
+import net.cupmouse.minecraft.worlds.WorldTagRocation;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.item.ItemTypes;
 import org.spongepowered.api.item.inventory.ItemStack;
@@ -11,7 +13,10 @@ import org.spongepowered.api.text.channel.MessageReceiver;
 import org.spongepowered.api.text.channel.MutableMessageChannel;
 import org.spongepowered.api.text.channel.impl.SimpleMutableMessageChannel;
 import org.spongepowered.api.text.chat.ChatType;
+import org.spongepowered.api.text.chat.ChatTypes;
 import org.spongepowered.api.text.format.TextColors;
+import org.spongepowered.api.text.format.TextStyle;
+import org.spongepowered.api.text.format.TextStyles;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -41,8 +46,9 @@ public final class SpleefRoom implements GameRoom {
     private SpleefClockManager clock;
     private GameRoomState state;
 
-    public SpleefRoom(int roomNumber, SpleefStageSettings stageSettings) {
-        this.roomNumber = roomNumber;
+    public SpleefRoom(SpleefStageSettings stageSettings) {
+        // TODO number
+        this.roomNumber = 0;
         this.stageSettings = stageSettings;
         this.messageChannel = new SpleefRoomMessageChannel();
 
@@ -83,51 +89,69 @@ public final class SpleefRoom implements GameRoom {
     // 外部向け処理
 
     @Override
-    public boolean tryJoinRoom(Player player) {
+    public void tryJoinRoom(Player player) throws GameRoomException {
+        // TODO TextMessageExceptionでもいいのでは？
         if (state != GameRoomState.WAITING_PLAYERS) {
             // プレイヤーを募集していないので無理
-            return false;
+            throw new GameRoomException(Text.of(""));
         }
         if (isPlayerPlaying(player)) {
             // すでにプレイ中
-            return false;
+            throw new GameRoomException(
+                    Text.of(TextColors.RED, "✗あなたはすでに参加しています。"));
         }
-        if (stageSettings.spawnRocations.size() >= players.size()) {
+        if (stageSettings.getSpawnRocations().size() >= players.size()) {
             // ステージのプレイ最大人数を超えているので参加不可
-            return false;
+            throw new GameRoomException(
+                    Text.of(TextColors.RED, "✗部屋の最大人数に達しています。参加できませんでした。"));
         }
 
         // プレイヤーを参加させる
-        int spawnId = stageSettings.spawnRocations.size();
+        int spawnId = stageSettings.getSpawnRocations().size();
+        // テレポートできるか確かめてから
+        WorldTagRocation spawnRoc = stageSettings.getSpawnRocations().get(spawnId);
+        if (!spawnRoc.teleportHere(player)) {
+            throw new GameRoomException(
+                    Text.of(TextColors.RED, "✗テレポートできませんでした。参加できませんでした。"));
+        }
+
         players.put(spawnId, new SpleefPlayer(player, spawnId));
+
         // TODO メッセージチャンネルをセットするが、解除を忘れないように
         player.setMessageChannel(messageChannel);
 
+        // 全員にプレイヤーが入室したことを通知
+        messageChannel.send(
+                Text.of(TextColors.AQUA, player.getName(), "が入室しました(" + players.size() + "/"
+                        + stageSettings.getMinimumPlayerCount() + "-"
+                        + stageSettings.getSpawnRocations().size() + ")")
+                , ChatTypes.SYSTEM);
+
         // プレイヤー人数が、ちょうど最低人数に達したら、プレイヤー待ちカウントダウンを開始する。
-        if (players.size() == stageSettings.minimumPlayerCount) {
+        if (players.size() == stageSettings.getMinimumPlayerCount()) {
             startCountdown();
         }
-
-        return false;
     }
 
 
     @Override
-    public boolean tryLeaveRoom(Player player) {
+    public void tryLeaveRoom(Player player) throws GameRoomException {
         Optional<SpleefPlayer> optional = getSpleefPlayer(player);
 
         // プレイヤーはこの部屋にいて、削除されたか。
         if (optional.isPresent() && players.values().remove(optional.get())) {
+            messageChannel.send(
+                    Text.of(TextColors.GRAY, player.getName(), "が退出しました(" + players.size() + "/"
+                            + stageSettings.getMinimumPlayerCount() + "-"
+                            + stageSettings.getSpawnRocations().size() + ")")
+                    , ChatTypes.SYSTEM);
 
             if (players.size() < 2) {
                 // プレイヤーが足りないならゲームを終了する
                 abortGame();
             }
-
-            return true;
         } else {
-
-            return false;
+            throw new GameRoomException(Text.of(TextColors.RED, "✗部屋へ入室していません。"));
         }
     }
 
@@ -144,7 +168,6 @@ public final class SpleefRoom implements GameRoom {
      */
     public void finishGame() {
         stopGame();
-        messageChannel.send(Text.of(TextColors.AQUA, "ゲーム終了！"));
 
         // TODO プレイヤーの移動と結果発表
         clock.setClock(new SpleefClockPrepare());
@@ -164,11 +187,11 @@ public final class SpleefRoom implements GameRoom {
      */
     boolean tryHoldNextGame() {
         if (state == GameRoomState.PREPARED) {
-            if (players.size() >= stageSettings.spawnRocations.size()) {
+            if (players.size() >= stageSettings.getSpawnRocations().size()) {
                 // すでに最高人数揃っているならすぐスタートカウントダウン
                 ready();
                 return true;
-            } else if (players.size() >= stageSettings.minimumPlayerCount) {
+            } else if (players.size() >= stageSettings.getMinimumPlayerCount()) {
                 // でなくても、最低人数揃っているならプレイヤー待ちカウントダウン
                 startCountdown();
                 return true;
@@ -214,7 +237,7 @@ public final class SpleefRoom implements GameRoom {
 
     void startGame() {
         this.state = GameRoomState.IN_PROGRESS;
-        this.clock.setClock(new SpleefClockGame(stageSettings.defaultGameTime));
+        this.clock.setClock(new SpleefClockGame(stageSettings.getDefaultGameTime()));
         this.clock.start();
     }
 
@@ -224,6 +247,8 @@ public final class SpleefRoom implements GameRoom {
     void stopGame() {
         this.state = GameRoomState.FINISHED;
         this.clock.cancel();
+
+        messageChannel.send(Text.of(TextColors.AQUA, TextStyles.BOLD, "ゲーム終了！"), ChatTypes.SYSTEM);
     }
 
     /**

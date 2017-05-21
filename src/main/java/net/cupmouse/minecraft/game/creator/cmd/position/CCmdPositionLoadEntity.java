@@ -1,4 +1,4 @@
-package net.cupmouse.minecraft.game.creator.command;
+package net.cupmouse.minecraft.game.creator.cmd.position;
 
 import net.cupmouse.minecraft.game.creator.CreatorModule;
 import net.cupmouse.minecraft.worlds.WorldTagRocation;
@@ -14,9 +14,6 @@ import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 
-import java.util.Optional;
-
-import static org.spongepowered.api.command.args.GenericArguments.none;
 import static org.spongepowered.api.command.args.GenericArguments.onlyOne;
 
 public class CCmdPositionLoadEntity implements CommandExecutor {

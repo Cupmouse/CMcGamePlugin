@@ -9,11 +9,17 @@ import java.util.*;
 
 public final class SpleefManager implements GameManager<SpleefRoom> {
 
-    private Map<String, SpleefRoom> rooms = new HashMap<>();
+    private Map<Integer, SpleefRoom> rooms = new HashMap<>();
+    private Map<String, SpleefRoom> roomsStageId = new HashMap<>();
 
     @Override
     public Collection<SpleefRoom> getRooms() {
         return rooms.values();
+    }
+
+    @Override
+    public Optional<SpleefRoom> getRoom(int roomNumber) {
+        return Optional.ofNullable(rooms.get(roomNumber));
     }
 
     @Override
@@ -22,6 +28,8 @@ public final class SpleefManager implements GameManager<SpleefRoom> {
         TypeSerializerCollection defaultSerializers = TypeSerializers.getDefaultSerializers();
 
         defaultSerializers.registerType(TypeToken.of(SpleefStageSettings.class), new SpleefStageSettings.Serializer());
+
+        // TODO ルームのロード
     }
 
     public Optional<SpleefRoom> getRoomOfStageId(String stageId) {
@@ -29,6 +37,21 @@ public final class SpleefManager implements GameManager<SpleefRoom> {
     }
 
     public Set<String> getStageIds() {
-        return rooms.keySet();
+        return roomsStageId.keySet();
+    }
+
+    public void addRoom(String stageId, int roomNumber, SpleefRoom spleefRoom) {
+        this.rooms.put(roomNumber, spleefRoom);
+        this.roomsStageId.put(stageId, spleefRoom);
+    }
+
+    public void removeRoom(String stageId) {
+        SpleefRoom remove = this.roomsStageId.remove(stageId);
+
+        if (remove == null) {
+            return;
+        }
+
+        this.rooms.remove(remove.roomNumber);
     }
 }

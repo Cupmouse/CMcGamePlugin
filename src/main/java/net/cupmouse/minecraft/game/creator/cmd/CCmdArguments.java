@@ -1,6 +1,6 @@
-package net.cupmouse.minecraft.game.creator.command;
+package net.cupmouse.minecraft.game.creator.cmd;
 
-import net.cupmouse.minecraft.game.creator.command.CommandElementGameType;
+import net.cupmouse.minecraft.game.creator.cmd.CommandElementGameType;
 import org.spongepowered.api.text.Text;
 
 public final class CCmdArguments {

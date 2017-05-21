@@ -40,5 +40,5 @@ public enum GameRoomState {
     /**
      * ゲームを開催できない状態。
      */
-    CLOSED;
+    CLOSED
 }

@@ -1,20 +1,11 @@
-package net.cupmouse.minecraft.game.creator.command;
+package net.cupmouse.minecraft.game.creator.cmd.area;
 
 import com.flowpowered.math.vector.Vector3i;
 import net.cupmouse.minecraft.CMcCore;
-import net.cupmouse.minecraft.game.creator.CreatorModule;
-import net.cupmouse.minecraft.game.creator.CreatorSessionInfo;
-import net.cupmouse.minecraft.worlds.BlockLocSequence;
-import net.cupmouse.minecraft.worlds.WorldTagModule;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.command.CommandCallable;
-import org.spongepowered.api.command.CommandException;
-import org.spongepowered.api.command.CommandResult;
-import org.spongepowered.api.command.CommandSource;
-import org.spongepowered.api.command.args.CommandContext;
-import org.spongepowered.api.command.spec.CommandExecutor;
 import org.spongepowered.api.command.spec.CommandSpec;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.effect.potion.PotionEffect;
@@ -26,8 +17,6 @@ import org.spongepowered.api.event.cause.entity.spawn.EntitySpawnCause;
 import org.spongepowered.api.event.cause.entity.spawn.SpawnTypes;
 import org.spongepowered.api.item.FireworkEffect;
 import org.spongepowered.api.scheduler.Task;
-import org.spongepowered.api.text.Text;
-import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.Color;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
@@ -35,7 +24,6 @@ import org.spongepowered.api.world.World;
 import java.util.*;
 
 import static org.spongepowered.api.command.args.GenericArguments.choices;
-import static org.spongepowered.api.command.args.GenericArguments.onlyOne;
 
 public final class CCmdAreaShow {
 
@@ -88,7 +76,7 @@ public final class CCmdAreaShow {
                                 task.cancel();
                             }
 
-                            armorEnt.setLocation(new Location<>(world, iterator.next()));
+                            armorEnt.setLocation(new Location<World>(world, iterator.next()));
                         })
                         .submit(CMcCore.getPlugin());
 

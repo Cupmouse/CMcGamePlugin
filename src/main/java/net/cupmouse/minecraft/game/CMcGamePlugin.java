@@ -7,25 +7,25 @@ import net.cupmouse.minecraft.PluginModule;
 import net.cupmouse.minecraft.PongPingModule;
 import net.cupmouse.minecraft.beam.BeamModule;
 import net.cupmouse.minecraft.db.DatabaseModule;
+import net.cupmouse.minecraft.game.cmd.CommandModule;
 import net.cupmouse.minecraft.game.data.user.GameUserDataModule;
-import net.cupmouse.minecraft.game.manager.GameManager;
-import net.cupmouse.minecraft.game.manager.GameRoom;
 import net.cupmouse.minecraft.game.spleef.SpleefManager;
-import net.cupmouse.minecraft.game.spleef.SpleefPlayer;
+import net.cupmouse.minecraft.game.spleef.SpleefRoom;
 import net.cupmouse.minecraft.worlds.WorldTagModule;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
 import org.slf4j.Logger;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.config.ConfigDir;
+import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
-import org.spongepowered.api.event.game.state.GameInitializationEvent;
 import org.spongepowered.api.event.game.state.GamePreInitializationEvent;
 import org.spongepowered.api.plugin.Plugin;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 
 import static net.cupmouse.minecraft.CMcCore.stopEternally;
 
@@ -51,7 +51,8 @@ public class CMcGamePlugin {
                 new PongPingModule(),
                 this.userm = new GameUserDataModule(),
                 new BeamModule(),
-                this.spleef = new SpleefManager()
+                this.spleef = new SpleefManager(),
+                new CommandModule()
         };
 
         core = new CMcCore(this, logger, configDir, moduleArray);
@@ -97,6 +98,17 @@ public class CMcGamePlugin {
 
 
         CMcCore.getLogger().info("ゲーム設定を読み込みました！");
+    }
+
+    public static Optional<SpleefRoom> getRoomPlayerJoin(Player player) {
+        // TODO
+        for (SpleefRoom spleefRoom : spleef.getRooms()) {
+            if (spleefRoom.isPlayerPlaying(player)) {
+                return Optional.of(spleefRoom);
+            }
+        }
+
+        return Optional.empty();
     }
 //
 //    @Listener

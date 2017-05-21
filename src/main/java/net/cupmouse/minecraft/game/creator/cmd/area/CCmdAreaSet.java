@@ -1,11 +1,10 @@
-package net.cupmouse.minecraft.game.creator.command;
+package net.cupmouse.minecraft.game.creator.cmd.area;
 
 import net.cupmouse.minecraft.game.CMcGamePlugin;
 import net.cupmouse.minecraft.game.GameType;
 import net.cupmouse.minecraft.game.creator.CreatorModule;
 import net.cupmouse.minecraft.game.spleef.SpleefRoom;
 import net.cupmouse.minecraft.worlds.WorldTagArea;
-import net.cupmouse.minecraft.worlds.WorldTagAreaSquare;
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
@@ -19,7 +18,7 @@ import org.spongepowered.api.text.format.TextColors;
 import java.util.ArrayList;
 import java.util.Optional;
 
-import static net.cupmouse.minecraft.game.creator.command.CCmdArguments.gameType;
+import static net.cupmouse.minecraft.game.creator.cmd.CCmdArguments.gameType;
 import static org.spongepowered.api.command.args.GenericArguments.allOf;
 import static org.spongepowered.api.command.args.GenericArguments.onlyOne;
 import static org.spongepowered.api.command.args.GenericArguments.string;

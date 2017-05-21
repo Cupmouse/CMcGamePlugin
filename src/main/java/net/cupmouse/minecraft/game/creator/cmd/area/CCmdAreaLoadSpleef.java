@@ -1,6 +1,7 @@
-package net.cupmouse.minecraft.game.creator.command;
+package net.cupmouse.minecraft.game.creator.cmd.area;
 
 import net.cupmouse.minecraft.game.creator.CreatorModule;
+import net.cupmouse.minecraft.game.creator.cmd.CCmdArguments;
 import net.cupmouse.minecraft.game.spleef.SpleefRoom;
 import net.cupmouse.minecraft.worlds.WorldTagArea;
 import org.spongepowered.api.command.CommandCallable;
