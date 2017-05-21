@@ -2,14 +2,10 @@ package net.cupmouse.minecraft.game.spleef;
 
 import com.google.common.reflect.TypeToken;
 import net.cupmouse.minecraft.game.manager.GameManager;
-import net.cupmouse.minecraft.worlds.WorldTagAreaSquare;
 import ninja.leaping.configurate.objectmapping.serialize.TypeSerializerCollection;
 import ninja.leaping.configurate.objectmapping.serialize.TypeSerializers;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 public final class SpleefManager implements GameManager<SpleefRoom> {
 
@@ -30,5 +26,9 @@ public final class SpleefManager implements GameManager<SpleefRoom> {
 
     public Optional<SpleefRoom> getRoomOfStageId(String stageId) {
         return Optional.ofNullable(rooms.get(stageId));
+    }
+
+    public Set<String> getStageIds() {
+        return rooms.keySet();
     }
 }

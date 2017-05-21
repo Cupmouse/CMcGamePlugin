@@ -1,7 +1,6 @@
 package net.cupmouse.minecraft.game.creator.command;
 
 import com.flowpowered.math.vector.Vector3i;
-import com.google.common.collect.Maps;
 import net.cupmouse.minecraft.CMcCore;
 import net.cupmouse.minecraft.game.creator.CreatorModule;
 import net.cupmouse.minecraft.game.creator.CreatorSessionInfo;
@@ -15,7 +14,6 @@ import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.CommandContext;
-import org.spongepowered.api.command.args.GenericArguments;
 import org.spongepowered.api.command.spec.CommandExecutor;
 import org.spongepowered.api.command.spec.CommandSpec;
 import org.spongepowered.api.data.key.Keys;
@@ -25,7 +23,6 @@ import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.EntityTypes;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.event.cause.entity.spawn.EntitySpawnCause;
-import org.spongepowered.api.event.cause.entity.spawn.SpawnType;
 import org.spongepowered.api.event.cause.entity.spawn.SpawnTypes;
 import org.spongepowered.api.item.FireworkEffect;
 import org.spongepowered.api.scheduler.Task;
@@ -38,7 +35,6 @@ import org.spongepowered.api.world.World;
 import java.util.*;
 
 import static org.spongepowered.api.command.args.GenericArguments.choices;
-import static org.spongepowered.api.command.args.GenericArguments.integer;
 import static org.spongepowered.api.command.args.GenericArguments.onlyOne;
 
 public final class CCmdAreaShow implements CommandExecutor {
@@ -78,7 +74,7 @@ public final class CCmdAreaShow implements CommandExecutor {
         BlockLocSequence sequence;
 
         CreatorSessionInfo session = CreatorModule.getOrCreateSession(src);
-        if (session.worldTagArea == null) {
+        if (session.loadedArea == null) {
             src.sendMessage(Text.of(TextColors.RED, "✗エリアがロードされていません。"));
             return CommandResult.empty();
         }
@@ -87,11 +83,11 @@ public final class CCmdAreaShow implements CommandExecutor {
             case "corner":
             case "c":
             default:
-                sequence = session.worldTagArea.getCornerBlocks();
+                sequence = session.loadedArea.getCornerBlocks();
                 break;
             case "outline":
             case "o":
-                sequence = session.worldTagArea.getOutlineBlocks();
+                sequence = session.loadedArea.getOutlineBlocks();
                 break;
         }
 

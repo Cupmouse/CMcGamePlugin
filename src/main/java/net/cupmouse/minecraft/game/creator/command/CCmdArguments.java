@@ -11,4 +11,8 @@ public final class CCmdArguments {
     public static CommandElementGameType gameType(Text text) {
         return new CommandElementGameType(text);
     }
+
+    public static CommandElementSpleefStageId spleefStageId(Text text) {
+        return new CommandElementSpleefStageId(text);
+    }
 }

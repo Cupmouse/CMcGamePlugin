@@ -1,6 +1,8 @@
 package net.cupmouse.minecraft.game.creator.command;
 
-import net.cupmouse.minecraft.game.GameType;
+import net.cupmouse.minecraft.game.CMcGamePlugin;
+import net.cupmouse.minecraft.game.spleef.SpleefManager;
+import net.cupmouse.minecraft.game.spleef.SpleefRoom;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.ArgumentParseException;
 import org.spongepowered.api.command.args.CommandArgs;
@@ -10,13 +12,13 @@ import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
-public final class CommandElementGameType extends CommandElement {
+public class CommandElementSpleefStageId extends CommandElement {
 
-    private ArrayList<String> gametypeStringList;
-
-    public CommandElementGameType(@Nullable Text key) {
+    protected CommandElementSpleefStageId(@Nullable Text key) {
         super(key);
     }
 
@@ -25,26 +27,18 @@ public final class CommandElementGameType extends CommandElement {
     protected Object parseValue(CommandSource source, CommandArgs args) throws ArgumentParseException {
         String next = args.next();
 
-        GameType gameType = GameType.fromString(next);
+        Optional<SpleefRoom> roomOptional = CMcGamePlugin.getSpleef().getRoomOfStageId(next);
 
-        if (gameType == null) {
-            throw new ArgumentParseException(Text.of(TextColors.RED, "✗ゲームタイプが見つかりません。"), next, 0);
+        if (!roomOptional.isPresent()) {
+            throw new ArgumentParseException(
+                    Text.of(TextColors.RED, "✗Spleefステージが見つかりませんでした。"), next, 0);
         }
 
-        return gameType;
+        return roomOptional.get();
     }
 
     @Override
     public List<String> complete(CommandSource src, CommandArgs args, CommandContext context) {
-        if (gametypeStringList == null) {
-            this.gametypeStringList = new ArrayList<>();
-            GameType[] values = GameType.values();
-
-            for (GameType value : values) {
-                this.gametypeStringList.add(value.name());
-            }
-        }
-
-        return gametypeStringList;
+        return new ArrayList<>(CMcGamePlugin.getSpleef().getStageIds());
     }
 }

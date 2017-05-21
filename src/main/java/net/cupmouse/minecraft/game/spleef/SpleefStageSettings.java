@@ -12,13 +12,13 @@ import java.lang.reflect.Type;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public final class SpleefStageSettings {
+public class SpleefStageSettings {
 
-    public final WorldTagArea groundArea;
-    public final WorldTagArea fightingArea;
-    public final List<WorldTagRocation> spawnRocations;
-    public final int defaultGameTime;
-    public final int minimumPlayerCount;
+    protected WorldTagArea groundArea;
+    protected WorldTagArea fightingArea;
+    protected List<WorldTagRocation> spawnRocations;
+    protected int defaultGameTime;
+    protected int minimumPlayerCount;
 
     private SpleefStageSettings(WorldTagArea groundArea, WorldTagArea fightingArea,
                                 List<WorldTagRocation> spawnRocations, int defaultGameTime, int minimumPlayerCount) {
@@ -36,10 +36,51 @@ public final class SpleefStageSettings {
     public static SpleefStageSettings creator() {
         // TODO
         // 変更可能なリスト
-        SpleefStageSettings settings = new SpleefStageSettings(null, null, new ArrayList<>(),
+        SpleefStageSettings settings = new SpleefStageSettings(
+                null, null, new ArrayList<>(),
                 30, 1);
 
         return settings;
+    }
+
+    public WorldTagArea getGroundArea() {
+        return groundArea;
+    }
+
+    public WorldTagArea getFightingArea() {
+        return fightingArea;
+    }
+
+    public List<WorldTagRocation> getSpawnRocations() {
+        return spawnRocations;
+    }
+
+    public int getDefaultGameTime() {
+        return defaultGameTime;
+    }
+
+    public int getMinimumPlayerCount() {
+        return minimumPlayerCount;
+    }
+
+    public void setGroundArea(WorldTagArea groundArea) {
+        this.groundArea = groundArea;
+    }
+
+    public void setFightingArea(WorldTagArea fightingArea) {
+        this.fightingArea = fightingArea;
+    }
+
+    public void setSpawnRocations(List<WorldTagRocation> spawnRocations) {
+        this.spawnRocations = spawnRocations;
+    }
+
+    public void setDefaultGameTime(int defaultGameTime) {
+        this.defaultGameTime = defaultGameTime;
+    }
+
+    public void setMinimumPlayerCount(int minimumPlayerCount) {
+        this.minimumPlayerCount = minimumPlayerCount;
     }
 
     static class Serializer implements TypeSerializer<SpleefStageSettings> {

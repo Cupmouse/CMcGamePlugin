@@ -65,7 +65,7 @@ public final class CCmdLocationLoad implements CommandExecutor {
                 // 引数が３個のとき
 
                 if (locationId.equals("spawn")) {
-                    selectedLoc = spleefRoom.stageSettings.spawnRocations.get(Integer.parseInt(lookupId.get(2)));
+                    selectedLoc = spleefRoom.stageSettings.getSpawnRocations().get(Integer.parseInt(lookupId.get(2)));
                 }
             }
             // 引数が二個以上ないとIDがないこととして処理する
