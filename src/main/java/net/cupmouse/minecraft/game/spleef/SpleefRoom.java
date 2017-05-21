@@ -15,7 +15,6 @@ import org.spongepowered.api.text.channel.impl.SimpleMutableMessageChannel;
 import org.spongepowered.api.text.chat.ChatType;
 import org.spongepowered.api.text.chat.ChatTypes;
 import org.spongepowered.api.text.format.TextColors;
-import org.spongepowered.api.text.format.TextStyle;
 import org.spongepowered.api.text.format.TextStyles;
 
 import javax.annotation.Nullable;
@@ -84,6 +83,10 @@ public final class SpleefRoom implements GameRoom {
         }
 
         return false;
+    }
+
+    public Collection<SpleefPlayer> getSpleefPlayerPlaying() {
+        return players.values();
     }
 
     // 外部向け処理
