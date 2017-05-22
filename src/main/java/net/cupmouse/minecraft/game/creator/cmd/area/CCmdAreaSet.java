@@ -4,6 +4,7 @@ import net.cupmouse.minecraft.game.CMcGamePlugin;
 import net.cupmouse.minecraft.game.GameType;
 import net.cupmouse.minecraft.game.creator.CreatorModule;
 import net.cupmouse.minecraft.game.spleef.SpleefRoom;
+import net.cupmouse.minecraft.game.spleef.SpleefStage;
 import net.cupmouse.minecraft.worlds.WorldTagArea;
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
@@ -48,23 +49,23 @@ public class CCmdAreaSet implements CommandExecutor {
             String stageId = lookupId.get(0);
             String areaId = lookupId.get(1);
 
-            Optional<SpleefRoom> roomOpt = CMcGamePlugin.getSpleef().getRoomOfStageId(stageId);
+            Optional<SpleefStage> stageOptional = CMcGamePlugin.getSpleef().getStage(stageId);
 
-            if (!roomOpt.isPresent()) {
+            if (!stageOptional.isPresent()) {
                 throw new CommandException(
                         Text.of(TextColors.RED, "✗そのようなステージIDは見つかりませんでした。"), false);
             }
 
-            SpleefRoom spleefRoom = roomOpt.get();
+            SpleefStage stage = stageOptional.get();
 
             switch (areaId) {
                 case "fighting":
                 case "f":
-                    spleefRoom.stage.setFightingArea(loadedArea);
+                    stage.setFightingArea(loadedArea);
                     break;
                 case "ground":
                 case "g":
-                    spleefRoom.stage.setGroundArea(loadedArea);
+                    stage.setGroundArea(loadedArea);
                     break;
                 default:
                     throw new CommandException(

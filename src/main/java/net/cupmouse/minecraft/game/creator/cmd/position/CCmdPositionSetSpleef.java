@@ -2,6 +2,7 @@ package net.cupmouse.minecraft.game.creator.cmd.position;
 
 import net.cupmouse.minecraft.game.creator.CreatorModule;
 import net.cupmouse.minecraft.game.spleef.SpleefRoom;
+import net.cupmouse.minecraft.game.spleef.SpleefStage;
 import net.cupmouse.minecraft.util.DualConsumer;
 import net.cupmouse.minecraft.worlds.WorldTagLocation;
 import net.cupmouse.minecraft.worlds.WorldTagPosition;
@@ -31,14 +32,14 @@ public class CCmdPositionSetSpleef implements CommandExecutor {
             .executor(new CCmdPositionSetSpleef())
             .build();
 
-    private Map<String, DualConsumer<SpleefRoom, WorldTagPosition>> setters = new HashMap<>();
+    private Map<String, DualConsumer<SpleefStage, WorldTagPosition>> setters = new HashMap<>();
 
     private CCmdPositionSetSpleef() {
     }
 
     @Override
     public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
-        SpleefRoom spleefRoom = args.<SpleefRoom>getOne("stage_id").get();
+        SpleefStage stage = args.<SpleefStage>getOne("stage_id").get();
         String positionId = args.<String>getOne("position_id").get();
 
         WorldTagPosition loadedPos = CreatorModule.getOrCreateSession(src).loadedPos;
@@ -76,13 +77,13 @@ public class CCmdPositionSetSpleef implements CommandExecutor {
                 spawnRoc = ((WorldTagLocation) loadedPos).convertRocation();
             }
 
-            if (spleefRoom.stage.getSpawnRocations().size() == number) {
-                spleefRoom.stage.getSpawnRocations().add(spawnRoc);
+            if (stage.getSpawnRocations().size() == number) {
+                stage.getSpawnRocations().add(spawnRoc);
             } else {
-                spleefRoom.stage.getSpawnRocations().set(number, spawnRoc);
+                stage.getSpawnRocations().set(number, spawnRoc);
             }
         } else {
-            DualConsumer<SpleefRoom, WorldTagPosition> setter = setters.get(positionId);
+            DualConsumer<SpleefStage, WorldTagPosition> setter = setters.get(positionId);
 
             if (setter == null) {
                 throw new CommandException(
@@ -90,7 +91,7 @@ public class CCmdPositionSetSpleef implements CommandExecutor {
             }
 
             // 変更してもらう
-            setter.accept(spleefRoom, loadedPos);
+            setter.accept(stage, loadedPos);
         }
 
         src.sendMessage(Text.of(TextColors.AQUA, "✓設定しました。"));

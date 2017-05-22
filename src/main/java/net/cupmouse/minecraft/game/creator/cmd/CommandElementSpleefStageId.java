@@ -3,6 +3,7 @@ package net.cupmouse.minecraft.game.creator.cmd;
 import net.cupmouse.minecraft.game.CMcGamePlugin;
 import net.cupmouse.minecraft.game.spleef.SpleefManager;
 import net.cupmouse.minecraft.game.spleef.SpleefRoom;
+import net.cupmouse.minecraft.game.spleef.SpleefStage;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.ArgumentParseException;
 import org.spongepowered.api.command.args.CommandArgs;
@@ -27,14 +28,14 @@ public class CommandElementSpleefStageId extends CommandElement {
     protected Object parseValue(CommandSource source, CommandArgs args) throws ArgumentParseException {
         String next = args.next();
 
-        Optional<SpleefRoom> roomOptional = CMcGamePlugin.getSpleef().getStage(next);
+        Optional<SpleefStage> stageOptional = CMcGamePlugin.getSpleef().getStage(next);
 
-        if (!roomOptional.isPresent()) {
+        if (!stageOptional.isPresent()) {
             throw new ArgumentParseException(
                     Text.of(TextColors.RED, "✗Spleefステージが見つかりませんでした。"), next, 0);
         }
 
-        return roomOptional.get();
+        return stageOptional.get();
     }
 
     @Override

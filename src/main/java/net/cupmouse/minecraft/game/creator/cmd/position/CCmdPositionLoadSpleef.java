@@ -4,6 +4,7 @@ import net.cupmouse.minecraft.game.creator.CreatorModule;
 import net.cupmouse.minecraft.game.creator.CreatorSessionInfo;
 import net.cupmouse.minecraft.game.creator.cmd.CCmdArguments;
 import net.cupmouse.minecraft.game.spleef.SpleefRoom;
+import net.cupmouse.minecraft.game.spleef.SpleefStage;
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
@@ -27,7 +28,7 @@ public class CCmdPositionLoadSpleef implements CommandExecutor {
 
     @Override
     public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
-        SpleefRoom spleefRoom = args.<SpleefRoom>getOne("stage_id").get();
+        SpleefStage stage = args.<SpleefStage>getOne("stage_id").get();
         String positionId = args.<String>getOne("position_id").get();
 
         CreatorSessionInfo session = CreatorModule.getOrCreateSession(src);
@@ -47,7 +48,7 @@ public class CCmdPositionLoadSpleef implements CommandExecutor {
                         , false);
             }
 
-            session.loadedPos = spleefRoom.stage.getSpawnRocations().get(number);
+            session.loadedPos = stage.getSpawnRocations().get(number);
         } else {
             // TODO
         }

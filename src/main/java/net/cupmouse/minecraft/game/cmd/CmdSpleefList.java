@@ -17,6 +17,7 @@ import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.text.format.TextStyles;
 
 import java.util.ArrayList;
+import java.util.Map;
 
 import static org.spongepowered.api.command.args.GenericArguments.none;
 
@@ -31,9 +32,12 @@ public class CmdSpleefList implements CommandExecutor {
     public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
         ArrayList<Text> texts = new ArrayList<>();
 
-        for (SpleefRoom spleefRoom : CMcGamePlugin.getSpleef().getRooms()) {
-            int playersInRoom = spleefRoom.getSpleefPlayerPlaying().size();
-            int maxPlayersInRoom = spleefRoom.stage.getSpawnRocations().size();
+        for (Map.Entry<SpleefRoom, Integer> entry : CMcGamePlugin.getSpleef().getRoomAndItsNumber()) {
+            SpleefRoom room = entry.getKey();
+            int roomNumber = entry.getValue();
+
+            int playersInRoom = room.getSpleefPlayerPlaying().size();
+            int maxPlayersInRoom = room.stage.getSpawnRocations().size();
             float occupRate = ((float) playersInRoom) / maxPlayersInRoom;
 
             TextColor color;
@@ -52,16 +56,16 @@ public class CmdSpleefList implements CommandExecutor {
             }
 
             Text joinButton = Text.builder("[参加]")
-                    .onClick(TextActions.runCommand("/join " + spleefRoom.roomNumber)).build();
+                    .onClick(TextActions.runCommand("/spleef join " + roomNumber)).build();
             texts.add(Text.of(color, TextStyles.BOLD, "(" + playersInRoom + "/" + maxPlayersInRoom + ")",
-                    TextStyles.RESET, " ", spleefRoom.roomNumber, " | ", joinButton));
+                    TextStyles.RESET, " ", roomNumber, " | ", joinButton));
         }
 
         PaginationList list = PaginationList.builder()
                 .title(Text.of(TextColors.AQUA, "Spleef部屋一覧"))
                 .contents(texts)
                 .header(Text.of("人数はコマンド発行時のものです。"))
-                .padding(Text.of("=sp"))
+                .padding(Text.of("="))
                 .build();
 
         list.sendTo(src);

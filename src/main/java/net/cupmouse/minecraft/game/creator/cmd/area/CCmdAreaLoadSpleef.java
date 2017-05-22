@@ -3,6 +3,7 @@ package net.cupmouse.minecraft.game.creator.cmd.area;
 import net.cupmouse.minecraft.game.creator.CreatorModule;
 import net.cupmouse.minecraft.game.creator.cmd.CCmdArguments;
 import net.cupmouse.minecraft.game.spleef.SpleefRoom;
+import net.cupmouse.minecraft.game.spleef.SpleefStage;
 import net.cupmouse.minecraft.worlds.WorldTagArea;
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
@@ -29,33 +30,33 @@ public class CCmdAreaLoadSpleef implements CommandExecutor {
             .executor(new CCmdAreaLoadSpleef())
             .build();
 
-    private Map<String, Function<SpleefRoom, WorldTagArea>> loaders = new HashMap<>();
+    private Map<String, Function<SpleefStage, WorldTagArea>> loaders = new HashMap<>();
 
     private CCmdAreaLoadSpleef() {
-        Function<SpleefRoom, WorldTagArea> groundAreaLoader = spleefRoom -> spleefRoom.stage.getGroundArea();
+        Function<SpleefStage, WorldTagArea> groundAreaLoader = stage -> stage.getGroundArea();
         loaders.put("ground", groundAreaLoader);
         loaders.put("g", groundAreaLoader);
 
-        Function<SpleefRoom, WorldTagArea> fightingAreaLoader =
-                spleefRoom -> spleefRoom.stage.getFightingArea();
+        Function<SpleefStage, WorldTagArea> fightingAreaLoader =
+                stage -> stage.getFightingArea();
         loaders.put("fighting", fightingAreaLoader);
         loaders.put("f", fightingAreaLoader);
     }
 
     @Override
     public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
-        SpleefRoom spleefRoom = args.<SpleefRoom>getOne("stage_id").get();
+        SpleefStage stage = args.<SpleefStage>getOne("stage_id").get();
         String areaId = args.<String>getOne("area_id").get();
 
         // セッションに設定する
 
-        Function<SpleefRoom, WorldTagArea> loader = loaders.get(areaId);
+        Function<SpleefStage, WorldTagArea> loader = loaders.get(areaId);
 
         if (loader == null) {
             throw new CommandException(Text.of(TextColors.RED, "✗入力されたエリアIDは見つかりませんでした。"));
         }
 
-        CreatorModule.getOrCreateSession(src).loadedArea = loader.apply(spleefRoom);
+        CreatorModule.getOrCreateSession(src).loadedArea = loader.apply(stage);
 
         src.sendMessage(Text.of(TextColors.GREEN, "✓入力されたエリアIDのエリアをロードしました。"));
 

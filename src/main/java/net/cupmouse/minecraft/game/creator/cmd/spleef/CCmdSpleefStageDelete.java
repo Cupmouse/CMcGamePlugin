@@ -2,7 +2,9 @@ package net.cupmouse.minecraft.game.creator.cmd.spleef;
 
 import net.cupmouse.minecraft.game.CMcGamePlugin;
 import net.cupmouse.minecraft.game.creator.cmd.CCmdArguments;
+import net.cupmouse.minecraft.game.manager.GameException;
 import net.cupmouse.minecraft.game.spleef.SpleefRoom;
+import net.cupmouse.minecraft.game.spleef.SpleefStage;
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
@@ -23,19 +25,20 @@ import static org.spongepowered.api.command.args.GenericArguments.string;
 public class CCmdSpleefStageDelete implements CommandExecutor {
 
     public static final CommandCallable CALLABLE = CommandSpec.builder()
-            .arguments(onlyOne(string(Text.of("stage_id"))))
+            .arguments(onlyOne(spleefStageId(Text.of("stage_id"))))
             .executor(new CCmdSpleefStageDelete())
             .build();
 
     @Override
     public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
-        String stageId = args.<String>getOne("stage_id").get();
+        SpleefStage stage = args.<SpleefStage>getOne("stage_id").get();
 
-        if (!CMcGamePlugin.getSpleef().getRoomOfStageId(stageId).isPresent()) {
-            throw new CommandException(Text.of(TextColors.RED, "✗そのステージIDのステージは存在しません。"));
+        try {
+            CMcGamePlugin.getSpleef().removeStage(CMcGamePlugin.getSpleef().getStageId(stage));
+        } catch (GameException e) {
+            throw new CommandException(Text.of(TextColors.RED, "✗ステージを削除できませんでした。", e.getText()),
+                    e, false);
         }
-
-        CMcGamePlugin.getSpleef().removeRoom(stageId);
         src.sendMessage(Text.of(TextColors.AQUA, "✓ステージを削除しました。"));
         return CommandResult.success();
     }
