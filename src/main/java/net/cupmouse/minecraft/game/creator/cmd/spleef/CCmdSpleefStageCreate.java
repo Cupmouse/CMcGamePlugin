@@ -31,9 +31,9 @@ public class CCmdSpleefStageCreate implements CommandExecutor {
     public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
         String stageId = args.<String>getOne("stage_id").get();
 
-        Optional<SpleefRoom> roomOfStageId = CMcGamePlugin.getSpleef().getRoomOfStageId(stageId);
+        Optional<SpleefStage> stageOptional = CMcGamePlugin.getSpleef().getStage(stageId);
 
-        if (roomOfStageId.isPresent()) {
+        if (stageOptional.isPresent()) {
             throw new CommandException(Text.of(TextColors.RED, "✗そのステージIDのステージはすでに存在します。"));
         }
 

@@ -36,16 +36,6 @@ public final class SpleefManager implements GameManager<SpleefRoom> {
         return Optional.ofNullable(rooms.get(roomNumber));
     }
 
-    public Optional<SpleefRoom> getRoomOfStageId(String stageId) {
-        SpleefStage stage = stages.get(stageId);
-
-        if (stage == null) {
-            return Optional.empty();
-        }
-
-        return Optional.ofNullable(roomStageMap.get(stage));
-    }
-
     public void addRoom(int roomNumber, SpleefRoom spleefRoom) throws GameException {
         String stageId = stages.getKey(spleefRoom.stage);
 
@@ -124,6 +114,8 @@ public final class SpleefManager implements GameManager<SpleefRoom> {
 
             addStage((String) entry.getKey(), stageSettings);
         }
+
+        // ロードしたステージに対応するルームを作成する
     }
 
     @Override

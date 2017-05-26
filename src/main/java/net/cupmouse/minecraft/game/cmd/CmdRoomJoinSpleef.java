@@ -8,6 +8,7 @@ import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.CommandContext;
+import org.spongepowered.api.command.args.GenericArguments;
 import org.spongepowered.api.command.spec.CommandExecutor;
 import org.spongepowered.api.command.spec.CommandSpec;
 import org.spongepowered.api.entity.living.player.Player;
@@ -16,24 +17,32 @@ import org.spongepowered.api.text.format.TextColors;
 
 import java.util.Optional;
 
-import static org.spongepowered.api.command.args.GenericArguments.integer;
-import static org.spongepowered.api.command.args.GenericArguments.onlyOne;
+import static org.spongepowered.api.command.args.GenericArguments.*;
 
-public class CmdSpleefJoin implements CommandExecutor {
+public class CmdRoomJoinSpleef implements CommandExecutor {
 
     // TODO おすすめ一発参加とかしたい(占有率が60％以下の部屋に送る)
     public static final CommandCallable CALLABLE = CommandSpec.builder()
-            .arguments(onlyOne(integer(Text.of("room_number"))))
-            .executor(new CmdSpleefJoin())
+            .arguments(onlyOne(integer(Text.of("room_number"))),
+                    requiringPermission(optional(player(Text.of("player"))),
+                            "cmcgame.mod.spleef.cmd.room.join"))
+            .executor(new CmdRoomJoinSpleef())
             .build();
 
     @Override
     public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
-        if (!(src instanceof Player)) {
+        Player player;
+
+        if (args.hasAny("player")) {
+            // モデレータ権限でプレイヤーが指定された場合はそのプレイヤーを指定のルームに強制収容する。
+            player = args.<Player>getOne("player").get();
+        } else if (src instanceof Player) {
+            // モデレータコマンドでもなくてプレイヤーが実行したならば、そのプレイヤーを指定のルームに入れる。
+            player = (Player) src;
+        } else {
+            // モデレータコマンドでもなくプレイヤーが実行したのでもないなら終了
             throw new CommandException(Text.of("プレイヤーのみ実行可能"));
         }
-
-        Player player = (Player) src;
 
         Integer roomNumber = args.<Integer>getOne("room_number").get();
 

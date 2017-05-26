@@ -8,6 +8,7 @@ import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.CommandContext;
+import org.spongepowered.api.command.args.GenericArguments;
 import org.spongepowered.api.command.spec.CommandExecutor;
 import org.spongepowered.api.command.spec.CommandSpec;
 import org.spongepowered.api.entity.living.player.Player;
@@ -16,22 +17,30 @@ import org.spongepowered.api.text.format.TextColors;
 
 import java.util.Optional;
 
-import static org.spongepowered.api.command.args.GenericArguments.none;
+import static org.spongepowered.api.command.args.GenericArguments.*;
 
-public class CmdQuit implements CommandExecutor {
+public class CmdRoomQuit implements CommandExecutor {
 
     public static final CommandCallable CALLABLE = CommandSpec.builder()
-            .arguments(none())
-            .executor(new CmdQuit())
+            .arguments(requiringPermission(optional(player(Text.of("player"))),
+                    "cmcgame.mod.spleef.cmd.room.quit"))
+            .executor(new CmdRoomQuit())
             .build();
 
     @Override
     public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
-        if (!(src instanceof Player)) {
+        Player player;
+
+        if (args.hasAny("player")) {
+            // モデレータによって、プレイヤー名が指定されると、そのプレイヤーに現在入室中のルームを抜けさせる。
+            player = args.<Player>getOne("player").get();
+        } else if (src instanceof Player) {
+            // プレイヤーが実行、モデレータコマンドでない
+            player = ((Player) src);
+        } else {
+            // それ以外はプレイヤーではなく、モデレータコマンドでもないので、これ以上続けられない、終了。
             throw new CommandException(Text.of("プレイヤーのみ実行可能"));
         }
-
-        Player player = (Player) src;
 
         Optional<SpleefRoom> roomPlayerJoin = CMcGamePlugin.getRoomPlayerJoin(player);
 
@@ -48,7 +57,7 @@ public class CmdQuit implements CommandExecutor {
 
             return CommandResult.success();
         } else {
-            throw new CommandException(Text.of(TextColors.RED, "✗あなたはどの部屋にも入室していません。"), false);
+            throw new CommandException(Text.of(TextColors.RED, "✗どの部屋にも入室していません。"), false);
         }
     }
 }
