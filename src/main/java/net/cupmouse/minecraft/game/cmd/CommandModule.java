@@ -11,7 +11,6 @@ public class CommandModule implements PluginModule {
     @Override
     public void onInitializationProxy() throws Exception {
         CommandManager cm = Sponge.getCommandManager();
-        cm.register(CMcCore.getPlugin(), CmdSpleef.CALLABLE, "spleef");
         cm.register(CMcCore.getPlugin(), CmdRoom.CALLABLE, "room");
     }
 }

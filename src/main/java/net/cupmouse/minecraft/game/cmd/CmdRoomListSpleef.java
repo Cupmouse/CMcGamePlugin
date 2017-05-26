@@ -21,18 +21,18 @@ import java.util.Map;
 
 import static org.spongepowered.api.command.args.GenericArguments.none;
 
-public class CmdSpleefList implements CommandExecutor {
+public class CmdRoomListSpleef implements CommandExecutor {
 
     public static final CommandCallable CALLABLE = CommandSpec.builder()
             .arguments(none())
-            .executor(new CmdSpleefList())
+            .executor(new CmdRoomListSpleef())
             .build();
 
     @Override
     public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
         ArrayList<Text> texts = new ArrayList<>();
 
-        for (Map.Entry<SpleefRoom, Integer> entry : CMcGamePlugin.getSpleef().getRoomAndItsNumber()) {
+        for (Map.Entry<SpleefRoom, Integer> entry : CMcGamePlugin.getSpleef().getRoomsAndItsNumber()) {
             SpleefRoom room = entry.getKey();
             int roomNumber = entry.getValue();
 
@@ -56,7 +56,7 @@ public class CmdSpleefList implements CommandExecutor {
             }
 
             Text joinButton = Text.builder("[参加]")
-                    .onClick(TextActions.runCommand("/spleef join " + roomNumber)).build();
+                    .onClick(TextActions.runCommand("/room join spleef " + roomNumber)).build();
             texts.add(Text.of(color, TextStyles.BOLD, "(" + playersInRoom + "/" + maxPlayersInRoom + ")",
                     TextStyles.RESET, " ", roomNumber, " | ", joinButton));
         }

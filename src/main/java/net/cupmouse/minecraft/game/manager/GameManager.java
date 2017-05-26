@@ -12,7 +12,7 @@ public interface GameManager<T extends GameRoom> extends PluginModule {
 
     Collection<T> getRooms();
 
-    Set<Map.Entry<SpleefRoom, Integer>> getRoomAndItsNumber();
+    Set<Map.Entry<SpleefRoom, Integer>> getRoomsAndItsNumber();
 
     Optional<T> getRoom(int roomNumber);
 }

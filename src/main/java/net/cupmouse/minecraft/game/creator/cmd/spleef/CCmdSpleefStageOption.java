@@ -17,6 +17,7 @@ import org.spongepowered.api.text.format.TextColors;
 import java.util.HashMap;
 import java.util.Map;
 
+import static net.cupmouse.minecraft.game.creator.cmd.CCmdArguments.spleefStageId;
 import static org.spongepowered.api.command.args.GenericArguments.onlyOne;
 import static org.spongepowered.api.command.args.GenericArguments.optional;
 import static org.spongepowered.api.command.args.GenericArguments.string;
@@ -24,7 +25,7 @@ import static org.spongepowered.api.command.args.GenericArguments.string;
 public class CCmdSpleefStageOption implements CommandExecutor {
 
     public static final CommandCallable CALLABLE = CommandSpec.builder()
-            .arguments(onlyOne(CCmdArguments.spleefStageId(Text.of("stage_id"))),
+            .arguments(onlyOne(spleefStageId(Text.of("stage_id"))),
                     onlyOne(string(Text.of("key"))),
                     optional(string(Text.of("value"))))
             .executor(new CCmdSpleefStageOption())

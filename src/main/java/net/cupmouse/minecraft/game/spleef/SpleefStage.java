@@ -11,14 +11,18 @@ import java.util.*;
 
 public class SpleefStage {
 
+    public final String stageId;
+
+    private List<String> builder;
     private WorldTagArea groundArea;
     private WorldTagArea fightingArea;
     private List<WorldTagRocation> spawnRocations;
     private int defaultGameTime;
     private int minimumPlayerCount;
 
-    private SpleefStage(WorldTagArea groundArea, WorldTagArea fightingArea,
+    private SpleefStage(String stageId, WorldTagArea groundArea, WorldTagArea fightingArea,
                         List<WorldTagRocation> spawnRocations, int defaultGameTime, int minimumPlayerCount) {
+        this.stageId = stageId;
         this.groundArea = groundArea;
         this.fightingArea = fightingArea;
         this.spawnRocations = spawnRocations;
@@ -30,11 +34,11 @@ public class SpleefStage {
      * 新しいステージを作るときに使うものです。
      * @return
      */
-    public static SpleefStage creator() {
+    public static SpleefStage creator(String stageId) {
         // TODO
         // 変更可能なリスト
         SpleefStage spleefStage = new SpleefStage(
-                null, null, new ArrayList<>(),
+                stageId, null, null, new ArrayList<>(),
                 30, 2);
 
         return spleefStage;
@@ -85,6 +89,7 @@ public class SpleefStage {
         @Override
         public SpleefStage deserialize(TypeToken<?> type, ConfigurationNode value)
                 throws ObjectMappingException {
+            String stageId = value.getNode("id").getString();
             WorldTagArea groundArea = value.getNode("ground_area").getValue(TypeToken.of(WorldTagArea.class));
             WorldTagArea fightingArea = value.getNode("fighting_area").getValue(TypeToken.of(WorldTagArea.class));
 
@@ -96,9 +101,9 @@ public class SpleefStage {
 //                    );
 
             int defaultGameTime = value.getNode("default_game_time").getInt();
-            int minimumPlayerCount = value.getNode("minimumPlayerCount").getInt();
+            int minimumPlayerCount = value.getNode("minimum_player_count").getInt();
 
-            return new SpleefStage(groundArea, fightingArea,
+            return new SpleefStage(stageId, groundArea, fightingArea,
                     spawnRocations, defaultGameTime, minimumPlayerCount);
         }
 
@@ -111,7 +116,7 @@ public class SpleefStage {
             value.getNode("spawns").setValue(new TypeToken<List<WorldTagRocation>>() {}, obj.spawnRocations);
 
             value.getNode("default_game_time").setValue(obj.defaultGameTime);
-            value.getNode("minimumPlayerCount").setValue(obj.minimumPlayerCount);
+            value.getNode("minimum_player_count").setValue(obj.minimumPlayerCount);
         }
     }
 }

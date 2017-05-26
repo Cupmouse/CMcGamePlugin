@@ -2,7 +2,6 @@ package net.cupmouse.minecraft.game.creator.cmd.spleef;
 
 import net.cupmouse.minecraft.game.CMcGamePlugin;
 import net.cupmouse.minecraft.game.manager.GameException;
-import net.cupmouse.minecraft.game.spleef.SpleefRoom;
 import net.cupmouse.minecraft.game.spleef.SpleefStage;
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
@@ -14,37 +13,28 @@ import org.spongepowered.api.command.spec.CommandSpec;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 
-import java.util.Optional;
-
+import static net.cupmouse.minecraft.game.creator.cmd.CCmdArguments.spleefStageId;
 import static org.spongepowered.api.command.args.GenericArguments.integer;
 import static org.spongepowered.api.command.args.GenericArguments.onlyOne;
-import static org.spongepowered.api.command.args.GenericArguments.string;
 
-public class CCmdSpleefStageCreate implements CommandExecutor {
+public class CCmdSpleefRoomRemove implements CommandExecutor {
 
     public static final CommandCallable CALLABLE = CommandSpec.builder()
-            .arguments(onlyOne(string(Text.of("stage_id"))))
-            .executor(new CCmdSpleefStageCreate())
+            .arguments(onlyOne(integer(Text.of("room_number"))))
+            .executor(new CCmdSpleefRoomRemove())
             .build();
 
     @Override
     public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
-        String stageId = args.<String>getOne("stage_id").get();
-
-        Optional<SpleefStage> stageOptional = CMcGamePlugin.getSpleef().getStage(stageId);
-
-        if (stageOptional.isPresent()) {
-            throw new CommandException(Text.of(TextColors.RED, "✗そのステージIDのステージはすでに存在します。"));
-        }
+        int roomNumber = args.<Integer>getOne("room_number").get();
 
         try {
-            CMcGamePlugin.getSpleef().addStage(stageId, SpleefStage.creator());
+            CMcGamePlugin.getSpleef().removeRoom(roomNumber);
         } catch (GameException e) {
-            throw new CommandException(Text.of(TextColors.RED, "✗ステージを作成できませんでした。", e.getText()),
+            throw new CommandException(Text.of(TextColors.RED, "✗ステージを削除できませんでした。", e.getText()),
                     e, false);
         }
-
-        src.sendMessage(Text.of(TextColors.AQUA, "✓ステージID", stageId,"のSpleefステージを作成しました。"));
+        src.sendMessage(Text.of(TextColors.AQUA, "✓ステージを削除しました。"));
         return CommandResult.success();
     }
 }
