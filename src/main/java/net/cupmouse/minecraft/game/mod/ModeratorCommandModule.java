@@ -10,5 +10,6 @@ public class ModeratorCommandModule implements PluginModule {
     @Override
     public void onInitializationProxy() throws Exception {
 //        Sponge.getCommandManager().register(CMcCore.getPlugin(), MCmdRoom.CALLABLE);
+
     }
 }

@@ -1,23 +1,44 @@
 package net.cupmouse.minecraft.game.spleef;
 
 import com.google.common.reflect.TypeToken;
+import net.cupmouse.minecraft.game.manager.*;
 import net.cupmouse.minecraft.worlds.WorldTagArea;
 import net.cupmouse.minecraft.worlds.WorldTagRocation;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
+import ninja.leaping.configurate.objectmapping.Setting;
+import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
 import ninja.leaping.configurate.objectmapping.serialize.TypeSerializer;
 
 import java.util.*;
 
+import static net.cupmouse.minecraft.game.manager.IntRange.range;
+
+@ConfigSerializable
 public class SpleefStage {
 
     public final String stageId;
 
-    private List<String> builder;
+    @OptionId({"builders"})
+    @Setting("builders")
+    private List<String> builders;
+
+    @AreaId({"groundArea", "g"})
+    @Setting("ground_area")
     private WorldTagArea groundArea;
+    @AreaId({"fightingArea", "f"})
+    @Setting("ground_area")
     private WorldTagArea fightingArea;
+
+    @PositionId({"spawn"})
+    @Setting("spawns")
     private List<WorldTagRocation> spawnRocations;
+
+    @IntOptionId({"defaultGameTime", "dgt"})
+    @Setting("default_game_time")
     private int defaultGameTime;
+    @IntOptionId({"minimumPlayerCount", "mpc"})
+    @Setting("minimum_player_count")
     private int minimumPlayerCount;
 
     private SpleefStage(String stageId, WorldTagArea groundArea, WorldTagArea fightingArea,
@@ -53,7 +74,7 @@ public class SpleefStage {
     }
 
     public List<WorldTagRocation> getSpawnRocations() {
-        return spawnRocations;
+        return Collections.unmodifiableList(spawnRocations);
     }
 
     public int getDefaultGameTime() {
@@ -72,51 +93,23 @@ public class SpleefStage {
         this.fightingArea = fightingArea;
     }
 
-    public void setSpawnRocations(List<WorldTagRocation> spawnRocations) {
-        this.spawnRocations = spawnRocations;
+    public WorldTagRocation getSpawnRocation(int index) {
+        return spawnRocations.get(index);
+    }
+
+    public void setSpawnRocation(int index, WorldTagRocation rocation) {
+        spawnRocations.set(index, rocation);
     }
 
     public void setDefaultGameTime(int defaultGameTime) {
+        range(2, null).checkInRange(defaultGameTime);
+
         this.defaultGameTime = defaultGameTime;
     }
 
     public void setMinimumPlayerCount(int minimumPlayerCount) {
+        range(0, null).checkInRange(minimumPlayerCount);
+
         this.minimumPlayerCount = minimumPlayerCount;
-    }
-
-    static class Serializer implements TypeSerializer<SpleefStage> {
-
-        @Override
-        public SpleefStage deserialize(TypeToken<?> type, ConfigurationNode value)
-                throws ObjectMappingException {
-            String stageId = value.getNode("id").getString();
-            WorldTagArea groundArea = value.getNode("ground_area").getValue(TypeToken.of(WorldTagArea.class));
-            WorldTagArea fightingArea = value.getNode("fighting_area").getValue(TypeToken.of(WorldTagArea.class));
-
-            // 変更不可能にしておく
-            List<WorldTagRocation> spawnRocations =
-//                    Collections.unmodifiableList(
-                            value.getNode("spawns").getList(TypeToken.of(WorldTagRocation.class))
-                    ;
-//                    );
-
-            int defaultGameTime = value.getNode("default_game_time").getInt();
-            int minimumPlayerCount = value.getNode("minimum_player_count").getInt();
-
-            return new SpleefStage(stageId, groundArea, fightingArea,
-                    spawnRocations, defaultGameTime, minimumPlayerCount);
-        }
-
-        @Override
-        public void serialize(TypeToken<?> type, SpleefStage obj, ConfigurationNode value)
-                throws ObjectMappingException {
-            value.getNode("ground_area").setValue(TypeToken.of(WorldTagArea.class), obj.groundArea);
-            value.getNode("fighting_area").setValue(TypeToken.of(WorldTagArea.class), obj.fightingArea);
-
-            value.getNode("spawns").setValue(new TypeToken<List<WorldTagRocation>>() {}, obj.spawnRocations);
-
-            value.getNode("default_game_time").setValue(obj.defaultGameTime);
-            value.getNode("minimum_player_count").setValue(obj.minimumPlayerCount);
-        }
     }
 }

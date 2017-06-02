@@ -1,14 +1,17 @@
 package net.cupmouse.minecraft.game.spleef;
 
 import com.google.common.reflect.TypeToken;
+import net.cupmouse.minecraft.CMcCore;
 import net.cupmouse.minecraft.game.CMcGamePlugin;
 import net.cupmouse.minecraft.game.manager.GameManager;
 import net.cupmouse.minecraft.game.manager.GameException;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
+import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import ninja.leaping.configurate.objectmapping.serialize.TypeSerializerCollection;
 import ninja.leaping.configurate.objectmapping.serialize.TypeSerializers;
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
+import org.json.JSONObject;
 import org.spongepowered.api.Game;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
@@ -55,7 +58,7 @@ public final class SpleefManager implements GameManager<SpleefRoom> {
     private void addRoom(int roomNumber, SpleefRoom spleefRoom) throws GameException {
         if (roomNumber < 0) {
             throw new GameException(
-                    Text.of(TextColors.RED, "✗負の数を部屋番号に指定すると使いづらいのでやめてください。"));
+                    Text.of(TextColors.RED, "✗負の数を部屋番号に指定しないでください。"));
         }
         if (rooms.containsKey(roomNumber)) {
             throw new GameException(Text.of(TextColors.RED, "✗部屋番号が重複しています。"));
@@ -73,7 +76,13 @@ public final class SpleefManager implements GameManager<SpleefRoom> {
     }
 
     public Optional<SpleefStage> getStage(String stageId) {
-        return Optional.ofNullable(stageIdVsRoom.get(stageId).stage);
+        SpleefRoom spleefRoom = stageIdVsRoom.get(stageId);
+
+        if (spleefRoom == null) {
+            return Optional.empty();
+        }
+
+        return Optional.ofNullable(spleefRoom.stage);
     }
 
     public String getStageId(SpleefStage stage) {
@@ -85,7 +94,15 @@ public final class SpleefManager implements GameManager<SpleefRoom> {
         // シリアライザ－登録
         TypeSerializerCollection defaultSerializers = TypeSerializers.getDefaultSerializers();
 
-        defaultSerializers.registerType(TypeToken.of(SpleefStage.class), new SpleefStage.Serializer());
+//        defaultSerializers.registerType(TypeToken.of(SpleefStage.class), new SpleefStage.Serializer());
+
+        load();
+    }
+
+    public void load() {
+        // TODO
+        this.rooms.clear();
+        this.stageIdVsRoom.clear();
 
         // ルームとステージのロード
         CommentedConfigurationNode nodeRooms = CMcGamePlugin.getGameConfigNode().getNode("spleef", "rooms");
@@ -93,21 +110,40 @@ public final class SpleefManager implements GameManager<SpleefRoom> {
         Map<Object, ? extends CommentedConfigurationNode> childrenMap = nodeRooms.getChildrenMap();
 
         for (Map.Entry<Object, ? extends CommentedConfigurationNode> entry : childrenMap.entrySet()) {
-            SpleefStage stage = entry.getValue().getNode("stage").getValue(TypeToken.of(SpleefStage.class));
+            SpleefStage stage = null;
+            try {
+                stage = entry.getValue().getNode("stage").getValue(TypeToken.of(SpleefStage.class));
+            } catch (ObjectMappingException e) {
+                e.printStackTrace();
+            }
             SpleefRoom spleefRoom = new SpleefRoom(stage);
 
-            addRoom((int) entry.getKey(), spleefRoom);
+            try {
+                addRoom(Integer.parseInt((String) entry.getKey()), spleefRoom);
+            } catch (GameException e) {
+                e.printStackTrace();
+            }
+            CMcCore.getLogger().info("SPLEEFルーム[stage=" + stage.stageId + "]を読み込みました");
+        }
+    }
+
+    public void save() {
+        CommentedConfigurationNode nodeRooms = CMcGamePlugin.getGameConfigNode().getNode("spleef", "rooms");
+
+        for (Map.Entry<Integer, SpleefRoom> entry : rooms.entrySet()) {
+            CommentedConfigurationNode nodeRoom = nodeRooms.getNode(Integer.toString(entry.getKey()));
+
+            System.out.println(nodeRoom.getNode("stage").toString());
+            try {
+                nodeRoom.getNode("stage").setValue(TypeToken.of(SpleefStage.class), entry.getValue().stage);
+            } catch (ObjectMappingException e) {
+                e.printStackTrace();
+            }
         }
     }
 
     @Override
     public void onStoppingServerProxy() throws Exception {
-        CommentedConfigurationNode nodeRooms = CMcGamePlugin.getGameConfigNode().getNode("spleef", "rooms");
-
-        for (Map.Entry<Integer, SpleefRoom> entry : rooms.entrySet()) {
-            CommentedConfigurationNode nodeRoom = nodeRooms.getNode(entry.getKey());
-
-            nodeRoom.getNode("stage").setValue(TypeToken.of(SpleefStage.class), entry.getValue().stage);
-        }
+        save();
     }
 }

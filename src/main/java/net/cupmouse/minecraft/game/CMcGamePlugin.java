@@ -13,8 +13,11 @@ import net.cupmouse.minecraft.game.data.user.GameUserDataModule;
 import net.cupmouse.minecraft.game.spleef.SpleefManager;
 import net.cupmouse.minecraft.game.spleef.SpleefRoom;
 import net.cupmouse.minecraft.worlds.WorldTagModule;
+import ninja.leaping.configurate.ConfigurationOptions;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
+import ninja.leaping.configurate.objectmapping.GuiceObjectMapperFactory;
+import ninja.leaping.configurate.objectmapping.ObjectMapperFactory;
 import org.slf4j.Logger;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.config.ConfigDir;
@@ -38,14 +41,17 @@ public class CMcGamePlugin {
 
     private final CMcCore core;
     private final GameUserDataModule userm;
-    private Path configGamePath;
-    private HoconConfigurationLoader gameConfigLoader;
+    private static Path configGamePath;
+    private static GuiceObjectMapperFactory objectMapperFactory;
+    private static HoconConfigurationLoader gameConfigLoader;
     private static CommentedConfigurationNode gameConfigNode;
 
     private static SpleefManager spleef;
 
     @Inject
-    public CMcGamePlugin(Logger logger, @ConfigDir(sharedRoot = false) Path configDir) {
+    public CMcGamePlugin(Logger logger, @ConfigDir(sharedRoot = false) Path configDir,
+                         GuiceObjectMapperFactory objectMapperFactory) {
+        this.objectMapperFactory = objectMapperFactory;
         PluginModule[] moduleArray = {
                 new DatabaseModule(),
                 new HeartbeatModule(),
@@ -90,15 +96,7 @@ public class CMcGamePlugin {
             }
         }
 
-        // 設定をロードする
-        this.gameConfigLoader = HoconConfigurationLoader.builder().setPath(configGamePath).build();
-
-        try {
-            CMcGamePlugin.gameConfigNode = gameConfigLoader.load();
-        } catch (IOException e) {
-            e.printStackTrace();
-            stopEternally();
-        }
+        loadConfig();
 
         CMcCore.getLogger().info("ゲーム設定を読み込みました！");
 
@@ -107,12 +105,7 @@ public class CMcGamePlugin {
 
     @Listener
     public void onStoppedServer(GameStoppedServerEvent event) {
-        try {
-            this.gameConfigLoader.save(gameConfigNode);
-        } catch (IOException e) {
-            e.printStackTrace();
-            CMcCore.getLogger().warn("設定が保存できませんでした。[ゲーム設定]");
-        }
+        saveConfig();
     }
 
     public static Optional<SpleefRoom> getRoomPlayerJoin(Player player) {
@@ -124,6 +117,34 @@ public class CMcGamePlugin {
         }
 
         return Optional.empty();
+    }
+
+    public static void reloadConfig() {
+        spleef.save();
+        saveConfig();
+        loadConfig();
+        spleef.load();
+    }
+
+    private static void saveConfig() {
+        try {
+            gameConfigLoader.save(gameConfigNode);
+        } catch (IOException e) {
+            e.printStackTrace();
+            CMcCore.getLogger().warn("設定が保存できませんでした。[ゲーム設定]");
+        }
+    }
+
+    private static void loadConfig() {
+        // 設定をロードする
+        gameConfigLoader = HoconConfigurationLoader.builder().setPath(configGamePath).build();
+
+        try {
+            CMcGamePlugin.gameConfigNode = gameConfigLoader.load(ConfigurationOptions.defaults().setObjectMapperFactory(objectMapperFactory));
+        } catch (IOException e) {
+            e.printStackTrace();
+            stopEternally();
+        }
     }
 //
 //    @Listener

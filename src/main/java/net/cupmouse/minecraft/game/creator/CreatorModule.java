@@ -5,6 +5,7 @@ import net.cupmouse.minecraft.CMcCore;
 import net.cupmouse.minecraft.PluginModule;
 import net.cupmouse.minecraft.game.CMcGamePlugin;
 import net.cupmouse.minecraft.game.GameType;
+import net.cupmouse.minecraft.game.creator.cmd.CCmdReloadConfig;
 import net.cupmouse.minecraft.game.creator.cmd.CCmdSelection;
 import net.cupmouse.minecraft.game.creator.cmd.CCmdTools;
 import net.cupmouse.minecraft.game.creator.cmd.area.CCmdArea;
@@ -64,6 +65,7 @@ public final class CreatorModule implements PluginModule {
                 .child(CCmdTools.CALLABLE, "tool", "tools", "t")
                 .child(CCmdSelection.CALLABLE, "selection", "sel", "s")
                 .child(CCmdSpleef.CALLABLE, GameType.SPLEEF.aliases)
+                .child(CCmdReloadConfig.CALLABLE, "reloadconfig", "rc")
                 .build(), "gc");
 
         CMcCore.getLogger().warn("=========================================");
