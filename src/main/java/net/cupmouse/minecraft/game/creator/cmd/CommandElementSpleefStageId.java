@@ -1,9 +1,7 @@
 package net.cupmouse.minecraft.game.creator.cmd;
 
 import net.cupmouse.minecraft.game.CMcGamePlugin;
-import net.cupmouse.minecraft.game.spleef.SpleefManager;
-import net.cupmouse.minecraft.game.spleef.SpleefRoom;
-import net.cupmouse.minecraft.game.spleef.SpleefStage;
+import net.cupmouse.minecraft.game.spleef.stage.SpleefStage;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.ArgumentParseException;
 import org.spongepowered.api.command.args.CommandArgs;

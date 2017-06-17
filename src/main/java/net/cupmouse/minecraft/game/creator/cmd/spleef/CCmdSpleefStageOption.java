@@ -1,8 +1,6 @@
 package net.cupmouse.minecraft.game.creator.cmd.spleef;
 
-import net.cupmouse.minecraft.game.creator.cmd.CCmdArguments;
-import net.cupmouse.minecraft.game.spleef.SpleefRoom;
-import net.cupmouse.minecraft.game.spleef.SpleefStage;
+import net.cupmouse.minecraft.game.spleef.stage.SpleefStage;
 import net.cupmouse.minecraft.util.CEThrowableDualConsumer;
 import net.cupmouse.minecraft.util.CEThrowableFunction;
 import org.spongepowered.api.command.CommandCallable;

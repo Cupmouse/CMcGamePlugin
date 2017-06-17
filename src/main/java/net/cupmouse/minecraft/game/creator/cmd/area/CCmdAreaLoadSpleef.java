@@ -2,8 +2,7 @@ package net.cupmouse.minecraft.game.creator.cmd.area;
 
 import net.cupmouse.minecraft.game.creator.CreatorModule;
 import net.cupmouse.minecraft.game.creator.cmd.CCmdArguments;
-import net.cupmouse.minecraft.game.spleef.SpleefRoom;
-import net.cupmouse.minecraft.game.spleef.SpleefStage;
+import net.cupmouse.minecraft.game.spleef.stage.SpleefStage;
 import net.cupmouse.minecraft.worlds.WorldTagArea;
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
