@@ -1,6 +1,5 @@
 package net.cupmouse.minecraft.game.creator;
 
-import io.netty.internal.tcnative.SessionTicketKey;
 import net.cupmouse.minecraft.CMcCore;
 import net.cupmouse.minecraft.PluginModule;
 import net.cupmouse.minecraft.game.CMcGamePlugin;
@@ -11,7 +10,6 @@ import net.cupmouse.minecraft.game.creator.cmd.CCmdTools;
 import net.cupmouse.minecraft.game.creator.cmd.area.CCmdArea;
 import net.cupmouse.minecraft.game.creator.cmd.position.CCmdPosition;
 import net.cupmouse.minecraft.game.creator.cmd.spleef.CCmdSpleef;
-import net.cupmouse.minecraft.game.creator.cmd.spleef.CCmdSpleefStage;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.block.BlockTypes;
@@ -27,7 +25,6 @@ import org.spongepowered.api.event.network.ClientConnectionEvent;
 import org.spongepowered.api.item.ItemTypes;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.text.Text;
-import org.spongepowered.api.text.format.TextColor;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
@@ -43,7 +40,7 @@ public final class CreatorModule implements PluginModule {
             "THEN CHECK OUT OTHER PAPER FOR USAGE OF THE COMMAND, " +
             "OR JUST ASK SOMEONE WHO KNOWS ABOUT IT.";
 
-    private static Map<CommandSource, CreatorSessionInfo> creatorSessionMap = new HashMap<>();
+    private static Map<CommandSource, CreatorBank> creatorSessionMap = new HashMap<>();
 
     private boolean creatorEnabled;
 
@@ -74,11 +71,11 @@ public final class CreatorModule implements PluginModule {
 
     }
 
-    public static CreatorSessionInfo getOrCreateSession(CommandSource commandSource) {
-        CreatorSessionInfo sessionInfo = creatorSessionMap.get(commandSource);
+    public static CreatorBank getOrCreateBankOf(CommandSource commandSource) {
+        CreatorBank sessionInfo = creatorSessionMap.get(commandSource);
 
         if (sessionInfo == null) {
-            sessionInfo = new CreatorSessionInfo();
+            sessionInfo = new CreatorBank();
             CreatorModule.creatorSessionMap.put(commandSource, sessionInfo);
         }
 
@@ -93,7 +90,7 @@ public final class CreatorModule implements PluginModule {
 
     @Listener
     public void onInteractBlock(InteractBlockEvent event, @First Player player) {
-        CreatorSessionInfo session = getOrCreateSession(player);
+        CreatorBank session = getOrCreateBankOf(player);
 
         if (!session.selectionEnabled) {
             return;

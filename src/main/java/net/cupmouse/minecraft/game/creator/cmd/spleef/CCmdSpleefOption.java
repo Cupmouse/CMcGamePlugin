@@ -1,6 +1,7 @@
 package net.cupmouse.minecraft.game.creator.cmd.spleef;
 
-import net.cupmouse.minecraft.game.spleef.stage.SpleefStage;
+import net.cupmouse.minecraft.game.spleef.SpleefStage;
+import net.cupmouse.minecraft.game.spleef.SpleefStageTemplate;
 import net.cupmouse.minecraft.util.CEThrowableDualConsumer;
 import net.cupmouse.minecraft.util.CEThrowableFunction;
 import org.spongepowered.api.command.CommandCallable;
@@ -21,23 +22,21 @@ import static org.spongepowered.api.command.args.GenericArguments.onlyOne;
 import static org.spongepowered.api.command.args.GenericArguments.optional;
 import static org.spongepowered.api.command.args.GenericArguments.string;
 
-public class CCmdSpleefStageOption implements CommandExecutor {
+public class CCmdSpleefOption implements CommandExecutor {
 
     public static final CommandCallable CALLABLE = CommandSpec.builder()
-            .arguments(onlyOne(spleefStageId(Text.of("stage_id"))),
-                    onlyOne(string(Text.of("key"))),
+            .arguments(onlyOne(string(Text.of("key"))),
                     optional(string(Text.of("value"))))
-            .executor(new CCmdSpleefStageOption())
+            .executor(new CCmdSpleefOption())
             .build();
 
     private Map<String, CEThrowableFunction<SpleefStage, ?>> getters = new HashMap<>();
     private Map<String, CEThrowableDualConsumer<SpleefStage, String>> setters = new HashMap<>();
 
-    // TODO Reflection
-    private CCmdSpleefStageOption() {
+    private CCmdSpleefOption() {
         // GETTER
 
-        CEThrowableFunction<SpleefStage, Object> defaultGameTimeGetter = SpleefStage::getDefaultGameTime;
+        CEThrowableFunction<SpleefStage, Object> defaultGameTimeGetter = SpleefStageTemplate::getDefaultOptions;
         this.getters.put("defaultGameTime", defaultGameTimeGetter);
         this.getters.put("dgt", defaultGameTimeGetter);
 

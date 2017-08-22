@@ -1,4 +1,4 @@
-package net.cupmouse.minecraft.game.spleef.stage;
+package net.cupmouse.minecraft.game.spleef;
 
 import net.cupmouse.minecraft.game.manager.IntOptionId;
 import ninja.leaping.configurate.objectmapping.Setting;

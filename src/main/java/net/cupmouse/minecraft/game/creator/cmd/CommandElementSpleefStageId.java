@@ -1,7 +1,7 @@
 package net.cupmouse.minecraft.game.creator.cmd;
 
 import net.cupmouse.minecraft.game.CMcGamePlugin;
-import net.cupmouse.minecraft.game.spleef.stage.SpleefStage;
+import net.cupmouse.minecraft.game.spleef.SpleefStage;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.ArgumentParseException;
 import org.spongepowered.api.command.args.CommandArgs;
@@ -38,6 +38,6 @@ public class CommandElementSpleefStageId extends CommandElement {
 
     @Override
     public List<String> complete(CommandSource src, CommandArgs args, CommandContext context) {
-        return new ArrayList<>(CMcGamePlugin.getSpleef().getStageIds());
+        return new ArrayList<>(CMcGamePlugin.getSpleef().getRoomNumbers());
     }
 }

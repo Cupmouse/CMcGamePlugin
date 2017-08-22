@@ -2,7 +2,7 @@ package net.cupmouse.minecraft.game.creator.cmd.position;
 
 import net.cupmouse.minecraft.CMcCore;
 import net.cupmouse.minecraft.game.creator.CreatorModule;
-import net.cupmouse.minecraft.game.creator.CreatorSessionInfo;
+import net.cupmouse.minecraft.game.creator.CreatorBank;
 import net.cupmouse.minecraft.worlds.WorldTagModule;
 import net.cupmouse.minecraft.worlds.WorldTagRocation;
 import org.spongepowered.api.Sponge;
@@ -48,9 +48,9 @@ public final class CCmdPositionShow implements CommandExecutor {
 
     @Override
     public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
-        CreatorSessionInfo session = CreatorModule.getOrCreateSession(src);
+        CreatorBank session = CreatorModule.getOrCreateBankOf(src);
 
-        if (session.loadedPos == null) {
+        if (session.loadedLoc == null) {
             throw new CommandException(Text.of(TextColors.RED, "✗ポジションがロードされていません。"), false);
         }
 
@@ -60,12 +60,12 @@ public final class CCmdPositionShow implements CommandExecutor {
             src.sendMessage(Text.of(TextColors.AQUA,
                     "===ロードされたポジション\n",
                     "回転情報/",
-                    session.loadedPos instanceof WorldTagRocation
-                            ? ((WorldTagRocation) session.loadedPos).rotation.toString()
+                    session.loadedLoc instanceof WorldTagRocation
+                            ? ((WorldTagRocation) session.loadedLoc).rotation.toString()
                             : "なし", "\n",
-                    "位置/", session.loadedPos.getPosition().toString(), "\n",
-                    "ワールドタグ名/", session.loadedPos.getWorldTag().getTagName(), " 存在する?/",
-                    WorldTagModule.getTaggedWorld(session.loadedPos.getWorldTag()).isPresent() ? "はい" : "いいえ"
+                    "位置/", session.loadedLoc.getPosition().toString(), "\n",
+                    "ワールドタグ名/", session.loadedLoc.getWorldTag().getTagName(), " 存在する?/",
+                    WorldTagModule.getTaggedWorld(session.loadedLoc.getWorldTag()).isPresent() ? "はい" : "いいえ"
 
             ));
 
@@ -75,16 +75,16 @@ public final class CCmdPositionShow implements CommandExecutor {
         if (method.equals("teleport") || method.equals("t")) {
 
             if (src instanceof Player) {
-                session.loadedPos.teleportHere(((Player) src));
+                session.loadedLoc.teleportHere(((Player) src));
             }
         } else if (method.equals("armorstand") || method.equals("a")) {
 
-            World world = WorldTagModule.getTaggedWorld(session.loadedPos.getWorldTag()).get();
+            World world = WorldTagModule.getTaggedWorld(session.loadedLoc.getWorldTag()).get();
 
-            Entity armorEnt= world.createEntity(EntityTypes.ARMOR_STAND, session.loadedPos.getPosition());
-            session.loadedPos.teleportHere(armorEnt);
+            Entity armorEnt= world.createEntity(EntityTypes.ARMOR_STAND, session.loadedLoc.getPosition());
+            session.loadedLoc.teleportHere(armorEnt);
 
-            if (session.loadedPos instanceof WorldTagRocation) {
+            if (session.loadedLoc instanceof WorldTagRocation) {
                 // 方向もあるなら、革のヘルメットを被らせる。
                 ((ArmorStand) armorEnt).setHelmet(ItemStack.of(ItemTypes.LEATHER_HELMET, 1));
             }

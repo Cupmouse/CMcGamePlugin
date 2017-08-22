@@ -1,7 +1,7 @@
 package net.cupmouse.minecraft.game.creator.cmd.area;
 
 import net.cupmouse.minecraft.game.creator.CreatorModule;
-import net.cupmouse.minecraft.game.creator.CreatorSessionInfo;
+import net.cupmouse.minecraft.game.creator.CreatorBank;
 import net.cupmouse.minecraft.worlds.WorldTagAreaSquare;
 import net.cupmouse.minecraft.worlds.WorldTagModule;
 import org.spongepowered.api.command.CommandCallable;
@@ -26,7 +26,7 @@ public class CCmdAreaShowText implements CommandExecutor {
 
     @Override
     public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
-        CreatorSessionInfo session = CreatorModule.getOrCreateSession(src);
+        CreatorBank session = CreatorModule.getOrCreateBankOf(src);
 
         if (session.loadedArea == null) {
             throw new CommandException(Text.of(TextColors.RED, "✗エリアがロードされていません。"), false);

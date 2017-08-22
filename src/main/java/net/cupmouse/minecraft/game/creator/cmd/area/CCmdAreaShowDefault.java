@@ -1,7 +1,7 @@
 package net.cupmouse.minecraft.game.creator.cmd.area;
 
 import net.cupmouse.minecraft.game.creator.CreatorModule;
-import net.cupmouse.minecraft.game.creator.CreatorSessionInfo;
+import net.cupmouse.minecraft.game.creator.CreatorBank;
 import net.cupmouse.minecraft.util.DualConsumer;
 import net.cupmouse.minecraft.worlds.BlockLocSequence;
 import net.cupmouse.minecraft.worlds.WorldTagModule;
@@ -49,7 +49,7 @@ public class CCmdAreaShowDefault implements CommandExecutor {
 
         BlockLocSequence sequence;
 
-        CreatorSessionInfo session = CreatorModule.getOrCreateSession(src);
+        CreatorBank session = CreatorModule.getOrCreateBankOf(src);
 
         if (session.loadedArea == null) {
             throw new CommandException(Text.of(TextColors.RED, "✗エリアがロードされていません。"), false);

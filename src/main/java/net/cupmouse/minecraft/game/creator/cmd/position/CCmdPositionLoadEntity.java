@@ -27,7 +27,7 @@ public class CCmdPositionLoadEntity implements CommandExecutor {
     public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
         Entity entity = args.<Entity>getOne("entity").get();
 
-        CreatorModule.getOrCreateSession(src).loadedPos = WorldTagRocation.fromEntity(entity);
+        CreatorModule.getOrCreateBankOf(src).loadedLoc = WorldTagRocation.fromEntity(entity);
 
         src.sendMessage(Text.of(TextColors.AQUA, "✓選択された回転情報つきロケーションをロードしました。"));
         return CommandResult.success();

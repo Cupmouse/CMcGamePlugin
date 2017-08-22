@@ -1,4 +1,4 @@
-package net.cupmouse.minecraft.game.spleef.stage;
+package net.cupmouse.minecraft.game.spleef;
 
 import com.flowpowered.math.vector.Vector3i;
 import net.cupmouse.minecraft.worlds.WorldTagArea;
@@ -19,7 +19,7 @@ public class SpleefStage {
     private ArrayList<WorldTagRocation> spawnRocations;
     private int minimumPlayerCount;
 
-    public SpleefStage(SpleefStageTemplate template, Vector3i relativeBasePoint) {
+    SpleefStage(SpleefStageTemplate template, Vector3i relativeBasePoint) {
         this.template = template;
         this.options = template.getDefaultOptions();
 
@@ -28,7 +28,7 @@ public class SpleefStage {
         loadFromTemplate();
     }
 
-    protected void loadFromTemplate() {
+    private void loadFromTemplate() {
         this.groundArea = template.getRelativeGroundArea().relativeBasePoint(relativeBasePoint);
         this.fightingArea = template.getRelativeFightingArea().relativeBasePoint(relativeBasePoint);
 

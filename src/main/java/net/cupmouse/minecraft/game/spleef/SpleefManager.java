@@ -6,8 +6,6 @@ import net.cupmouse.minecraft.CMcCore;
 import net.cupmouse.minecraft.game.CMcGamePlugin;
 import net.cupmouse.minecraft.game.manager.GameManager;
 import net.cupmouse.minecraft.game.manager.GameException;
-import net.cupmouse.minecraft.game.spleef.stage.SpleefStage;
-import net.cupmouse.minecraft.game.spleef.stage.SpleefStageTemplate;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import ninja.leaping.configurate.objectmapping.serialize.TypeSerializerCollection;
@@ -19,41 +17,46 @@ import org.spongepowered.api.text.format.TextColors;
 
 import java.util.*;
 
-public final class SpleefManager implements GameManager<SpleefRoom> {
+public final class SpleefManager implements GameManager {
 
     /**
-     * テンプレートID / LIST(ルームのリスト)
+     * 部屋番号とSpleefRoomのマップ
      */
-    private BidiMap<SpleefStageTemplate, List<SpleefRoom>> rooms = new DualHashBidiMap<>();
+    private BidiMap<Integer, SpleefRoom> rooms = new DualHashBidiMap<>();
     private BidiMap<String, SpleefStageTemplate> stageTemplates = new DualHashBidiMap<>();
 
-    @Override
-    public Collection<SpleefRoom> getRooms() {
-        return Collections.unmodifiableCollection();
+    public Optional<SpleefRoom> getRoomsByNumber(int roomNumber) {
+        return Optional.ofNullable(rooms.get(roomNumber));
     }
 
-    public
-
-    public Set<Map.Entry<SpleefRoom, Integer>> getRoomsAndItsNumber() {
-        return Collections.unmodifiableSet(rooms.inverseBidiMap().entrySet());
+    public Set<String> getStageTemplateIds() {
+        return stageTemplates.keySet();
     }
 
-    @Override
-    public Optional<SpleefRoom> getRoom(int roomNumber) {
+    public Optional<SpleefStageTemplate> getStageTemplate(String templateId) {
+        SpleefStageTemplate stageTemplate = stageTemplates.get(templateId);
 
-
-        return ;
+        return Optional.ofNullable(stageTemplate);
     }
 
-    public void newRoom(String templateId, Vector3i relativeBasePoint) throws GameException {
+    private void addStageTemplate(SpleefStageTemplate template, String templateId) throws GameException {
+        if (stageTemplates.containsKey(templateId)) {
+            throw new GameException(Text.of(TextColors.RED, "✗ステージテンプレートIDが重複しています。"));
+        }
+
+        stageTemplates.put(templateId, template);
+    }
+
+    public void newRoom(int roomNumber, String templateId, Vector3i relativeBasePoint) throws GameException {
         SpleefStageTemplate stageTemplate = stageTemplates.get(templateId);
 
         if (stageTemplate == null) {
             throw new GameException(Text.of(TextColors.RED, "✗そのステージテンプレートは存在しません。"));
         }
 
-        SpleefRoom spleefRoom = new SpleefRoom(new SpleefStage(stageTemplate, relativeBasePoint));
-        addRoom(spleefRoom);
+        SpleefStage stage = new SpleefStage(stageTemplate, relativeBasePoint);
+        SpleefRoom spleefRoom = new SpleefRoom(stage);
+        addRoom(roomNumber, spleefRoom);
     }
 
     public void removeRoom(int roomNumber) throws GameException {
@@ -69,40 +72,18 @@ public final class SpleefManager implements GameManager<SpleefRoom> {
         this.rooms.remove(roomNumber);
     }
 
-    private void addRoom(SpleefStage stage) throws GameException {
-        if (!stageTemplates.containsValue(stage.getTemplate())) {
-            // テンプレートが登録されていない。
-
+    private void addRoom(int roomNumber, SpleefRoom room) throws GameException {
+        if (rooms.containsKey(roomNumber)) {
+            throw new GameException(
+                    Text.of(TextColors.RED, String.format("✗部屋番号が重複しています [%d]", roomNumber)));
         }
 
-        rooms.get(stage.getTemplate()).var
-
-        if (stageIdVsRoom.containsKey(spleefRoom.stage.stageId)) {
-            throw new GameException(Text.of(TextColors.RED, "✗ステージテンプレートIDが重複しています。"));
-        }
-
-        this.rooms.put(roomNumber, spleefRoom);
-        this.stageIdVsRoom.put(spleefRoom.stage.stageId, spleefRoom);
+        this.rooms.put(roomNumber, room);
     }
 
-    public Set<String> getStageIds() {
-        return Collections.unmodifiableSet(stageIdVsRoom.keySet());
+    public Set<Integer> getRoomNumbers() {
+        return Collections.unmodifiableSet(rooms.keySet());
     }
-
-    public Optional<SpleefStage> getStage(String stageId) {
-        SpleefRoom spleefRoom = stageIdVsRoom.get(stageId);
-
-        if (spleefRoom == null) {
-            return Optional.empty();
-        }
-
-        return Optional.ofNullable(spleefRoom.stage);
-    }
-
-    public String getStageId(SpleefStage stage) {
-        return stageIdVsRoom.getKey(stage);
-    }
-
     @Override
     public void onInitializationProxy() throws Exception {
         // シリアライザ－登録
@@ -116,7 +97,7 @@ public final class SpleefManager implements GameManager<SpleefRoom> {
     public void load() {
         // TODO
         this.rooms.clear();
-        this.stageIdVsRoom.clear();
+        this.stageTemplates.clear();
 
         // ルームとステージのロード
         CommentedConfigurationNode nodeRooms = CMcGamePlugin.getGameConfigNode().getNode("spleef", "rooms");
@@ -133,11 +114,12 @@ public final class SpleefManager implements GameManager<SpleefRoom> {
             SpleefRoom spleefRoom = new SpleefRoom(stage);
 
             try {
-                addRoom(Integer.parseInt((String) entry.getKey()), spleefRoom);
+                int roomNumber = Integer.parseInt((String) entry.getKey());
+                addRoom(roomNumber, spleefRoom);
+                CMcCore.getLogger().info(String.format("SPLEEFルーム(ステージ%s)を読み込みました", roomNumber));
             } catch (GameException e) {
                 e.printStackTrace();
             }
-            CMcCore.getLogger().info("SPLEEFルーム[stage=" + stage.stageId + "]を読み込みました");
         }
     }
 

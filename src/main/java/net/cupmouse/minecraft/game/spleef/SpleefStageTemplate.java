@@ -1,4 +1,4 @@
-package net.cupmouse.minecraft.game.spleef.stage;
+package net.cupmouse.minecraft.game.spleef;
 
 import net.cupmouse.minecraft.game.manager.AreaId;
 import net.cupmouse.minecraft.game.manager.IntOptionId;

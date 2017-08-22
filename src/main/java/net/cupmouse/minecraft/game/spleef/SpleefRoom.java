@@ -3,7 +3,6 @@ package net.cupmouse.minecraft.game.spleef;
 import net.cupmouse.minecraft.game.manager.GameRoom;
 import net.cupmouse.minecraft.game.manager.GameException;
 import net.cupmouse.minecraft.game.manager.GameRoomState;
-import net.cupmouse.minecraft.game.spleef.stage.SpleefStage;
 import net.cupmouse.minecraft.worlds.WorldTagRocation;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.item.ItemTypes;
@@ -45,7 +44,7 @@ public final class SpleefRoom implements GameRoom {
     private SpleefClockManager clock;
     private GameRoomState state;
 
-    public SpleefRoom(SpleefStage stage) {
+    SpleefRoom(SpleefStage stage) {
         this.stage = stage;
         this.messageChannel = new SpleefRoomMessageChannel();
 

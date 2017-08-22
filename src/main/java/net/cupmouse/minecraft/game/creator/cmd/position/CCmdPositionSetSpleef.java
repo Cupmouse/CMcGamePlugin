@@ -1,7 +1,7 @@
 package net.cupmouse.minecraft.game.creator.cmd.position;
 
 import net.cupmouse.minecraft.game.creator.CreatorModule;
-import net.cupmouse.minecraft.game.spleef.stage.SpleefStage;
+import net.cupmouse.minecraft.game.spleef.SpleefStage;
 import net.cupmouse.minecraft.util.DualConsumer;
 import net.cupmouse.minecraft.worlds.WorldTagLocation;
 import net.cupmouse.minecraft.worlds.WorldTagPosition;
@@ -41,7 +41,7 @@ public class CCmdPositionSetSpleef implements CommandExecutor {
         SpleefStage stage = args.<SpleefStage>getOne("stage_id").get();
         String positionId = args.<String>getOne("position_id").get();
 
-        WorldTagPosition loadedPos = CreatorModule.getOrCreateSession(src).loadedPos;
+        WorldTagPosition loadedPos = CreatorModule.getOrCreateBankOf(src).loadedLoc;
 
         if (loadedPos == null) {
             throw new CommandException(Text.of(TextColors.RED, "✗ポジションをロードして下さい。"));

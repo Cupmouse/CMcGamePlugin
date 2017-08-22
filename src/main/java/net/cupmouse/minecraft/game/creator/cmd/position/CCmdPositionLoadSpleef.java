@@ -1,9 +1,9 @@
 package net.cupmouse.minecraft.game.creator.cmd.position;
 
 import net.cupmouse.minecraft.game.creator.CreatorModule;
-import net.cupmouse.minecraft.game.creator.CreatorSessionInfo;
+import net.cupmouse.minecraft.game.creator.CreatorBank;
 import net.cupmouse.minecraft.game.creator.cmd.CCmdArguments;
-import net.cupmouse.minecraft.game.spleef.stage.SpleefStage;
+import net.cupmouse.minecraft.game.spleef.SpleefStage;
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
@@ -30,7 +30,7 @@ public class CCmdPositionLoadSpleef implements CommandExecutor {
         SpleefStage stage = args.<SpleefStage>getOne("stage_id").get();
         String positionId = args.<String>getOne("position_id").get();
 
-        CreatorSessionInfo session = CreatorModule.getOrCreateSession(src);
+        CreatorBank session = CreatorModule.getOrCreateBankOf(src);
 
         if (positionId.startsWith("spawn.")) {
             // スポーンをロード
@@ -47,7 +47,7 @@ public class CCmdPositionLoadSpleef implements CommandExecutor {
                         , false);
             }
 
-            session.loadedPos = stage.getSpawnRocations().get(number);
+            session.loadedLoc = stage.getSpawnRocations().get(number);
         } else {
             // TODO
         }

@@ -1,8 +1,7 @@
 package net.cupmouse.minecraft.game.creator.cmd;
 
-import net.cupmouse.minecraft.game.CMcGamePlugin;
 import net.cupmouse.minecraft.game.creator.CreatorModule;
-import net.cupmouse.minecraft.game.creator.CreatorSessionInfo;
+import net.cupmouse.minecraft.game.creator.CreatorBank;
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
@@ -22,7 +21,7 @@ public class CCmdSelection implements CommandExecutor {
 
     @Override
     public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
-        CreatorSessionInfo session = CreatorModule.getOrCreateSession(src);
+        CreatorBank session = CreatorModule.getOrCreateBankOf(src);
 
         session.selectionEnabled = !session.selectionEnabled;
 
