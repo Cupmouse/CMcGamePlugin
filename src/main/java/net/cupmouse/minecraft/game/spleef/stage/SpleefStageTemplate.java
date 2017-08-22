@@ -10,9 +10,9 @@ import ninja.leaping.configurate.objectmapping.Setting;
 import java.util.Collections;
 import java.util.List;
 
-public abstract class SpleefStageTemplate {
+public class SpleefStageTemplate {
 
-    @Setting("template_info")
+    @Setting("info")
     private SpleefStageTemplateInfo info;
     @Setting("default_options")
     private SpleefStageOptions defaultOptions;
@@ -21,16 +21,19 @@ public abstract class SpleefStageTemplate {
     @Setting("minimum_player_count")
     private int minimumPlayerCount;
 
-    @AreaId({"relativeGroundArea", "g"})
+    @AreaId({"groundArea", "g"})
     @Setting("relative_ground_area")
     private WorldTagArea relativeGroundArea;
-    @AreaId({"relativeFightingArea", "f"})
+    @AreaId({"fightingArea", "f"})
     @Setting("relative_ground_area")
     private WorldTagArea relativeFightingArea;
 
     @PositionId({"spawn"})
     @Setting("spawns")
     private List<WorldTagRocation> relativeSpawnRocations;
+
+    private SpleefStageTemplate() {
+    }
 
     public SpleefStageOptions getDefaultOptions() {
         return defaultOptions;
@@ -75,4 +78,6 @@ public abstract class SpleefStageTemplate {
     public void setMinimumPlayerCount(int minimumPlayerCount) {
         this.minimumPlayerCount = minimumPlayerCount;
     }
+
+
 }

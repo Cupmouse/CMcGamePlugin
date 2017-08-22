@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public abstract class SpleefStage {
+public class SpleefStage {
 
     private final SpleefStageTemplate template;
     private SpleefStageOptions options;
@@ -39,6 +39,10 @@ public abstract class SpleefStage {
         }
 
         this.minimumPlayerCount = template.getMinimumPlayerCount();
+    }
+
+    public SpleefStageTemplate getTemplate() {
+        return template;
     }
 
     public SpleefStageOptions getOptions() {

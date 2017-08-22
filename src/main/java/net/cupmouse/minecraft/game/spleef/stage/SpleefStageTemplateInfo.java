@@ -10,13 +10,20 @@ import java.util.List;
 @ConfigSerializable
 public class SpleefStageTemplateInfo {
 
-    private String templateId;
+    @OptionId({"name", "n"})
+    @Setting("name")
     private String name;
+    @OptionId({"description", "d"})
+    @Setting("description")
     private String description;
+    @OptionId({"version", "v"})
+    @Setting("version")
     private String version;
-    @OptionId({"builders"})
+    @OptionId({"builders", "b"})
     @Setting("builders")
     private List<String> builders;
+    @OptionId({"unveiledTime", "ut"})
+    @Setting("unveiled_time")
     private LocalDateTime unveiledTime;
 
 }
