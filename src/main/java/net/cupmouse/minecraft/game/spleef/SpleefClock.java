@@ -1,7 +1,5 @@
 package net.cupmouse.minecraft.game.spleef;
 
-import net.cupmouse.minecraft.game.manager.GameRoomState;
-
 /**
  * 注意！この時計は0になってもctickLeftをどんどん減らしていきます。マイナスになります。
  * 0で次の処理に移りたいときは、0で動作を起こすようにして下さい。

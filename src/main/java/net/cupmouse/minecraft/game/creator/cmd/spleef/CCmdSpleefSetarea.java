@@ -1,9 +1,7 @@
 package net.cupmouse.minecraft.game.creator.cmd.spleef;
 
 import net.cupmouse.minecraft.game.CMcGamePlugin;
-import net.cupmouse.minecraft.game.GameType;
 import net.cupmouse.minecraft.game.creator.CreatorModule;
-import net.cupmouse.minecraft.game.spleef.SpleefStage;
 import net.cupmouse.minecraft.game.spleef.SpleefStageTemplate;
 import net.cupmouse.minecraft.util.DualConsumer;
 import net.cupmouse.minecraft.worlds.WorldTagArea;
@@ -17,9 +15,10 @@ import org.spongepowered.api.command.spec.CommandSpec;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
-import static org.spongepowered.api.command.args.GenericArguments.allOf;
 import static org.spongepowered.api.command.args.GenericArguments.onlyOne;
 import static org.spongepowered.api.command.args.GenericArguments.string;
 // TODO

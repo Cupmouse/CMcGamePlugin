@@ -1,7 +1,7 @@
 package net.cupmouse.minecraft.game.creator.cmd;
 
-import net.cupmouse.minecraft.game.creator.CreatorModule;
 import net.cupmouse.minecraft.game.creator.CreatorBank;
+import net.cupmouse.minecraft.game.creator.CreatorModule;
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;

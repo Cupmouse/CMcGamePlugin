@@ -38,7 +38,9 @@ public class SpleefStage {
             spawnRocations.add(rocation.relativeBasePoint(relativeBasePoint));
         }
 
-        this.minimumPlayerCount = template.getMinimumPlayerCount();
+        SpleefStageOptions defaultOptions = template.getDefaultOptions();
+        this.minimumPlayerCount = defaultOptions.getMinimumPlayerCount();
+        // TODO
     }
 
     public SpleefStageTemplate getTemplate() {

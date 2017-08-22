@@ -1,11 +1,9 @@
 package net.cupmouse.minecraft.game.creator;
 
-import net.cupmouse.minecraft.game.manager.GameException;
-import net.cupmouse.minecraft.game.spleef.SpleefStage;
+import net.cupmouse.minecraft.game.spleef.SpleefStageTemplate;
 import net.cupmouse.minecraft.worlds.*;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.text.Text;
-import org.spongepowered.api.text.format.TextColor;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
@@ -20,12 +18,13 @@ import java.util.Optional;
 public final class CreatorBank {
 
     private WorldTagArea area;
+    private WorldTagPosition relativeBase;
 
     public boolean selectionEnabled;
     private Location<World> firstLoc;
     private Location<World> secondLoc;
 
-    private SpleefStage spleefSelectedTemplate;
+    private SpleefStageTemplate spleefSelectedTemplate;
 
     public WorldTagAreaSquare createAreaSquareOrThrow() throws CommandException {
         if (firstLoc.getExtent() != secondLoc.getExtent()) {
@@ -47,7 +46,7 @@ public final class CreatorBank {
                 firstLoc.getBlockPosition(), secondLoc.getBlockPosition());
     }
 
-    public SpleefStage getSpleefSelectedTemplateOrThrow() throws CommandException {
+    public SpleefStageTemplate getSpleefSelectedTemplateOrThrow() throws CommandException {
         if (spleefSelectedTemplate == null) {
             throw new CommandException(Text.of(TextColors.RED, "✗ステージテンプレートが選択されていません"), false);
         }
@@ -65,5 +64,9 @@ public final class CreatorBank {
 
     public void setArea(WorldTagArea area) {
         this.area = area;
+    }
+
+    public WorldTagPosition setLocation() {
+        return null;
     }
 }

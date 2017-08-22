@@ -1,7 +1,7 @@
 package net.cupmouse.minecraft.game.creator.cmd.area;
 
-import net.cupmouse.minecraft.game.creator.CreatorModule;
 import net.cupmouse.minecraft.game.creator.CreatorBank;
+import net.cupmouse.minecraft.game.creator.CreatorModule;
 import net.cupmouse.minecraft.worlds.WorldTagAreaSquare;
 import net.cupmouse.minecraft.worlds.WorldTagModule;
 import org.spongepowered.api.command.CommandCallable;

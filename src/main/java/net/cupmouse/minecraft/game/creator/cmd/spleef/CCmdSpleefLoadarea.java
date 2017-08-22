@@ -3,6 +3,7 @@ package net.cupmouse.minecraft.game.creator.cmd.spleef;
 import net.cupmouse.minecraft.game.creator.CreatorBank;
 import net.cupmouse.minecraft.game.creator.CreatorModule;
 import net.cupmouse.minecraft.game.spleef.SpleefStage;
+import net.cupmouse.minecraft.game.spleef.SpleefStageTemplate;
 import net.cupmouse.minecraft.worlds.WorldTagArea;
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
@@ -31,39 +32,40 @@ public class CCmdSpleefLoadarea implements CommandExecutor {
 
     // すべてのエリアIDをIfで書くと読みづらくなるので、ゲッターをローダーとしてラムダ関数をマップする
     // 後に必要なときにステージを入れるとゲッターの結果が帰ってくるものがローダー
-    private Map<String, Function<SpleefStage, WorldTagArea>> loaders = new HashMap<>();
+    // 返ってくるのは相対位置
+    private Map<String, Function<SpleefStageTemplate, WorldTagArea>> loaders = new HashMap<>();
 
     private CCmdSpleefLoadarea() {
         // ローダーを設定する
 
-        Function<SpleefStage, WorldTagArea> groundAreaLoader = SpleefStage::getGroundArea;
+        Function<SpleefStageTemplate, WorldTagArea> groundAreaLoader = SpleefStageTemplate::getRelativeGroundArea;
         loaders.put("ground", groundAreaLoader);
         loaders.put("g", groundAreaLoader);
 
-        Function<SpleefStage, WorldTagArea> fightingAreaLoader = SpleefStage::getFightingArea;
+        Function<SpleefStageTemplate, WorldTagArea> fightingAreaLoader = SpleefStageTemplate::getRelativeFightingArea;
         loaders.put("fighting", fightingAreaLoader);
         loaders.put("f", fightingAreaLoader);
     }
 
     @Override
     public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
-        // バンクを読み込み
+        // バンクをを取得
         CreatorBank bank = CreatorModule.getOrCreateBankOf(src);
 
         // 入力されたエリアIDを取得するonlyOneなのでisPresentを確認しなくても良い
         String areaId = args.<String>getOne("area_id").get();
 
         // 予め用意されたローダーからエリアIDと一致するものを入手する
-        Function<SpleefStage, WorldTagArea> loader = loaders.get(areaId);
+        Function<SpleefStageTemplate, WorldTagArea> loader = loaders.get(areaId);
 
         if (loader == null) {
-            throw new CommandException(Text.of(TextColors.RED, "✗入力されたエリアIDは見つかりませんでした。"));
+            throw new CommandException(Text.of(TextColors.RED, "✗入力されたエリアIDは間違っています"));
         }
 
         // バンクにローダーの結果を設定するバンクに設定されていない場合は例外が発生し、設定されない
         bank.setArea(loader.apply(bank.getSpleefSelectedTemplateOrThrow()));
 
-        src.sendMessage(Text.of(TextColors.GREEN, "✓エリアをロードしました。"));
+        src.sendMessage(Text.of(TextColors.GREEN, "✓バンクにエリアをロードしました"));
 
         // コマンドは成功
         return CommandResult.success();

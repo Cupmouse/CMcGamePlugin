@@ -1,7 +1,5 @@
 package net.cupmouse.minecraft.game;
 
-import org.spongepowered.api.Game;
-
 import java.util.*;
 
 public enum GameType {

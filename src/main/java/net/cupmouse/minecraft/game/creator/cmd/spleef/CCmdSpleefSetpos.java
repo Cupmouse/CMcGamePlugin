@@ -1,4 +1,4 @@
-package net.cupmouse.minecraft.game.creator.cmd.position;
+package net.cupmouse.minecraft.game.creator.cmd.spleef;
 
 import net.cupmouse.minecraft.game.creator.CreatorModule;
 import net.cupmouse.minecraft.game.spleef.SpleefStage;
@@ -23,17 +23,16 @@ import static net.cupmouse.minecraft.game.creator.cmd.CCmdArguments.spleefStageI
 import static org.spongepowered.api.command.args.GenericArguments.onlyOne;
 import static org.spongepowered.api.command.args.GenericArguments.string;
 
-public class CCmdPositionSetSpleef implements CommandExecutor {
+public class CCmdSpleefSetpos implements CommandExecutor {
 
     public static final CommandCallable CALLABLE = CommandSpec.builder()
-            .arguments(onlyOne(spleefStageId(Text.of("stage_id"))),
-                    onlyOne(string(Text.of("position_id"))))
-            .executor(new CCmdPositionSetSpleef())
+            .arguments(onlyOne(string(Text.of("position_id"))))
+            .executor(new CCmdSpleefSetpos())
             .build();
 
     private Map<String, DualConsumer<SpleefStage, WorldTagPosition>> setters = new HashMap<>();
 
-    private CCmdPositionSetSpleef() {
+    private CCmdSpleefSetpos() {
     }
 
     @Override

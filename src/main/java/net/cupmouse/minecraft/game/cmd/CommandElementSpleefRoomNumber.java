@@ -1,6 +1,5 @@
 package net.cupmouse.minecraft.game.cmd;
 
-import net.cupmouse.minecraft.game.CMcGamePlugin;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.ArgumentParseException;
 import org.spongepowered.api.command.args.CommandArgs;

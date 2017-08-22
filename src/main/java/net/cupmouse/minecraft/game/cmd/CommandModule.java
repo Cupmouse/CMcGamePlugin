@@ -2,7 +2,6 @@ package net.cupmouse.minecraft.game.cmd;
 
 import net.cupmouse.minecraft.CMcCore;
 import net.cupmouse.minecraft.PluginModule;
-import net.cupmouse.minecraft.game.CMcGamePlugin;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandManager;
 

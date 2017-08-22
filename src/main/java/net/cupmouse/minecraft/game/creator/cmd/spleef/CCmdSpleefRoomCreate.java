@@ -12,9 +12,7 @@ import org.spongepowered.api.command.spec.CommandSpec;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 
-import static org.spongepowered.api.command.args.GenericArguments.integer;
-import static org.spongepowered.api.command.args.GenericArguments.onlyOne;
-import static org.spongepowered.api.command.args.GenericArguments.string;
+import static org.spongepowered.api.command.args.GenericArguments.*;
 
 public class CCmdSpleefRoomCreate implements CommandExecutor {
 

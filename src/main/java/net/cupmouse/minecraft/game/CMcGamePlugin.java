@@ -17,7 +17,6 @@ import ninja.leaping.configurate.ConfigurationOptions;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
 import ninja.leaping.configurate.objectmapping.GuiceObjectMapperFactory;
-import ninja.leaping.configurate.objectmapping.ObjectMapperFactory;
 import org.slf4j.Logger;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.config.ConfigDir;
@@ -51,7 +50,7 @@ public class CMcGamePlugin {
     @Inject
     public CMcGamePlugin(Logger logger, @ConfigDir(sharedRoot = false) Path configDir,
                          GuiceObjectMapperFactory objectMapperFactory) {
-        this.objectMapperFactory = objectMapperFactory;
+        CMcGamePlugin.objectMapperFactory = objectMapperFactory;
         PluginModule[] moduleArray = {
                 new DatabaseModule(),
                 new HeartbeatModule(),
@@ -59,7 +58,7 @@ public class CMcGamePlugin {
                 new PongPingModule(),
                 this.userm = new GameUserDataModule(),
                 new BeamModule(),
-                this.spleef = new SpleefManager(),
+                spleef = new SpleefManager(),
                 new CommandModule(),
                 new CreatorModule()
         };
@@ -83,7 +82,7 @@ public class CMcGamePlugin {
     public void onPreInitialization(GamePreInitializationEvent event) {
         core.onPreInitialization(event);
 
-        this.configGamePath = CMcCore.getConfigDir().resolve("game.conf");
+        configGamePath = CMcCore.getConfigDir().resolve("game.conf");
 
         // 設定ファイルが存在しない場合、jarファイル内のアセットフォルダからコピーする。
         if (!Files.exists(configGamePath)) {

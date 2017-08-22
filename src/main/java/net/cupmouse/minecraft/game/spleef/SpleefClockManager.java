@@ -4,8 +4,6 @@ import net.cupmouse.minecraft.CMcCore;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.scheduler.Task;
 
-import java.util.concurrent.TimeUnit;
-
 /**
  * Runnableですが、時計は自分で管理するので、外からSpongeスケジューラに登録しないでください。
  */

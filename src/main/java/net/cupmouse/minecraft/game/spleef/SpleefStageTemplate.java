@@ -1,35 +1,19 @@
 package net.cupmouse.minecraft.game.spleef;
 
-import net.cupmouse.minecraft.game.manager.AreaId;
-import net.cupmouse.minecraft.game.manager.IntOptionId;
-import net.cupmouse.minecraft.game.manager.PositionId;
 import net.cupmouse.minecraft.worlds.WorldTagArea;
 import net.cupmouse.minecraft.worlds.WorldTagRocation;
-import ninja.leaping.configurate.objectmapping.Setting;
 
 import java.util.Collections;
 import java.util.List;
 
 public class SpleefStageTemplate {
 
-    @Setting("info")
     private SpleefStageTemplateInfo info;
-    @Setting("default_options")
-    private SpleefStageOptions defaultOptions;
+    private SpleefStageOptionsMutable defaultOptions;
 
-    @IntOptionId({"minimumPlayerCount", "mpc"})
-    @Setting("minimum_player_count")
-    private int minimumPlayerCount;
-
-    @AreaId({"groundArea", "g"})
-    @Setting("relative_ground_area")
     private WorldTagArea relativeGroundArea;
-    @AreaId({"fightingArea", "f"})
-    @Setting("relative_ground_area")
     private WorldTagArea relativeFightingArea;
 
-    @PositionId({"spawn"})
-    @Setting("spawns")
     private List<WorldTagRocation> relativeSpawnRocations;
 
     private SpleefStageTemplate() {
@@ -55,10 +39,6 @@ public class SpleefStageTemplate {
         return Collections.unmodifiableList(relativeSpawnRocations);
     }
 
-    public int getMinimumPlayerCount() {
-        return minimumPlayerCount;
-    }
-
     /*
     ここからSetter
      */
@@ -75,9 +55,15 @@ public class SpleefStageTemplate {
         relativeSpawnRocations.set(index, rocation);
     }
 
-    public void setMinimumPlayerCount(int minimumPlayerCount) {
-        this.minimumPlayerCount = minimumPlayerCount;
-    }
+    /*
+    ロードとセーブ
+     */
+    public static SpleefStageTemplate createNew() {
+        SpleefStageTemplate spleefStageTemplate = new SpleefStageTemplate();
+        spleefStageTemplate.defaultOptions = new SpleefStageOptionsMutable();
+        spleefStageTemplate.info = new SpleefStageTemplateInfo();
 
+        return spleefStageTemplate;
+    }
 
 }

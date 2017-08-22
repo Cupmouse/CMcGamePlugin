@@ -1,6 +1,5 @@
 package net.cupmouse.minecraft.game.spleef;
 
-import net.cupmouse.minecraft.game.manager.GameRoomState;
 import org.spongepowered.api.text.Text;
 
 public class SpleefClockReadyCountdown implements SpleefClock {

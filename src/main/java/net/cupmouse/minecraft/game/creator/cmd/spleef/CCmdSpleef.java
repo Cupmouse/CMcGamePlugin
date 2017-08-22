@@ -10,15 +10,15 @@ public class CCmdSpleef {
 
     public static final CommandCallable CALLABLE = CommandSpec.builder()
             // 範囲をバンクに読み込む
-            .child(, "loadarea", "la")
+            .child(CCmdSpleefLoadarea.CALLABLE, "loadarea", "la")
             // 範囲をテンプレートに設定する
-            .child(, "setarea", "sa")
+            .child(CCmdSpleefSetarea.CALLABLE, "setarea", "sa")
             // 位置をバンクに読み込む
-            .child(, "loadloc", "ll")
+            .child(CCmdSpleefLoadpos.CALLABLE, "loadpos", "lp")
             // 位置を記録する
-            .child(, "setloc", "sl")
+            .child(CCmdSpleefSetpos.CALLABLE, "setpos", "sp")
             // ステージテンプレートを選択する
-            .child(, "select", "s")
+            .child(CcmdSelect, "select", "s")
             // ステージテンプレートを作成する、作成後自動的に選択される。
             .child(, "new", "n")
             .build();

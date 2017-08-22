@@ -1,29 +1,47 @@
 package net.cupmouse.minecraft.game.spleef;
 
-import net.cupmouse.minecraft.game.manager.OptionId;
-import ninja.leaping.configurate.objectmapping.Setting;
 import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
 
-import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 
 @ConfigSerializable
 public class SpleefStageTemplateInfo {
 
-    @OptionId({"name", "n"})
-    @Setting("name")
     private String name;
-    @OptionId({"description", "d"})
-    @Setting("description")
     private String description;
-    @OptionId({"version", "v"})
-    @Setting("version")
     private String version;
-    @OptionId({"builders", "b"})
-    @Setting("builders")
     private List<String> builders;
-    @OptionId({"unveiledTime", "ut"})
-    @Setting("unveiled_time")
-    private LocalDateTime unveiledTime;
 
+    public String getName() {
+        return name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public List<String> getBuilders() {
+        return Collections.unmodifiableList(builders);
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
+    }
+
+    public void setBuilders(List<String> builders) {
+        this.builders = builders;
+    }
 }

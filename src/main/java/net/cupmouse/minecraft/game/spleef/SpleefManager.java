@@ -4,8 +4,8 @@ import com.flowpowered.math.vector.Vector3i;
 import com.google.common.reflect.TypeToken;
 import net.cupmouse.minecraft.CMcCore;
 import net.cupmouse.minecraft.game.CMcGamePlugin;
-import net.cupmouse.minecraft.game.manager.GameManager;
 import net.cupmouse.minecraft.game.manager.GameException;
+import net.cupmouse.minecraft.game.manager.GameManager;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import ninja.leaping.configurate.objectmapping.serialize.TypeSerializerCollection;
@@ -15,7 +15,10 @@ import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 public final class SpleefManager implements GameManager {
 
@@ -63,7 +66,7 @@ public final class SpleefManager implements GameManager {
         SpleefRoom removed = rooms.remove(roomNumber);
 
         if (removed == null) {
-            throw new GameException(Text.of(TextColors.RED, "✗その部屋番号は存在しません。"));
+            throw new GameException(Text.of(TextColors.RED, "✗その部屋番号は存在しません。もう一度ご確認ください"));
         }
 
         // 部屋を閉じる
@@ -84,6 +87,11 @@ public final class SpleefManager implements GameManager {
     public Set<Integer> getRoomNumbers() {
         return Collections.unmodifiableSet(rooms.keySet());
     }
+
+    public Set<SpleefRoom> getRooms() {
+        return rooms.values();
+    }
+
     @Override
     public void onInitializationProxy() throws Exception {
         // シリアライザ－登録
