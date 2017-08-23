@@ -5,6 +5,7 @@ import net.cupmouse.minecraft.worlds.*;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
+import org.spongepowered.api.text.format.TextStyles;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
@@ -17,28 +18,35 @@ import java.util.Optional;
  */
 public final class CreatorBank {
 
+    private WorldTagPosition position;
     private WorldTagArea area;
-    private WorldTagPosition relativeBase;
 
-    public boolean selectionEnabled;
+    public boolean isSelectionEnabled;
     private Location<World> firstLoc;
     private Location<World> secondLoc;
+    private Location<World> relativeBase;
 
     private SpleefStageTemplate spleefSelectedTemplate;
 
     public WorldTagAreaSquare createAreaSquareOrThrow() throws CommandException {
+        if (firstLoc == null) {
+            throw new CommandException(Text.of(TextColors.RED, "✗第1ポイントが選択されていません"));
+        }
+
+        if (secondLoc == null) {
+            throw new CommandException(Text.of(TextColors.RED, "✗第2ポイントが選択されていません"));
+        }
+
         if (firstLoc.getExtent() != secondLoc.getExtent()) {
             throw new CommandException(Text.of(TextColors.RED,
-                            "✗2つの位置が選択されましたが、それぞれ別のワールドにあるので続行できません"),
+                    "✗2つの位置が選択されましたが、それぞれ別のワールドにあるので続行できません"),
                     false);
         }
 
         Optional<WorldTag> worldTagOptional = WorldTagModule.whatIsThisWorld(firstLoc.getExtent());
 
         if (!worldTagOptional.isPresent()) {
-            throw new CommandException(Text.of(TextColors.RED,
-                    String.format("✗ワールド'%s'が不明です、管理人にこれを報告してください",
-                            firstLoc.getExtent().getName())), false);
+            throw new CommandException(Text.of(TextColors.RED, "✗エラー、管理人に報告してください"));
         }
 
         // TODO ブロックの位置!=Entityの位置？なので使うとプレイヤーが中にいるか判定するのに手こずるのではないか？
@@ -66,7 +74,72 @@ public final class CreatorBank {
         this.area = area;
     }
 
-    public WorldTagPosition setLocation() {
-        return null;
+    public void setPosition(WorldTagPosition position) {
+        this.position = position;
+    }
+
+    public WorldTagPosition getPositionOrThrow() throws CommandException {
+        if (position == null) {
+            throw new CommandException(Text.of(TextColors.RED,
+                    "✗バンクにポジションはロードされていません"), false);
+        }
+
+        return position;
+    }
+
+    /**
+     * ロードされていなくても通ります
+     */
+    public WorldTagRocation getPositionAsRocationOrThrow() throws CommandException {
+        if (!(position instanceof WorldTagRocation)) {
+            throw new CommandException(Text.of(TextColors.RED,
+                    "✗バンクにロードされているポジションは回転要素を", TextStyles.BOLD, "含んでいません"),
+                    false);
+        }
+// TODO 明示的になるためにしたが、コマンドでバンクのポジションを変換できるようにしなければいけない
+
+        return (WorldTagRocation) position;
+    }
+
+    public WorldTagLocation getPositionAsLocationOrThrow() throws CommandException {
+        if (position == null) {
+            throw new CommandException(Text.of(TextColors.RED, "✗バンクにポジションはロードされていません"),
+                    false);
+        }
+        if (!(position instanceof WorldTagLocation)) {
+            throw new CommandException(Text.of(TextColors.RED,
+                    "✗バンクにロードされているポジションは回転要素を", TextStyles.BOLD, "含んでいます"), false);
+        }
+
+
+        return (WorldTagLocation) position;
+    }
+
+    public void setSpleefSelectedTemplate(SpleefStageTemplate spleefSelectedTemplate) {
+        this.spleefSelectedTemplate = spleefSelectedTemplate;
+    }
+
+    public Location<World> getFirstLoc() {
+        return firstLoc;
+    }
+
+    public void setFirstLoc(Location<World> firstLoc) {
+        this.firstLoc = firstLoc;
+    }
+
+    public Location<World> getSecondLoc() {
+        return secondLoc;
+    }
+
+    public void setSecondLoc(Location<World> secondLoc) {
+        this.secondLoc = secondLoc;
+    }
+
+    public Location<World> getRelativeBaseOrThrow() throws CommandException {
+        if (relativeBase == null) {
+            throw new CommandException(Text.of(TextColors.RED, "✗相対位置基準ポジションがロードされていません"));
+        }
+
+        return relativeBase;
     }
 }

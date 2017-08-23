@@ -23,14 +23,14 @@ public class CCmdSelection implements CommandExecutor {
     public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
         CreatorBank session = CreatorModule.getOrCreateBankOf(src);
 
-        session.selectionEnabled = !session.selectionEnabled;
+        session.isSelectionEnabled = !session.isSelectionEnabled;
 
-        if (session.selectionEnabled) {
-            src.sendMessage(Text.of(TextColors.AQUA, "✓範囲指定は現在",
-                    TextColors.GREEN, "有効", TextColors.AQUA, "です。"));
+        if (session.isSelectionEnabled) {
+            src.sendMessage(Text.of(TextColors.GOLD, "✓範囲指定は現在",
+                    TextColors.GREEN, "有効", TextColors.GOLD, "です。"));
         } else {
-            src.sendMessage(Text.of(TextColors.AQUA, "✓範囲指定は現在",
-                    TextColors.RED, "無効", TextColors.AQUA, "です。"));
+            src.sendMessage(Text.of(TextColors.GOLD, "✓範囲指定は現在",
+                    TextColors.RED, "無効", TextColors.GOLD, "です。"));
         }
 
         return CommandResult.success();

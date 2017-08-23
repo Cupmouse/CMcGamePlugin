@@ -2,6 +2,7 @@ package net.cupmouse.minecraft.game.creator.cmd.area;
 
 import net.cupmouse.minecraft.game.creator.CreatorBank;
 import net.cupmouse.minecraft.game.creator.CreatorModule;
+import net.cupmouse.minecraft.worlds.WorldTagArea;
 import net.cupmouse.minecraft.worlds.WorldTagAreaSquare;
 import net.cupmouse.minecraft.worlds.WorldTagModule;
 import org.spongepowered.api.command.CommandCallable;
@@ -26,17 +27,14 @@ public class CCmdAreaShowText implements CommandExecutor {
 
     @Override
     public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
-        CreatorBank session = CreatorModule.getOrCreateBankOf(src);
+        CreatorBank bank = CreatorModule.getOrCreateBankOf(src);
+        WorldTagArea area = bank.getAreaOrThrow();
 
-        if (session.loadedArea == null) {
-            throw new CommandException(Text.of(TextColors.RED, "✗エリアがロードされていません。"), false);
-        }
-
-        if (session.loadedArea instanceof WorldTagAreaSquare) {
-            WorldTagAreaSquare areaSquare = (WorldTagAreaSquare) session.loadedArea;
+        if (area instanceof WorldTagAreaSquare) {
+            WorldTagAreaSquare areaSquare = (WorldTagAreaSquare) area;
 
             src.sendMessage(
-                    Text.of(TextColors.AQUA,
+                    Text.of(TextColors.GOLD,
                             "===ロードされたエリアの種類/直方体\n",
                             "位置小/", areaSquare.minPos.toString(),
                             " 位置大/", areaSquare.maxPos.toString(), "\n",

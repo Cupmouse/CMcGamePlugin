@@ -35,10 +35,8 @@ import java.util.Optional;
 
 public final class CreatorModule implements PluginModule {
 
-    public static final String TEXT_DEFAULT_DESCRIPTION = "THIS IS FOR LIMITED PEOPLE ONLY. " +
-            "IF YOU NEED HELP WITH THIS COMMAND, " +
-            "THEN CHECK OUT OTHER PAPER FOR USAGE OF THE COMMAND, " +
-            "OR JUST ASK SOMEONE WHO KNOWS ABOUT IT.";
+    public static final String TEXT_DEFAULT_DESCRIPTION = "This command is for limited people only." +
+            " Usage can be found in the stage creator documentation.";
 
     private static Map<CommandSource, CreatorBank> creatorSessionMap = new HashMap<>();
 
@@ -61,9 +59,10 @@ public final class CreatorModule implements PluginModule {
                 .child(CCmdPosition.CALLABLE, "position", "pos", "p")
                 .child(CCmdTools.CALLABLE, "tool", "tools", "t")
                 .child(CCmdSelection.CALLABLE, "selection", "sel", "s")
-                .child(CCmdSpleef.CALLABLE, GameType.SPLEEF.aliases)
+                .child(CCmdSpleef.CALLABLE,
+                        GameType.SPLEEF.aliases.stream().map(s -> "c" + s).toArray(String[]::new))
                 .child(CCmdReloadConfig.CALLABLE, "reloadconfig", "rc")
-                .build(), "gc");
+                .build(), "c");
 
         CMcCore.getLogger().warn("=========================================");
         CMcCore.getLogger().warn("クリエイターモードが有効化されました！");
@@ -90,79 +89,88 @@ public final class CreatorModule implements PluginModule {
 
     @Listener
     public void onInteractBlock(InteractBlockEvent event, @First Player player) {
-        CreatorBank session = getOrCreateBankOf(player);
+        // 立体選択の実装です
+        CreatorBank bank = getOrCreateBankOf(player);
 
-        if (!session.selectionEnabled) {
+        if (!bank.isSelectionEnabled) {
+            // 無効になっているので無視します
             return;
         }
 
         Optional<ItemStack> optional = player.getItemInHand(HandTypes.MAIN_HAND);
 
         if (!optional.isPresent()) {
+            // 何も持っていないなら無視
             return;
         }
 
         ItemStack itemStack = optional.get();
 
+        // 手に持っているアイテムがマグマ/硬い氷のときは範囲選択(ポイントが選ばれた)ということ
         if (itemStack.getItem() == ItemTypes.MAGMA || itemStack.getItem() == ItemTypes.PACKED_ICE) {
 
             if (player.get(Keys.IS_SNEAKING).orElse(false)) {
-                // 姿勢を低くした状態ならスキップ
+                // 姿勢を低くした状態なら無視(姿勢を低くすると、範囲選択がONでもこれらのブロックを置くことができる)
                 return;
             }
 
+            // クリックされた位置を入手する。右クリックの場合は、右クリックしたブロックが、左クリックの場合は破壊した
+            // ブロックの位置が帰って来る
             // なんでnullの可能性があるのか不明だが、isPresentでチェック
-            Optional<Location<World>> locOpt = event.getTargetBlock().getLocation();
+            Optional<Location<World>> targetBlockLocOpt = event.getTargetBlock().getLocation();
 
-            if (!locOpt.isPresent()) {
+            if (!targetBlockLocOpt.isPresent()) {
+                // なかったら無視
                 return;
             }
 
-            Location<World> clickLoc = locOpt.get();
+            Location<World> targetLoc = targetBlockLocOpt.get();
 
-            // 実際に設定するロケーション
-            Location<World> locToSet;
+            // 実際に選択された点として記録する位置がこれです
+            Location<World> selectedLoc;
 
             if (event instanceof InteractBlockEvent.Primary) {
-                // そのまま左クリックなら、破壊したはずのブロックを位置に登録
-                locToSet = clickLoc;
+                // 左クリックなら、破壊したはずのブロックを位置に登録
+                selectedLoc = targetLoc;
 
             } else if (event instanceof InteractBlockEvent.Secondary) {
                 // 右クリックでブロックを置こうとしたら、その置こうとしたところの位置を登録
+                // つまり右クリックされたブロックの、クリックされた側面からその方向に１ブロック先が選択点
 
-                locToSet = clickLoc.getRelative(event.getTargetSide());
+                selectedLoc = targetLoc.getRelative(event.getTargetSide());
             } else {
+                // それ以外は普通ないが無視
                 return;
             }
 
-            // アイテムによって第一ポイントか第二ポイントか変える
+            // 持っているアイテム(ブロック)によって第一ポイントか第二ポイントが選択されたかを変える
             if (itemStack.getItem() == ItemTypes.MAGMA) {
-                // 以前選択していたところがあるならそのブロックをなかったコトにする
-                if (session.firstLoc != null) {
-                    player.resetBlockChange(session.firstLoc.getBlockPosition());
+                // 以前選択していたところがあるならその位置のビジュアルビューを消して新しくフェイクブロックを置く
+                if (bank.getFirstLoc() != null) {
+                    player.resetBlockChange(bank.getFirstLoc().getBlockPosition());
                 }
 
                 // 第一ポイントを決定
-                session.firstLoc = locToSet;
+                bank.setFirstLoc(selectedLoc);
 
                 player.sendMessage(Text.of(TextColors.AQUA, "第1ポイントを設定しました/",
-                        locToSet.getBlockPosition().toString()));
+                        selectedLoc.getBlockPosition().toString()));
             } else if (itemStack.getItem() == ItemTypes.PACKED_ICE) {
-                if (session.secondLoc != null) {
-                    player.resetBlockChange(session.secondLoc.getBlockPosition());
+                if (bank.getSecondLoc() != null) {
+                    player.resetBlockChange(bank.getSecondLoc().getBlockPosition());
                 }
 
                 // 第二ポイントを決定
-                session.secondLoc = locToSet;
+                bank.setSecondLoc(selectedLoc);
 
                 player.sendMessage(Text.of(TextColors.AQUA, "第2ポイントを設定しました/",
-                        locToSet.getBlockPosition().toString()));
+                        selectedLoc.getBlockPosition().toString()));
             }
 
             // その後溶岩と水に変化したように見せかける
             Sponge.getScheduler().createTaskBuilder().delayTicks(1)
                     .execute(() -> {
-                        player.sendBlockChange(locToSet.getBlockPosition(),
+                        player.sendBlockChange(selectedLoc.getBlockPosition(),
                                 BlockState.builder().blockType(
                                         itemStack.getItem().getBlock().map(blockType -> {
                                             if (blockType == BlockTypes.MAGMA) {
@@ -180,11 +188,11 @@ public final class CreatorModule implements PluginModule {
         } else if (itemStack.getItem() == ItemTypes.WOOL) {
             if (event instanceof InteractBlockEvent.Secondary) {
 
-                if (session.firstLoc != null) {
-                    player.resetBlockChange(session.firstLoc.getBlockPosition());
+                if (bank.getFirstLoc() != null) {
+                    player.resetBlockChange(bank.getFirstLoc().getBlockPosition());
                 }
-                if (session.secondLoc != null) {
-                    player.resetBlockChange(session.secondLoc.getBlockPosition());
+                if (bank.getSecondLoc() != null) {
+                    player.resetBlockChange(bank.getSecondLoc().getBlockPosition());
                 }
 
                 event.setCancelled(true);

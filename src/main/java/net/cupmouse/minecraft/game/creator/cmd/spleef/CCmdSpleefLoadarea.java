@@ -2,7 +2,6 @@ package net.cupmouse.minecraft.game.creator.cmd.spleef;
 
 import net.cupmouse.minecraft.game.creator.CreatorBank;
 import net.cupmouse.minecraft.game.creator.CreatorModule;
-import net.cupmouse.minecraft.game.spleef.SpleefStage;
 import net.cupmouse.minecraft.game.spleef.SpleefStageTemplate;
 import net.cupmouse.minecraft.worlds.WorldTagArea;
 import org.spongepowered.api.command.CommandCallable;
@@ -65,7 +64,7 @@ public class CCmdSpleefLoadarea implements CommandExecutor {
         // バンクにローダーの結果を設定するバンクに設定されていない場合は例外が発生し、設定されない
         bank.setArea(loader.apply(bank.getSpleefSelectedTemplateOrThrow()));
 
-        src.sendMessage(Text.of(TextColors.GREEN, "✓バンクにエリアをロードしました"));
+        src.sendMessage(Text.of(TextColors.GOLD, "✓バンクにエリアをロードしました"));
 
         // コマンドは成功
         return CommandResult.success();

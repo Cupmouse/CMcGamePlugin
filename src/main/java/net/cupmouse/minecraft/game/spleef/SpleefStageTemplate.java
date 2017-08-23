@@ -1,9 +1,10 @@
 package net.cupmouse.minecraft.game.spleef;
 
+import com.flowpowered.math.vector.Vector3i;
 import net.cupmouse.minecraft.worlds.WorldTagArea;
+import net.cupmouse.minecraft.worlds.WorldTagLocation;
 import net.cupmouse.minecraft.worlds.WorldTagRocation;
 
-import java.util.Collections;
 import java.util.List;
 
 public class SpleefStageTemplate {
@@ -11,6 +12,7 @@ public class SpleefStageTemplate {
     private SpleefStageTemplateInfo info;
     private SpleefStageOptionsMutable defaultOptions;
 
+    private WorldTagLocation relativeBaseLocation;
     private WorldTagArea relativeGroundArea;
     private WorldTagArea relativeFightingArea;
 
@@ -19,7 +21,7 @@ public class SpleefStageTemplate {
     private SpleefStageTemplate() {
     }
 
-    public SpleefStageOptions getDefaultOptions() {
+    public SpleefStageOptionsMutable getDefaultOptions() {
         return defaultOptions;
     }
 
@@ -31,12 +33,12 @@ public class SpleefStageTemplate {
         return relativeFightingArea;
     }
 
-    public WorldTagRocation getRelativeSpawnRocation(int index) {
-        return relativeSpawnRocations.get(index);
-    }
-
+    /**
+     * なんと外部から変更可能
+     * @return
+     */
     public List<WorldTagRocation> getRelativeSpawnRocations() {
-        return Collections.unmodifiableList(relativeSpawnRocations);
+        return relativeSpawnRocations;
     }
 
     /*
@@ -51,10 +53,6 @@ public class SpleefStageTemplate {
         this.relativeFightingArea = fightingArea;
     }
 
-    public void setRelativeSpawnRocation(int index, WorldTagRocation rocation) {
-        relativeSpawnRocations.set(index, rocation);
-    }
-
     /*
     ロードとセーブ
      */
@@ -66,4 +64,7 @@ public class SpleefStageTemplate {
         return spleefStageTemplate;
     }
 
+    public WorldTagLocation getRelativeBaseLocation() {
+        return relativeBaseLocation;
+    }
 }

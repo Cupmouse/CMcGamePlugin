@@ -18,8 +18,9 @@ public class CCmdSpleef {
             // 位置を記録する
             .child(CCmdSpleefSetpos.CALLABLE, "setpos", "sp")
             // ステージテンプレートを選択する
-            .child(CcmdSelect, "select", "s")
+            .child(CCmdSpleefSelect.CALLABLE, "select", "s")
             // ステージテンプレートを作成する、作成後自動的に選択される。
-            .child(, "new", "n")
+            .child(CCmdSpleefNew.CALLABLE, "new", "n")
             .build();
 }
+

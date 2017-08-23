@@ -28,6 +28,7 @@ import java.util.Set;
 public final class CCmdAreaShow {
 
     private static final Vector3d V3D_HALF = new Vector3d(.5, .5, .5);
+
     public static final CommandCallable CALLABLE = CommandSpec.builder()
             .child(CCmdAreaShowText.CALLABLE, "text", "t")
             // GLOW
@@ -109,7 +110,7 @@ public final class CCmdAreaShow {
                 for (Vector3i blockLoc : blockLocSequence.blockLocs) {
                     world.resetBlockChange(blockLoc);
                 }
-            }), "resetfake", "rb")
+            }), "resetfake", "rf", "rb", "c")
             .build();
 
     private CCmdAreaShow() {

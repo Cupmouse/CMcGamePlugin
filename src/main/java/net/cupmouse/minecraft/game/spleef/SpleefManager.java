@@ -6,6 +6,7 @@ import net.cupmouse.minecraft.CMcCore;
 import net.cupmouse.minecraft.game.CMcGamePlugin;
 import net.cupmouse.minecraft.game.manager.GameException;
 import net.cupmouse.minecraft.game.manager.GameManager;
+import net.cupmouse.minecraft.worlds.WorldTagLocation;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import ninja.leaping.configurate.objectmapping.serialize.TypeSerializerCollection;
@@ -44,20 +45,26 @@ public final class SpleefManager implements GameManager {
 
     private void addStageTemplate(SpleefStageTemplate template, String templateId) throws GameException {
         if (stageTemplates.containsKey(templateId)) {
-            throw new GameException(Text.of(TextColors.RED, "✗ステージテンプレートIDが重複しています。"));
+            throw new GameException(Text.of(TextColors.RED, "✗ステージテンプレートIDが重複しています"));
         }
 
         stageTemplates.put(templateId, template);
     }
 
-    public void newRoom(int roomNumber, String templateId, Vector3i relativeBasePoint) throws GameException {
+    public SpleefStageTemplate newStageTemplate(String templateId) throws GameException {
+        SpleefStageTemplate template = SpleefStageTemplate.createNew();
+        addStageTemplate(template, templateId);
+        return template;
+    }
+
+    public void newRoom(int roomNumber, String templateId, WorldTagLocation relativeBaseLocation) throws GameException {
         SpleefStageTemplate stageTemplate = stageTemplates.get(templateId);
 
         if (stageTemplate == null) {
-            throw new GameException(Text.of(TextColors.RED, "✗そのステージテンプレートは存在しません。"));
+            throw new GameException(Text.of(TextColors.RED, "✗そのステージテンプレートは存在しません"));
         }
 
-        SpleefStage stage = new SpleefStage(stageTemplate, relativeBasePoint);
+        SpleefStage stage = new SpleefStage(stageTemplate, relativeBaseLocation);
         SpleefRoom spleefRoom = new SpleefRoom(stage);
         addRoom(roomNumber, spleefRoom);
     }
@@ -89,7 +96,11 @@ public final class SpleefManager implements GameManager {
     }
 
     public Set<SpleefRoom> getRooms() {
-        return rooms.values();
+        return Collections.unmodifiableSet(rooms.values());
+    }
+
+    public Set<Map.Entry<SpleefRoom, Integer>> getRoomsAndItsNumber() {
+        return rooms.inverseBidiMap().entrySet();
     }
 
     @Override

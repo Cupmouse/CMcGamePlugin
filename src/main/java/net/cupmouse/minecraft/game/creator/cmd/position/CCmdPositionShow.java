@@ -4,6 +4,7 @@ import net.cupmouse.minecraft.CMcCore;
 import net.cupmouse.minecraft.game.creator.CreatorBank;
 import net.cupmouse.minecraft.game.creator.CreatorModule;
 import net.cupmouse.minecraft.worlds.WorldTagModule;
+import net.cupmouse.minecraft.worlds.WorldTagPosition;
 import net.cupmouse.minecraft.worlds.WorldTagRocation;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandCallable;
@@ -35,12 +36,12 @@ public final class CCmdPositionShow implements CommandExecutor {
 
     public static final CommandCallable CALLABLE = CommandSpec.builder()
             .arguments(onlyOne(choices(Text.of("method"), new HashMap<String, String>() {{
-                put("text", "text");
-                put("t", "t");
+                put("info", "info");
+                put("i", "info");
                 put("teleport", "teleport");
-                put("t", "t");
+                put("t", "teleport");
                 put("armorstand", "armorstand");
-                put("a", "a");
+                put("a", "armorstand");
             }})))
             .executor(new CCmdPositionShow())
             .build();
@@ -48,43 +49,43 @@ public final class CCmdPositionShow implements CommandExecutor {
 
     @Override
     public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
-        CreatorBank session = CreatorModule.getOrCreateBankOf(src);
+        CreatorBank bank = CreatorModule.getOrCreateBankOf(src);
 
-        if (session.loadedLoc == null) {
-            throw new CommandException(Text.of(TextColors.RED, "✗ポジションがロードされていません。"), false);
-        }
+        WorldTagPosition position = bank.getPositionOrThrow();
 
         String method = args.<String>getOne("method").get();
 
-        if (method.equals("text") || method.equals("t")) {
-            src.sendMessage(Text.of(TextColors.AQUA,
+        if (method.equals("text")) {
+            src.sendMessage(Text.of(TextColors.GOLD,
                     "===ロードされたポジション\n",
                     "回転情報/",
-                    session.loadedLoc instanceof WorldTagRocation
-                            ? ((WorldTagRocation) session.loadedLoc).rotation.toString()
+                    position instanceof WorldTagRocation
+                            ? ((WorldTagRocation) position).rotation.toString()
                             : "なし", "\n",
-                    "位置/", session.loadedLoc.getPosition().toString(), "\n",
-                    "ワールドタグ名/", session.loadedLoc.getWorldTag().getTagName(), " 存在する?/",
-                    WorldTagModule.getTaggedWorld(session.loadedLoc.getWorldTag()).isPresent() ? "はい" : "いいえ"
+                    "位置/", position.getPosition().toString(), "\n",
+                    "ワールドタグ名/", position.getWorldTag().getTagName(), " 存在する?/",
+                    WorldTagModule.getTaggedWorld(position.getWorldTag()).isPresent() ? "はい" : "いいえ"
 
             ));
 
             return CommandResult.success();
         }
 
-        if (method.equals("teleport") || method.equals("t")) {
+        if (method.equals("teleport")) {
 
             if (src instanceof Player) {
-                session.loadedLoc.teleportHere(((Player) src));
+                position.teleportHere(((Player) src));
             }
-        } else if (method.equals("armorstand") || method.equals("a")) {
 
-            World world = WorldTagModule.getTaggedWorld(session.loadedLoc.getWorldTag()).get();
+            src.sendMessage(Text.of(TextColors.GOLD, "✓テレポートしました"));
+            return CommandResult.success();
+        } else if (method.equals("armorstand")) {
+            World world = WorldTagModule.getTaggedWorld(position.getWorldTag()).get();
 
-            Entity armorEnt= world.createEntity(EntityTypes.ARMOR_STAND, session.loadedLoc.getPosition());
-            session.loadedLoc.teleportHere(armorEnt);
+            Entity armorEnt = world.createEntity(EntityTypes.ARMOR_STAND, position.getPosition());
+            position.teleportHere(armorEnt);
 
-            if (session.loadedLoc instanceof WorldTagRocation) {
+            if (position instanceof WorldTagRocation) {
                 // 方向もあるなら、革のヘルメットを被らせる。
                 ((ArmorStand) armorEnt).setHelmet(ItemStack.of(ItemTypes.LEATHER_HELMET, 1));
             }
@@ -98,10 +99,12 @@ public final class CCmdPositionShow implements CommandExecutor {
                     .delayTicks(20 * 20)
                     .execute((Runnable) armorEnt::remove)
                     .submit(CMcCore.getPlugin());
+
+            src.sendMessage(Text.of(TextColors.GOLD, "✓アーマースタンドを配置しました"));
+            return CommandResult.success();
         }
 
-
-        src.sendMessage(Text.of(TextColors.AQUA, "✓実行しました。"));
-        return CommandResult.success();
+        // 起きないはず
+        return CommandResult.empty();
     }
 }

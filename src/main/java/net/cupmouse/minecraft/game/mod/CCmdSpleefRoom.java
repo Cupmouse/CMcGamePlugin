@@ -1,4 +1,4 @@
-package net.cupmouse.minecraft.game.creator.cmd.spleef;
+package net.cupmouse.minecraft.game.mod;
 
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.spec.CommandSpec;

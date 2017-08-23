@@ -4,6 +4,7 @@ import net.cupmouse.minecraft.game.creator.CreatorBank;
 import net.cupmouse.minecraft.game.creator.CreatorModule;
 import net.cupmouse.minecraft.util.DualConsumer;
 import net.cupmouse.minecraft.worlds.BlockLocSequence;
+import net.cupmouse.minecraft.worlds.WorldTagArea;
 import net.cupmouse.minecraft.worlds.WorldTagModule;
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
@@ -27,11 +28,11 @@ public class CCmdAreaShowDefault implements CommandExecutor {
     public static CommandCallable callable(DualConsumer<World, BlockLocSequence> shower) {
         return CommandSpec.builder()
                 .arguments(
-                        onlyOne(choices(Text.of("place"), new HashMap<String, String>() {{
+                        onlyOne(choices(Text.of("method"), new HashMap<String, String>() {{
                             put("corner", "corner");
-                            put("c", "c");
+                            put("c", "corner");
                             put("outline", "outline");
-                            put("o", "o");
+                            put("o", "outline");
                         }})))
                 .executor(new CCmdAreaShowDefault(shower))
                 .build();
@@ -39,32 +40,29 @@ public class CCmdAreaShowDefault implements CommandExecutor {
 
     private DualConsumer<World, BlockLocSequence> shower;
 
-    public CCmdAreaShowDefault(DualConsumer<World, BlockLocSequence> shower) {
+    private CCmdAreaShowDefault(DualConsumer<World, BlockLocSequence> shower) {
         this.shower = shower;
     }
 
     @Override
     public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
-        String place = args.<String>getOne("place").get();
+        String method = args.<String>getOne("method").get();
 
         BlockLocSequence sequence;
 
-        CreatorBank session = CreatorModule.getOrCreateBankOf(src);
+        CreatorBank bank = CreatorModule.getOrCreateBankOf(src);
+        WorldTagArea area = bank.getAreaOrThrow();
 
-        if (session.loadedArea == null) {
-            throw new CommandException(Text.of(TextColors.RED, "✗エリアがロードされていません。"), false);
-        }
-
-        switch (place) {
+        switch (method) {
             case "corner":
-            case "c":
-            default:
-                sequence = session.loadedArea.getCornerBlocks();
+                sequence = area.getCornerBlocks();
                 break;
             case "outline":
-            case "o":
-                sequence = session.loadedArea.getOutlineBlocks();
+                sequence = area.getOutlineBlocks();
                 break;
+            default:
+                // 起こらないはず
+                return CommandResult.empty();
         }
 
         Optional<World> worldOptional = WorldTagModule.getTaggedWorld(sequence.worldTag);
@@ -72,7 +70,7 @@ public class CCmdAreaShowDefault implements CommandExecutor {
         if (!worldOptional.isPresent()) {
             throw new CommandException(
                     Text.of(TextColors.RED,
-                            "✗エリアに問題があります。エリアに設定されたワールドが存在しません。"));
+                            "✗エリアに問題があります。エリアに設定されたワールドが存在しません"));
         }
 
         World world = worldOptional.get();
@@ -80,7 +78,7 @@ public class CCmdAreaShowDefault implements CommandExecutor {
         // 実行する、渡す
         shower.accept(world, sequence);
 
-        src.sendMessage(Text.of(TextColors.AQUA, "✓実行しました。"));
+        src.sendMessage(Text.of(TextColors.GOLD, "✓実行しました"));
         return CommandResult.success();
     }
 }

@@ -62,7 +62,7 @@ public class CCmdSpleefSetarea implements CommandExecutor {
         }
 
         // コマンドは正常に実行され、エリアが設定された
-        src.sendMessage(Text.of(TextColors.AQUA, "✓バンクからエリアを設定しました。"));
+        src.sendMessage(Text.of(TextColors.GOLD, "✓バンクからエリアを設定しました。"));
         return CommandResult.success();
     }
 }

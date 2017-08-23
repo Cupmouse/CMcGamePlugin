@@ -45,7 +45,7 @@ public class CmdRoomJoinSpleef implements CommandExecutor {
 
         Integer roomNumber = args.<Integer>getOne("room_number").get();
 
-        Optional<SpleefRoom> roomOptional = CMcGamePlugin.getSpleef().getRoom(roomNumber);
+        Optional<SpleefRoom> roomOptional = CMcGamePlugin.getSpleef().getRoomsByNumber(roomNumber);
 
         if (roomOptional.isPresent()) {
             SpleefRoom spleefRoom = roomOptional.get();
@@ -59,7 +59,7 @@ public class CmdRoomJoinSpleef implements CommandExecutor {
             return CommandResult.success();
         } else {
             throw new CommandException(
-                    Text.of(TextColors.RED, "✗入力された部屋番号を探しましたが、見つかりませんでした。"), false);
+                    Text.of(TextColors.RED, "✗入力された部屋番号を探しましたが、見つかりませんでした"), false);
         }
     }
 }

@@ -1,4 +1,4 @@
-package net.cupmouse.minecraft.game.creator.cmd.spleef;
+package net.cupmouse.minecraft.game.mod;
 
 import net.cupmouse.minecraft.game.CMcGamePlugin;
 import net.cupmouse.minecraft.game.manager.GameException;
@@ -32,7 +32,7 @@ public class CCmdSpleefRoomRemove implements CommandExecutor {
             throw new CommandException(Text.of(TextColors.RED, "✗ステージを削除できませんでした。", e.getText()),
                     e, false);
         }
-        src.sendMessage(Text.of(TextColors.AQUA, "✓ステージを削除しました。"));
+        src.sendMessage(Text.of(TextColors.GOLD, "✓ステージを削除しました。"));
         return CommandResult.success();
     }
 }

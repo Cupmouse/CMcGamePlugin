@@ -1,6 +1,8 @@
 package net.cupmouse.minecraft.game.creator.cmd.spleef;
 
 import net.cupmouse.minecraft.game.creator.CreatorModule;
+import net.cupmouse.minecraft.game.spleef.SpleefStageOptions;
+import net.cupmouse.minecraft.game.spleef.SpleefStageOptionsMutable;
 import net.cupmouse.minecraft.game.spleef.SpleefStageTemplate;
 import net.cupmouse.minecraft.util.CEThrowableDualConsumer;
 import net.cupmouse.minecraft.util.CEThrowableFunction;
@@ -27,36 +29,37 @@ public class CCmdSpleefOption implements CommandExecutor {
             .executor(new CCmdSpleefOption())
             .build();
 
-    private Map<String, CEThrowableFunction<SpleefStageTemplate, ?>> getters = new HashMap<>();
-    private Map<String, CEThrowableDualConsumer<SpleefStageTemplate, String>> setters = new HashMap<>();
+    private Map<String, CEThrowableFunction<SpleefStageOptionsMutable, ?>> getters = new HashMap<>();
+    private Map<String, CEThrowableDualConsumer<SpleefStageOptionsMutable, String>> setters = new HashMap<>();
 
     private CCmdSpleefOption() {
         // GETTER
 
-        CEThrowableFunction<SpleefStageTemplate, Object> defaultGameTimeGetter = template -> template.getDefaultOptions().getGameTime();
-        this.getters.put("defaultGameTime", defaultGameTimeGetter);
-        this.getters.put("dgt", defaultGameTimeGetter);
+        CEThrowableFunction<SpleefStageOptionsMutable, Object> gameTimeGetter = SpleefStageOptions::getGameTime;
+        this.getters.put("gameTime", gameTimeGetter);
+        this.getters.put("gt", gameTimeGetter);
 
-        CEThrowableFunction<SpleefStageTemplate, Object> minimumPlayerCountGetter = SpleefStageTemplate::getMinimumPlayerCount;
+        CEThrowableFunction<SpleefStageOptionsMutable, Object> minimumPlayerCountGetter =
+                SpleefStageOptions::getMinimumPlayerCount;
         this.getters.put("minimumPlayerCount", minimumPlayerCountGetter);
         this.getters.put("mpc", minimumPlayerCountGetter);
 
 
         // SETTER
 
-        IntSetter defaultGameTimeSetter = new IntSetter((template, integer) -> {
+        IntSetter defaultGameTimeSetter = new IntSetter((optionsMutable, integer) -> {
             if (integer < 1) {
-                throw new CommandException(Text.of(TextColors.RED, "✗整数で1以上を指定してください。"));
+                throw new CommandException(Text.of(TextColors.RED, "✗整数で1以上を指定してください"));
             }
 
-            template.getDefaultOptions();
+            optionsMutable.setGameTime(integer);
         });
-        this.setters.put("defaultGameTime", defaultGameTimeSetter);
-        this.setters.put("dgt", defaultGameTimeSetter);
+        this.setters.put("gameTime", defaultGameTimeSetter);
+        this.setters.put("gt", defaultGameTimeSetter);
 
         IntSetter minimumPlayerCountSetter = new IntSetter((stage, integer) -> {
             if (integer < 2) {
-                throw new CommandException(Text.of(TextColors.RED, "✗整数で2以上を指定してください。"), false);
+                throw new CommandException(Text.of(TextColors.RED, "✗整数で2以上を指定してください"), false);
             }
 
             stage.setMinimumPlayerCount(integer);
@@ -68,47 +71,53 @@ public class CCmdSpleefOption implements CommandExecutor {
 
     @Override
     public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
-        //
-        String key = args.<String>getOne("key").get();
+        String optionId = args.<String>getOne("option_id").get();
 
         if (args.hasAny("value")) {
+            // valueが設定されているならばオプションIDに設定する
             String value = args.<String>getOne("value").get();
 
-            CEThrowableDualConsumer<SpleefStageTemplate, String> setter = this.setters.get(key);
+            CEThrowableDualConsumer<SpleefStageOptionsMutable, String> setter = this.setters.get(optionId);
             if (setter == null) {
-                throw new CommandException(Text.of(TextColors.RED, "✗キーが存在しません。"));
+                throw new CommandException(Text.of(TextColors.RED, "✗オプションIDが間違っています"));
             }
 
-            SpleefStageTemplate template = CreatorModule.getOrCreateBankOf(src).getSpleefSelectedTemplateOrThrow();
+            // テンプレートが選択されていない場合は例外が発生し続行されない
+            SpleefStageOptionsMutable optionsMutable =
+                    CreatorModule.getOrCreateBankOf(src).getSpleefSelectedTemplateOrThrow().getDefaultOptions();
 
-            // セットする
-            setter.accept(template, value);
+            // 値をセットしてもらう
+            setter.accept(optionsMutable, value);
 
-            src.sendMessage(Text.of(TextColors.AQUA, "✓", key, "を", value, "に設定しました。"));
+            src.sendMessage(Text.of(TextColors.GOLD, String.format("✓%sを%sに設定しました", optionId, value)));
         } else {
-            CEThrowableFunction<SpleefStageTemplate, ?> getter = this.getters.get(key);
+            // valueが設定されていないならオプションIDに設定されている内容を表示する
+            CEThrowableFunction<SpleefStageOptionsMutable, ?> getter = this.getters.get(optionId);
             if (getter == null) {
-                throw new CommandException(Text.of(TextColors.RED, "✗キーが存在しません。"));
+                throw new CommandException(Text.of(TextColors.RED, "✗オプションIDが間違っています"));
             }
 
-            Object value = getter.apply(spleefStage);
+            SpleefStageOptionsMutable optionsMutable =
+                    CreatorModule.getOrCreateBankOf(src).getSpleefSelectedTemplateOrThrow().getDefaultOptions();
 
-            src.sendMessage(Text.of(TextColors.AQUA, key, " = ", value));
+            // ゲッターから値をもらう
+            Object value = getter.apply(optionsMutable);
+            src.sendMessage(Text.of(TextColors.GOLD, optionId, " = ", value));
         }
 
         return CommandResult.success();
     }
 
-    private static class IntSetter implements CEThrowableDualConsumer<SpleefStageTemplate, String> {
+    private static class IntSetter implements CEThrowableDualConsumer<SpleefStageOptionsMutable, String> {
 
-        private final CEThrowableDualConsumer<SpleefStageTemplate, Integer> setter;
+        private final CEThrowableDualConsumer<SpleefStageOptionsMutable, Integer> setter;
 
-        public IntSetter(CEThrowableDualConsumer<SpleefStageTemplate, Integer> setter) {
+        IntSetter(CEThrowableDualConsumer<SpleefStageOptionsMutable, Integer> setter) {
             this.setter = setter;
         }
 
         @Override
-        public void accept(SpleefStageTemplate stage, String s) throws CommandException {
+        public void accept(SpleefStageOptionsMutable options, String s) throws CommandException {
             int i;
 
             try {
@@ -117,7 +126,7 @@ public class CCmdSpleefOption implements CommandExecutor {
                 throw new CommandException(Text.of(TextColors.RED, "✗整数値を入力してください。"), false);
             }
 
-            this.setter.accept(stage, i);
+            this.setter.accept(options, i);
         }
     }
 }
