@@ -1,6 +1,5 @@
 package net.cupmouse.minecraft.game.spleef;
 
-import com.flowpowered.math.vector.Vector3i;
 import com.google.common.reflect.TypeToken;
 import net.cupmouse.minecraft.CMcCore;
 import net.cupmouse.minecraft.game.CMcGamePlugin;
@@ -13,6 +12,7 @@ import ninja.leaping.configurate.objectmapping.serialize.TypeSerializerCollectio
 import ninja.leaping.configurate.objectmapping.serialize.TypeSerializers;
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
+import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 
@@ -41,6 +41,18 @@ public final class SpleefManager implements GameManager {
         SpleefStageTemplate stageTemplate = stageTemplates.get(templateId);
 
         return Optional.ofNullable(stageTemplate);
+    }
+
+    public SpleefStageTemplate getStageTemplateOrThrow(String templateId) throws CommandException {
+        SpleefStageTemplate stageTemplate = stageTemplates.get(templateId);
+
+
+        if (stageTemplate == null) {
+            throw new CommandException(
+                    Text.of(TextColors.RED, "✗そのようなステージIDは見つかりませんでした。"), false);
+        }
+
+        return stageTemplate;
     }
 
     private void addStageTemplate(SpleefStageTemplate template, String templateId) throws GameException {

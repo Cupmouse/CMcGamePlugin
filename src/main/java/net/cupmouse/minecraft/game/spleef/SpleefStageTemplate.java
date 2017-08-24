@@ -1,6 +1,5 @@
 package net.cupmouse.minecraft.game.spleef;
 
-import com.flowpowered.math.vector.Vector3i;
 import net.cupmouse.minecraft.worlds.WorldTagArea;
 import net.cupmouse.minecraft.worlds.WorldTagLocation;
 import net.cupmouse.minecraft.worlds.WorldTagRocation;
@@ -12,11 +11,12 @@ public class SpleefStageTemplate {
     private SpleefStageTemplateInfo info;
     private SpleefStageOptionsMutable defaultOptions;
 
+    // これらはすべてステージテンプレート作成時の絶対位置（ワールドも含め）なので、相対位置ではない
+    // そのために相対位置の基準点を決め、それを使って新しいステージを作成する
     private WorldTagLocation relativeBaseLocation;
-    private WorldTagArea relativeGroundArea;
-    private WorldTagArea relativeFightingArea;
-
-    private List<WorldTagRocation> relativeSpawnRocations;
+    private WorldTagArea groundArea;
+    private WorldTagArea fightingArea;
+    private List<WorldTagRocation> spawnRocations;
 
     private SpleefStageTemplate() {
     }
@@ -25,32 +25,32 @@ public class SpleefStageTemplate {
         return defaultOptions;
     }
 
-    public WorldTagArea getRelativeGroundArea() {
-        return relativeGroundArea;
+    public WorldTagArea getGroundArea() {
+        return groundArea;
     }
 
-    public WorldTagArea getRelativeFightingArea() {
-        return relativeFightingArea;
+    public WorldTagArea getFightingArea() {
+        return fightingArea;
     }
 
     /**
      * なんと外部から変更可能
      * @return
      */
-    public List<WorldTagRocation> getRelativeSpawnRocations() {
-        return relativeSpawnRocations;
+    public List<WorldTagRocation> getSpawnRocations() {
+        return spawnRocations;
     }
 
     /*
     ここからSetter
      */
 
-    public void setRelativeGroundArea(WorldTagArea groundArea) {
-        this.relativeGroundArea = groundArea;
+    public void setGroundArea(WorldTagArea groundArea) {
+        this.groundArea = groundArea;
     }
 
-    public void setRelativeFightingArea(WorldTagArea fightingArea) {
-        this.relativeFightingArea = fightingArea;
+    public void setFightingArea(WorldTagArea fightingArea) {
+        this.fightingArea = fightingArea;
     }
 
     /*

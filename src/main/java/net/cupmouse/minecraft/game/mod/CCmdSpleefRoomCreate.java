@@ -3,6 +3,8 @@ package net.cupmouse.minecraft.game.mod;
 import net.cupmouse.minecraft.game.CMcGamePlugin;
 import net.cupmouse.minecraft.game.creator.CreatorModule;
 import net.cupmouse.minecraft.game.manager.GameException;
+import net.cupmouse.minecraft.worlds.WorldTagLocation;
+import net.cupmouse.minecraft.worlds.WorldTagPosition;
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
@@ -30,10 +32,10 @@ public class CCmdSpleefRoomCreate implements CommandExecutor {
         Integer roomNumber = args.<Integer>getOne("room_number").get();
         String templateId = args.<String>getOne("template_id").get();
 
-        Location<World> relativeBase = CreatorModule.getOrCreateBankOf(src).getRelativeBaseOrThrow();
+        WorldTagLocation relativeBaseLocation = CreatorModule.getOrCreateBankOf(src).getPositionAsLocationOrThrow();
 
         try {
-            CMcGamePlugin.getSpleef().newRoom(roomNumber, templateId, relativeBase);
+            CMcGamePlugin.getSpleef().newRoom(roomNumber, templateId, relativeBaseLocation);
         } catch (GameException e) {
             throw new CommandException(Text.of(TextColors.RED, "✗ステージを作成できませんでした。", e.getText()),
                     e, false);

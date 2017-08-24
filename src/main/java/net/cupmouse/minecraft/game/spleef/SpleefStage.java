@@ -17,7 +17,6 @@ public class SpleefStage {
     private WorldTagArea groundArea;
     private WorldTagArea fightingArea;
     private ArrayList<WorldTagRocation> spawnRocations;
-    private int minimumPlayerCount;
 
     SpleefStage(SpleefStageTemplate template, WorldTagLocation relativeBaseLocation) {
         this.template = template;
@@ -29,18 +28,27 @@ public class SpleefStage {
     }
 
     private void loadFromTemplate() {
-        template.getRelativeBaseLocation();
-        this.groundArea = template.getRelativeGroundArea().relativeBasePoint(relativeBaseLocation);
-        this.fightingArea = template.getRelativeFightingArea().relativeBasePoint(relativeBaseLocation);
+        WorldTagLocation templateBaseLoc = template.getRelativeBaseLocation();
+
+        // ワールドタグはテンプレートの方に設定されるので変更する必要がある
+        this.groundArea = template.getGroundArea()
+                .relativeTo(templateBaseLoc)
+                .relativeBase(relativeBaseLocation)
+                .worldTag(relativeBaseLocation.worldTag);
+        this.fightingArea = template.getFightingArea()
+                .relativeTo(templateBaseLoc)
+                .relativeBase(relativeBaseLocation)
+                .worldTag(relativeBaseLocation.worldTag);
 
         this.spawnRocations = new ArrayList<>();
 
-        for (WorldTagRocation rocation : template.getRelativeSpawnRocations()) {
-            spawnRocations.add(rocation.relativeBasePoint(relativeBaseLocation));
+        for (WorldTagRocation rocation : template.getSpawnRocations()) {
+            spawnRocations.add(rocation.relativeTo(templateBaseLoc)
+                    .relativeBase(relativeBaseLocation)
+                    .worldTag(relativeBaseLocation.worldTag));
         }
 
         SpleefStageOptions defaultOptions = template.getDefaultOptions();
-        this.minimumPlayerCount = defaultOptions.getMinimumPlayerCount();
         // TODO
     }
 
@@ -66,9 +74,5 @@ public class SpleefStage {
 
     public List<WorldTagRocation> getSpawnRocations() {
         return Collections.unmodifiableList(spawnRocations);
-    }
-
-    public int getMinimumPlayerCount() {
-        return minimumPlayerCount;
     }
 }

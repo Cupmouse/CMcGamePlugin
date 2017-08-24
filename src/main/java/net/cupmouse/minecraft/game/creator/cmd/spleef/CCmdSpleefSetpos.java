@@ -53,7 +53,7 @@ public class CCmdSpleefSetpos implements CommandExecutor {
             // ロードされていなくても通る
             WorldTagRocation rocation = bank.getPositionAsRocationOrThrow();
 
-            List<WorldTagRocation> relativeSpawnRocations = template.getRelativeSpawnRocations();
+            List<WorldTagRocation> relativeSpawnRocations = template.getSpawnRocations();
 
             if (rocation == null) {
                 // 設定されていないとき、指定されたインデックスの要素削除

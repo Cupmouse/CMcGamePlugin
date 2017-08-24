@@ -121,13 +121,15 @@ public final class SpleefRoom implements GameRoom {
 
         // 全員にプレイヤーが入室したことを通知
         messageChannel.send(
-                Text.of(TextColors.AQUA, player.getName(), "が入室しました(" + players.size() + "/"
-                        + stage.getMinimumPlayerCount() + "-"
-                        + stage.getSpawnRocations().size() + ")")
-                , ChatTypes.SYSTEM);
+                Text.of(TextColors.AQUA, String.format("%sが入室しました(%d/%d-%d)",
+                        player.getName(),
+                        players.size(),
+                        stage.getOptions().getMinimumPlayerCount(),
+                        stage.getSpawnRocations().size())
+                ), ChatTypes.SYSTEM);
 
         // プレイヤー人数が、ちょうど最低人数に達したら、プレイヤー待ちカウントダウンを開始する。
-        if (players.size() == stage.getMinimumPlayerCount()) {
+        if (players.size() == stage.getOptions().getMinimumPlayerCount()) {
             startCountdown();
         }
     }
@@ -141,7 +143,7 @@ public final class SpleefRoom implements GameRoom {
         if (optional.isPresent() && players.values().remove(optional.get())) {
             messageChannel.send(
                     Text.of(TextColors.GRAY, player.getName(), "が退出しました(" + players.size() + "/"
-                            + stage.getMinimumPlayerCount() + "-"
+                            + stage.getOptions().getMinimumPlayerCount() + "-"
                             + stage.getSpawnRocations().size() + ")")
                     , ChatTypes.SYSTEM);
 
@@ -190,7 +192,7 @@ public final class SpleefRoom implements GameRoom {
                 // すでに最高人数揃っているならすぐスタートカウントダウン
                 ready();
                 return true;
-            } else if (players.size() >= stage.getMinimumPlayerCount()) {
+            } else if (players.size() >= stage.getOptions().getMinimumPlayerCount()) {
                 // でなくても、最低人数揃っているならプレイヤー待ちカウントダウン
                 startCountdown();
                 return true;

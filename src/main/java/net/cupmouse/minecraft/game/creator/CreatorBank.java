@@ -24,7 +24,6 @@ public final class CreatorBank {
     public boolean isSelectionEnabled;
     private Location<World> firstLoc;
     private Location<World> secondLoc;
-    private Location<World> relativeBase;
 
     private SpleefStageTemplate spleefSelectedTemplate;
 
@@ -50,8 +49,8 @@ public final class CreatorBank {
         }
 
         // TODO ブロックの位置!=Entityの位置？なので使うとプレイヤーが中にいるか判定するのに手こずるのではないか？
-        return new WorldTagAreaSquare(worldTagOptional.get(),
-                firstLoc.getBlockPosition(), secondLoc.getBlockPosition());
+        return WorldTagAreaSquare.fromWorldTagAndPositions(worldTagOptional.get(),
+                firstLoc.getBlockPosition().toDouble(), secondLoc.getBlockPosition().toDouble());
     }
 
     public SpleefStageTemplate getSpleefSelectedTemplateOrThrow() throws CommandException {
@@ -133,13 +132,5 @@ public final class CreatorBank {
 
     public void setSecondLoc(Location<World> secondLoc) {
         this.secondLoc = secondLoc;
-    }
-
-    public Location<World> getRelativeBaseOrThrow() throws CommandException {
-        if (relativeBase == null) {
-            throw new CommandException(Text.of(TextColors.RED, "✗相対位置基準ポジションがロードされていません"));
-        }
-
-        return relativeBase;
     }
 }

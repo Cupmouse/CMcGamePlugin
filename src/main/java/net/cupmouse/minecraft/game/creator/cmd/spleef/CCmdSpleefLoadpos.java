@@ -36,26 +36,26 @@ public class CCmdSpleefLoadpos implements CommandExecutor {
             // スポーンをロード
 
             // 整数値が入力されたか確認する
-            int number;
+            int spawnIndex;
 
             try {
-                number = Integer.parseInt(positionId.substring("spawn.".length()));
+                spawnIndex = Integer.parseInt(positionId.substring("spawn.".length()));
             } catch (NumberFormatException e) {
                 throw new CommandException(Text.of(TextColors.RED, "✗0以上の整数を入力してください"), false);
             }
 
             SpleefStageTemplate template = bank.getSpleefSelectedTemplateOrThrow();
 
-            List<WorldTagRocation> relativeSpawnRocations = template.getRelativeSpawnRocations();
+            List<WorldTagRocation> relativeSpawnRocations = template.getSpawnRocations();
 
             // 入力された整数値が定義されているスポーンの数を超えるとぬるぽなので回避
-            if (number >= relativeSpawnRocations.size()) {
+            if (spawnIndex >= relativeSpawnRocations.size()) {
                 throw new CommandException(Text.of(TextColors.RED, String.format(
-                                "✗%d個のスポーン位置が設定されています、それ未満の値を入力してください", number))
+                                "✗%d個のスポーン位置が設定されています、それ未満の値を入力してください", spawnIndex))
                         , false);
             }
             // 実際にバンクに設定する
-            bank.setPosition(relativeSpawnRocations.get(number).relativeBasePoint(template.getRelativeBaseLocation()));
+            bank.setPosition(relativeSpawnRocations.get(spawnIndex));
         } else {
             // TODO
 

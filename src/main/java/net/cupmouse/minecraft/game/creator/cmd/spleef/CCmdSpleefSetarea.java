@@ -17,7 +17,6 @@ import org.spongepowered.api.text.format.TextColors;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 import static org.spongepowered.api.command.args.GenericArguments.onlyOne;
 import static org.spongepowered.api.command.args.GenericArguments.string;
@@ -32,7 +31,7 @@ public class CCmdSpleefSetarea implements CommandExecutor {
     private Map<String, DualConsumer<SpleefStageTemplate, WorldTagArea>> setter = new HashMap<>();
 
     private CCmdSpleefSetarea() {
-        DualConsumer<SpleefStageTemplate, WorldTagArea> fightingAreaSetter = SpleefStageTemplate::setRelativeFightingArea;
+        DualConsumer<SpleefStageTemplate, WorldTagArea> fightingAreaSetter = SpleefStageTemplate::setFightingArea;
         this.setter.put("f", fightingAreaSetter);
         this.setter.put("fighting", fightingAreaSetter);
 
@@ -45,14 +44,7 @@ public class CCmdSpleefSetarea implements CommandExecutor {
         // エリアがバンクにロードされていない場合は例外になってこれ以上続行されない
         WorldTagArea loadedArea = CreatorModule.getOrCreateBankOf(src).getAreaOrThrow();
 
-        Optional<SpleefStageTemplate> templateOptional = CMcGamePlugin.getSpleef().getStageTemplate(areaId);
-
-        if (!templateOptional.isPresent()) {
-            throw new CommandException(
-                    Text.of(TextColors.RED, "✗そのようなステージIDは見つかりませんでした。"), false);
-        }
-
-        SpleefStageTemplate template = templateOptional.get();
+        SpleefStageTemplate template = CMcGamePlugin.getSpleef().getStageTemplateOrThrow(areaId);
 
         DualConsumer<SpleefStageTemplate, WorldTagArea> setter = this.setter.get(areaId);
 
@@ -60,6 +52,8 @@ public class CCmdSpleefSetarea implements CommandExecutor {
             throw new CommandException(
                     Text.of(TextColors.RED, "✗入力されたエリアIDは間違っています"), false);
         }
+
+        setter.accept(template, loadedArea);
 
         // コマンドは正常に実行され、エリアが設定された
         src.sendMessage(Text.of(TextColors.GOLD, "✓バンクからエリアを設定しました。"));
