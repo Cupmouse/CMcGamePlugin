@@ -1,9 +1,8 @@
 package net.cupmouse.minecraft.game.creator.cmd.spleef;
 
-import net.cupmouse.minecraft.game.CMcGamePlugin;
+import net.cupmouse.minecraft.game.creator.CreatorBank;
 import net.cupmouse.minecraft.game.creator.CreatorModule;
 import net.cupmouse.minecraft.game.spleef.SpleefStageTemplate;
-import net.cupmouse.minecraft.util.DualConsumer;
 import net.cupmouse.minecraft.worlds.WorldTagArea;
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
@@ -17,6 +16,7 @@ import org.spongepowered.api.text.format.TextColors;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.BiConsumer;
 
 import static org.spongepowered.api.command.args.GenericArguments.onlyOne;
 import static org.spongepowered.api.command.args.GenericArguments.string;
@@ -28,12 +28,17 @@ public class CCmdSpleefSetarea implements CommandExecutor {
             .executor(new CCmdSpleefSetarea())
             .build();
 
-    private Map<String, DualConsumer<SpleefStageTemplate, WorldTagArea>> setter = new HashMap<>();
+    private Map<String, BiConsumer<SpleefStageTemplate, WorldTagArea>> setter = new HashMap<>();
 
     private CCmdSpleefSetarea() {
-        DualConsumer<SpleefStageTemplate, WorldTagArea> fightingAreaSetter = SpleefStageTemplate::setFightingArea;
+        BiConsumer<SpleefStageTemplate, WorldTagArea> fightingAreaSetter = SpleefStageTemplate::setFightingArea;
         this.setter.put("f", fightingAreaSetter);
         this.setter.put("fighting", fightingAreaSetter);
+
+        BiConsumer<SpleefStageTemplate, WorldTagArea> groundAreaSetter = SpleefStageTemplate::setGroundArea;
+        this.setter.put("g", groundAreaSetter);
+        this.setter.put("ground", groundAreaSetter);
+
 
     }
 
@@ -42,11 +47,11 @@ public class CCmdSpleefSetarea implements CommandExecutor {
         String areaId = args.<String>getOne("area_id").get();
 
         // エリアがバンクにロードされていない場合は例外になってこれ以上続行されない
-        WorldTagArea loadedArea = CreatorModule.getOrCreateBankOf(src).getAreaOrThrow();
+        CreatorBank bank = CreatorModule.getOrCreateBankOf(src);
+        WorldTagArea loadedArea = bank.getAreaOrThrow();
+        SpleefStageTemplate template = bank.getSpleefSelectedTemplateOrThrow();
 
-        SpleefStageTemplate template = CMcGamePlugin.getSpleef().getStageTemplateOrThrow(areaId);
-
-        DualConsumer<SpleefStageTemplate, WorldTagArea> setter = this.setter.get(areaId);
+        BiConsumer<SpleefStageTemplate, WorldTagArea> setter = this.setter.get(areaId);
 
         if (setter == null) {
             throw new CommandException(
@@ -56,7 +61,7 @@ public class CCmdSpleefSetarea implements CommandExecutor {
         setter.accept(template, loadedArea);
 
         // コマンドは正常に実行され、エリアが設定された
-        src.sendMessage(Text.of(TextColors.GOLD, "✓バンクからエリアを設定しました。"));
+        src.sendMessage(Text.of(TextColors.GOLD, String.format("✓バンクからエリアを%sに設定しました", areaId)));
         return CommandResult.success();
     }
 }

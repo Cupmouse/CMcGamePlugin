@@ -64,7 +64,7 @@ public class CCmdSpleefLoadpos implements CommandExecutor {
 
 
         // ここまで来ると正常にロードされている。コマンド正常終了
-        src.sendMessage(Text.of(TextColors.GOLD, "✓バンクに位置をロードしました"));
+        src.sendMessage(Text.of(TextColors.GOLD, String.format("✓バンクに位置%sをロードしました", positionId)));
         return CommandResult.success();
     }
 }

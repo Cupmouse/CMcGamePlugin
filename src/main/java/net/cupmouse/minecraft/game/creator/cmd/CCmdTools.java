@@ -1,5 +1,6 @@
 package net.cupmouse.minecraft.game.creator.cmd;
 
+import net.cupmouse.minecraft.game.creator.CreatorModule;
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
@@ -20,6 +21,8 @@ import java.util.Iterator;
 public class CCmdTools implements CommandExecutor {
 
     public static final CommandCallable CALLABLE = CommandSpec.builder()
+            .description(Text.of(CreatorModule.TEXT_DEFAULT_DESCRIPTION))
+            .permission("cmc.game.creator")
             .arguments(GenericArguments.none())
             .executor(new CCmdTools())
             .build();

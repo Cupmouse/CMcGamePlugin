@@ -15,6 +15,8 @@ import org.spongepowered.api.text.format.TextColors;
 
 public class CCmdSelection implements CommandExecutor {
     public static final CommandCallable CALLABLE = CommandSpec.builder()
+            .description(Text.of(CreatorModule.TEXT_DEFAULT_DESCRIPTION))
+            .permission("cmc.game.creator")
             .arguments(GenericArguments.none())
             .executor(new CCmdSelection())
             .build();

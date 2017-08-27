@@ -64,7 +64,7 @@ public class CCmdSpleefLoadarea implements CommandExecutor {
         // バンクにローダーの結果を設定するバンクに設定されていない場合は例外が発生し、設定されない
         bank.setArea(loader.apply(bank.getSpleefSelectedTemplateOrThrow()));
 
-        src.sendMessage(Text.of(TextColors.GOLD, "✓バンクにエリアをロードしました"));
+        src.sendMessage(Text.of(TextColors.GOLD, String.format("✓バンクにエリア%sをロードしました", areaId)));
 
         // コマンドは成功
         return CommandResult.success();

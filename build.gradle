@@ -24,9 +24,9 @@ repositories {
 }
 
 dependencies {
-    compile project(':CMcCore')
     compile group: 'org.spongepowered', name: 'spongeapi', version: '5.0.0'
     compile group: 'org.apache.commons', name: 'commons-collections4', version: '4.1'
+    compile project(':CMcCore')
     testCompile group: 'junit', name: 'junit', version: '4.12'
 }
 
@@ -35,8 +35,8 @@ compileJava {
 }
 
 shadowJar {
-    baseName = 'cmcplugin'
+    baseName = 'cmcgameplugin'
     dependencies {
-        exclude(dependency(group: 'org.spongepowered', name: 'spongeapi', version: '5.0.0'))
+        exclude dependency('org.spongepowered:spongeapi')
     }
 }

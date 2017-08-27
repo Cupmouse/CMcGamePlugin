@@ -1,15 +1,25 @@
 package net.cupmouse.minecraft.game.spleef;
 
+import com.google.common.reflect.TypeToken;
+import com.google.inject.Inject;
 import net.cupmouse.minecraft.worlds.WorldTagArea;
 import net.cupmouse.minecraft.worlds.WorldTagLocation;
 import net.cupmouse.minecraft.worlds.WorldTagRocation;
+import ninja.leaping.configurate.ConfigurationNode;
+import ninja.leaping.configurate.objectmapping.ObjectMappingException;
+import ninja.leaping.configurate.objectmapping.Setting;
+import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
+import ninja.leaping.configurate.objectmapping.serialize.TypeSerializer;
+import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.List;
 
+@ConfigSerializable
 public class SpleefStageTemplate {
 
     private SpleefStageTemplateInfo info;
-    private SpleefStageOptionsMutable defaultOptions;
+    private SpleefStageOptions defaultOptions;
 
     // これらはすべてステージテンプレート作成時の絶対位置（ワールドも含め）なので、相対位置ではない
     // そのために相対位置の基準点を決め、それを使って新しいステージを作成する
@@ -21,7 +31,7 @@ public class SpleefStageTemplate {
     private SpleefStageTemplate() {
     }
 
-    public SpleefStageOptionsMutable getDefaultOptions() {
+    public SpleefStageOptions getDefaultOptions() {
         return defaultOptions;
     }
 
@@ -57,14 +67,52 @@ public class SpleefStageTemplate {
     ロードとセーブ
      */
     public static SpleefStageTemplate createNew() {
-        SpleefStageTemplate spleefStageTemplate = new SpleefStageTemplate();
-        spleefStageTemplate.defaultOptions = new SpleefStageOptionsMutable();
-        spleefStageTemplate.info = new SpleefStageTemplateInfo();
+        SpleefStageTemplate template = new SpleefStageTemplate();
+        template.defaultOptions = new SpleefStageOptions();
+        template.info = new SpleefStageTemplateInfo();
 
-        return spleefStageTemplate;
+        return template;
     }
 
     public WorldTagLocation getRelativeBaseLocation() {
         return relativeBaseLocation;
+    }
+
+    static class Serializer implements TypeSerializer<SpleefStageTemplate> {
+
+        @Override
+        public SpleefStageTemplate deserialize(TypeToken<?> type, ConfigurationNode value)
+                throws ObjectMappingException {
+            SpleefStageTemplate template = new SpleefStageTemplate();
+
+            template.defaultOptions =
+                    value.getNode("default_options").getValue(TypeToken.of(SpleefStageOptions.class));
+            template.info = value.getNode("info").getValue(TypeToken.of(SpleefStageTemplateInfo.class));
+            template.relativeBaseLocation =
+                    value.getNode("relative_base_location").getValue(TypeToken.of(WorldTagLocation.class));
+            template.fightingArea =
+                    value.getNode("fighting_area").getValue(TypeToken.of(WorldTagArea.class));
+            template.groundArea =
+                    value.getNode("ground_area").getValue(TypeToken.of(WorldTagArea.class));
+
+            List<WorldTagRocation> rocationsSaved =
+                    value.getNode("spawn_rocations").getList(TypeToken.of(WorldTagRocation.class));
+
+            template.spawnRocations = new ArrayList<>();
+            template.spawnRocations.addAll(rocationsSaved);
+
+            return template;
+        }
+
+        @Override
+        public void serialize(TypeToken<?> type, SpleefStageTemplate obj, ConfigurationNode value)
+                throws ObjectMappingException {
+            value.getNode("default_options").setValue(obj.defaultOptions);
+            value.getNode("info").setValue(obj.info);
+            value.getNode("relative_base_location").setValue(obj.relativeBaseLocation);
+            value.getNode("fighting_area").setValue(obj.fightingArea);
+            value.getNode("ground_area").setValue(obj.groundArea);
+            value.getNode("spawn_rocations").setValue(obj.spawnRocations);
+        }
     }
 }

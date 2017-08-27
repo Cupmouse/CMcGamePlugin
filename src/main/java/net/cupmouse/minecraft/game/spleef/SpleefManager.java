@@ -49,7 +49,7 @@ public final class SpleefManager implements GameManager {
 
         if (stageTemplate == null) {
             throw new CommandException(
-                    Text.of(TextColors.RED, "✗そのようなステージIDは見つかりませんでした。"), false);
+                    Text.of(TextColors.RED, "✗そのようなステージテンプレートIDは見つかりませんでした"), false);
         }
 
         return stageTemplate;
@@ -120,7 +120,10 @@ public final class SpleefManager implements GameManager {
         // シリアライザ－登録
         TypeSerializerCollection defaultSerializers = TypeSerializers.getDefaultSerializers();
 
-//        defaultSerializers.registerType(TypeToken.of(SpleefStage.class), new SpleefStage.Serializer());
+        defaultSerializers.registerType(TypeToken.of(SpleefStageOptions.class), new SpleefStageOptions.Serializer());
+        defaultSerializers.registerType(TypeToken.of(SpleefStageTemplateInfo.class),
+                new SpleefStageTemplateInfo.Serializer());
+        defaultSerializers.registerType(TypeToken.of(SpleefStageTemplate.class), new SpleefStageTemplate.Serializer());
 
         load();
     }
@@ -157,15 +160,10 @@ public final class SpleefManager implements GameManager {
     public void save() {
         CommentedConfigurationNode nodeRooms = CMcGamePlugin.getGameConfigNode().getNode("spleef", "rooms");
 
-        for (Map.Entry<Integer, SpleefRoom> entry : rooms.entrySet()) {
-            CommentedConfigurationNode nodeRoom = nodeRooms.getNode(Integer.toString(entry.getKey()));
+        for (Map.Entry<String, SpleefStageTemplate> entry : stageTemplates.entrySet()) {
+            CommentedConfigurationNode nodeRoom = nodeRooms.getNode(entry.getKey());
 
-            System.out.println(nodeRoom.getNode("stage").toString());
-            try {
-                nodeRoom.getNode("stage").setValue(TypeToken.of(SpleefStage.class), entry.getValue().stage);
-            } catch (ObjectMappingException e) {
-                e.printStackTrace();
-            }
+            nodeRoom.getNode("templates").setValue(entry.getValue());
         }
     }
 

@@ -1,6 +1,7 @@
 package net.cupmouse.minecraft.game.creator.cmd.spleef;
 
 import net.cupmouse.minecraft.game.CMcGamePlugin;
+import net.cupmouse.minecraft.game.creator.CreatorModule;
 import net.cupmouse.minecraft.game.manager.GameException;
 import net.cupmouse.minecraft.game.spleef.SpleefStageTemplate;
 import org.spongepowered.api.command.CommandCallable;
@@ -36,12 +37,14 @@ public class CCmdSpleefNew implements CommandExecutor {
 
         try {
             SpleefStageTemplate template = CMcGamePlugin.getSpleef().newStageTemplate(templateId);
+            CreatorModule.getOrCreateBankOf(src).setSpleefSelectedTemplate(template);
         } catch (GameException e) {
             throw new CommandException(e.getText(), false);
         }
 
         src.sendMessage(Text.of(TextColors.GOLD,
                 String.format("✓新しいテンプレート%sを作成しました", templateId)));
+        src.sendMessage(Text.of(TextColors.AQUA, String.format("テンプレート%sが選択されています", templateId)));
         return CommandResult.success();
     }
 }

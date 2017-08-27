@@ -2,7 +2,6 @@ package net.cupmouse.minecraft.game.creator.cmd.area;
 
 import net.cupmouse.minecraft.game.creator.CreatorBank;
 import net.cupmouse.minecraft.game.creator.CreatorModule;
-import net.cupmouse.minecraft.util.DualConsumer;
 import net.cupmouse.minecraft.worlds.BlockLocSequence;
 import net.cupmouse.minecraft.worlds.WorldTagArea;
 import net.cupmouse.minecraft.worlds.WorldTagModule;
@@ -19,13 +18,14 @@ import org.spongepowered.api.world.World;
 
 import java.util.HashMap;
 import java.util.Optional;
+import java.util.function.BiConsumer;
 
 import static org.spongepowered.api.command.args.GenericArguments.choices;
 import static org.spongepowered.api.command.args.GenericArguments.onlyOne;
 
 public class CCmdAreaShowDefault implements CommandExecutor {
 
-    public static CommandCallable callable(DualConsumer<World, BlockLocSequence> shower) {
+    public static CommandCallable callable(BiConsumer<World, BlockLocSequence> shower) {
         return CommandSpec.builder()
                 .arguments(
                         onlyOne(choices(Text.of("method"), new HashMap<String, String>() {{
@@ -38,9 +38,9 @@ public class CCmdAreaShowDefault implements CommandExecutor {
                 .build();
     }
 
-    private DualConsumer<World, BlockLocSequence> shower;
+    private BiConsumer<World, BlockLocSequence> shower;
 
-    private CCmdAreaShowDefault(DualConsumer<World, BlockLocSequence> shower) {
+    private CCmdAreaShowDefault(BiConsumer<World, BlockLocSequence> shower) {
         this.shower = shower;
     }
 

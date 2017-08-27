@@ -15,11 +15,11 @@ import org.spongepowered.api.text.format.TextColors;
 import static org.spongepowered.api.command.args.GenericArguments.integer;
 import static org.spongepowered.api.command.args.GenericArguments.onlyOne;
 
-public class CCmdSpleefRoomRemove implements CommandExecutor {
+public class MCmdSpleefRoomRemove implements CommandExecutor {
 
     public static final CommandCallable CALLABLE = CommandSpec.builder()
             .arguments(onlyOne(integer(Text.of("room_number"))))
-            .executor(new CCmdSpleefRoomRemove())
+            .executor(new MCmdSpleefRoomRemove())
             .build();
 
     @Override

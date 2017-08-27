@@ -10,6 +10,7 @@ import net.cupmouse.minecraft.db.DatabaseModule;
 import net.cupmouse.minecraft.game.cmd.CommandModule;
 import net.cupmouse.minecraft.game.creator.CreatorModule;
 import net.cupmouse.minecraft.game.data.user.GameUserDataModule;
+import net.cupmouse.minecraft.game.mod.ModeratorCommandModule;
 import net.cupmouse.minecraft.game.spleef.SpleefManager;
 import net.cupmouse.minecraft.game.spleef.SpleefRoom;
 import net.cupmouse.minecraft.worlds.WorldTagModule;
@@ -59,6 +60,7 @@ public class CMcGamePlugin {
                 this.userm = new GameUserDataModule(),
                 new BeamModule(),
                 spleef = new SpleefManager(),
+                new ModeratorCommandModule(),
                 new CommandModule(),
                 new CreatorModule()
         };
@@ -139,7 +141,7 @@ public class CMcGamePlugin {
         gameConfigLoader = HoconConfigurationLoader.builder().setPath(configGamePath).build();
 
         try {
-            CMcGamePlugin.gameConfigNode = gameConfigLoader.load(ConfigurationOptions.defaults().setObjectMapperFactory(objectMapperFactory));
+            CMcGamePlugin.gameConfigNode = gameConfigLoader.load();
         } catch (IOException e) {
             e.printStackTrace();
             stopEternally();

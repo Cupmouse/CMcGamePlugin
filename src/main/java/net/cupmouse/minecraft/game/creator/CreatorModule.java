@@ -6,6 +6,7 @@ import net.cupmouse.minecraft.game.CMcGamePlugin;
 import net.cupmouse.minecraft.game.GameType;
 import net.cupmouse.minecraft.game.creator.cmd.CCmdReloadConfig;
 import net.cupmouse.minecraft.game.creator.cmd.CCmdSelection;
+import net.cupmouse.minecraft.game.creator.cmd.CCmdTest;
 import net.cupmouse.minecraft.game.creator.cmd.CCmdTools;
 import net.cupmouse.minecraft.game.creator.cmd.area.CCmdArea;
 import net.cupmouse.minecraft.game.creator.cmd.position.CCmdPosition;
@@ -13,6 +14,7 @@ import net.cupmouse.minecraft.game.creator.cmd.spleef.CCmdSpleef;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.block.BlockTypes;
+import org.spongepowered.api.command.CommandManager;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.spec.CommandSpec;
 import org.spongepowered.api.data.key.Keys;
@@ -52,17 +54,22 @@ public final class CreatorModule implements PluginModule {
 
         Sponge.getEventManager().registerListeners(CMcCore.getPlugin(), this);
 
-        Sponge.getCommandManager().register(CMcCore.getPlugin(), CommandSpec.builder()
+        CommandManager commandManager = Sponge.getCommandManager();
+        commandManager.register(CMcCore.getPlugin(), CommandSpec.builder()
                 .description(Text.of(TEXT_DEFAULT_DESCRIPTION))
                 .permission("cmc.game.creator")
-                .child(CCmdArea.CALLABLE, "area", "a")
-                .child(CCmdPosition.CALLABLE, "position", "pos", "p")
-                .child(CCmdTools.CALLABLE, "tool", "tools", "t")
-                .child(CCmdSelection.CALLABLE, "selection", "sel", "s")
-                .child(CCmdSpleef.CALLABLE,
-                        GameType.SPLEEF.aliases.stream().map(s -> "c" + s).toArray(String[]::new))
                 .child(CCmdReloadConfig.CALLABLE, "reloadconfig", "rc")
                 .build(), "c");
+
+        commandManager.register(CMcCore.getPlugin(), CCmdArea.CALLABLE, "area", "a");
+        commandManager.register(CMcCore.getPlugin(), CCmdPosition.CALLABLE, "position", "pos", "p");
+        commandManager.register(CMcCore.getPlugin(), CCmdTools.CALLABLE, "tool", "tools", "t");
+        commandManager.register(CMcCore.getPlugin(), CCmdSelection.CALLABLE, "selection", "sel", "s");
+
+        commandManager.register(CMcCore.getPlugin(), CCmdSpleef.CALLABLE,
+                GameType.SPLEEF.aliases.stream().map(s -> "c" + s).toArray(String[]::new));
+
+        commandManager.register(CMcCore.getPlugin(), CCmdTest.CALLABLE, "ctest");
 
         CMcCore.getLogger().warn("=========================================");
         CMcCore.getLogger().warn("クリエイターモードが有効化されました！");

@@ -28,7 +28,10 @@ import static org.spongepowered.api.command.args.GenericArguments.onlyOne;
 public final class CCmdPosition implements CommandExecutor {
 
     public static final CommandCallable CALLABLE = CommandSpec.builder()
+            .description(Text.of(CreatorModule.TEXT_DEFAULT_DESCRIPTION))
+            .permission("cmc.game.creator")
             .arguments(flags().flag("r", "rot", "rotation").buildWith(none()))
+            .child(CCmdPositionLookingat.CALLABLE, "lookat", "l")
             .child(CCmdPositionShow.CALLABLE, "show", "s")
             .child(CCmdPositionEntity.CALLABLE, "entity", "ent", "e")
             .executor(new CCmdPosition())

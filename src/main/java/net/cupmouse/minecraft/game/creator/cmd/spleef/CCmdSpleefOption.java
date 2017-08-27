@@ -2,8 +2,6 @@ package net.cupmouse.minecraft.game.creator.cmd.spleef;
 
 import net.cupmouse.minecraft.game.creator.CreatorModule;
 import net.cupmouse.minecraft.game.spleef.SpleefStageOptions;
-import net.cupmouse.minecraft.game.spleef.SpleefStageOptionsMutable;
-import net.cupmouse.minecraft.game.spleef.SpleefStageTemplate;
 import net.cupmouse.minecraft.util.CEThrowableDualConsumer;
 import net.cupmouse.minecraft.util.CEThrowableFunction;
 import org.spongepowered.api.command.CommandCallable;
@@ -29,17 +27,17 @@ public class CCmdSpleefOption implements CommandExecutor {
             .executor(new CCmdSpleefOption())
             .build();
 
-    private Map<String, CEThrowableFunction<SpleefStageOptionsMutable, ?>> getters = new HashMap<>();
-    private Map<String, CEThrowableDualConsumer<SpleefStageOptionsMutable, String>> setters = new HashMap<>();
+    private Map<String, CEThrowableFunction<SpleefStageOptions, ?>> getters = new HashMap<>();
+    private Map<String, CEThrowableDualConsumer<SpleefStageOptions, String>> setters = new HashMap<>();
 
     private CCmdSpleefOption() {
         // GETTER
 
-        CEThrowableFunction<SpleefStageOptionsMutable, Object> gameTimeGetter = SpleefStageOptions::getGameTime;
+        CEThrowableFunction<SpleefStageOptions, Object> gameTimeGetter = SpleefStageOptions::getGameTime;
         this.getters.put("gameTime", gameTimeGetter);
         this.getters.put("gt", gameTimeGetter);
 
-        CEThrowableFunction<SpleefStageOptionsMutable, Object> minimumPlayerCountGetter =
+        CEThrowableFunction<SpleefStageOptions, Object> minimumPlayerCountGetter =
                 SpleefStageOptions::getMinimumPlayerCount;
         this.getters.put("minimumPlayerCount", minimumPlayerCountGetter);
         this.getters.put("mpc", minimumPlayerCountGetter);
@@ -77,47 +75,47 @@ public class CCmdSpleefOption implements CommandExecutor {
             // valueが設定されているならばオプションIDに設定する
             String value = args.<String>getOne("value").get();
 
-            CEThrowableDualConsumer<SpleefStageOptionsMutable, String> setter = this.setters.get(optionId);
+            CEThrowableDualConsumer<SpleefStageOptions, String> setter = this.setters.get(optionId);
             if (setter == null) {
                 throw new CommandException(Text.of(TextColors.RED, "✗オプションIDが間違っています"));
             }
 
             // テンプレートが選択されていない場合は例外が発生し続行されない
-            SpleefStageOptionsMutable optionsMutable =
+            SpleefStageOptions options =
                     CreatorModule.getOrCreateBankOf(src).getSpleefSelectedTemplateOrThrow().getDefaultOptions();
 
             // 値をセットしてもらう
-            setter.accept(optionsMutable, value);
+            setter.accept(options, value);
 
             src.sendMessage(Text.of(TextColors.GOLD, String.format("✓%sを%sに設定しました", optionId, value)));
         } else {
             // valueが設定されていないならオプションIDに設定されている内容を表示する
-            CEThrowableFunction<SpleefStageOptionsMutable, ?> getter = this.getters.get(optionId);
+            CEThrowableFunction<SpleefStageOptions, ?> getter = this.getters.get(optionId);
             if (getter == null) {
                 throw new CommandException(Text.of(TextColors.RED, "✗オプションIDが間違っています"));
             }
 
-            SpleefStageOptionsMutable optionsMutable =
+            SpleefStageOptions options =
                     CreatorModule.getOrCreateBankOf(src).getSpleefSelectedTemplateOrThrow().getDefaultOptions();
 
             // ゲッターから値をもらう
-            Object value = getter.apply(optionsMutable);
+            Object value = getter.apply(options);
             src.sendMessage(Text.of(TextColors.GOLD, optionId, " = ", value));
         }
 
         return CommandResult.success();
     }
 
-    private static class IntSetter implements CEThrowableDualConsumer<SpleefStageOptionsMutable, String> {
+    private static class IntSetter implements CEThrowableDualConsumer<SpleefStageOptions, String> {
 
-        private final CEThrowableDualConsumer<SpleefStageOptionsMutable, Integer> setter;
+        private final CEThrowableDualConsumer<SpleefStageOptions, Integer> setter;
 
-        IntSetter(CEThrowableDualConsumer<SpleefStageOptionsMutable, Integer> setter) {
+        IntSetter(CEThrowableDualConsumer<SpleefStageOptions, Integer> setter) {
             this.setter = setter;
         }
 
         @Override
-        public void accept(SpleefStageOptionsMutable options, String s) throws CommandException {
+        public void accept(SpleefStageOptions options, String s) throws CommandException {
             int i;
 
             try {

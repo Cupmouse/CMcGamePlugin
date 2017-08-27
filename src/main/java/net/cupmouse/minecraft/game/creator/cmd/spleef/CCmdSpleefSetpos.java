@@ -75,7 +75,8 @@ public class CCmdSpleefSetpos implements CommandExecutor {
                     relativeSpawnRocations.set(spawnIndex, rocation);
                 }
 
-                src.sendMessage(Text.of(TextColors.GOLD, "✓指定されたポジションIDへ設定しました"));
+                src.sendMessage(Text.of(TextColors.GOLD,
+                        String.format("✓バンクからポジション%sへ設定しました", positionId)));
                 return CommandResult.success();
             }
         }
