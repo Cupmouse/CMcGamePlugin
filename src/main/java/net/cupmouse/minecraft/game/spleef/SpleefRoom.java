@@ -52,6 +52,10 @@ public final class SpleefRoom implements GameRoom {
         this.state = GameRoomState.WAITING_PLAYERS;
     }
 
+    public SpleefStage getStage() {
+        return stage;
+    }
+
     @Override
     public GameRoomState getState() {
         return state;

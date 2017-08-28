@@ -3,6 +3,7 @@ package net.cupmouse.minecraft.game.creator.cmd.position;
 import net.cupmouse.minecraft.game.creator.CreatorModule;
 import net.cupmouse.minecraft.worlds.WorldTagLocation;
 import net.cupmouse.minecraft.worlds.WorldTagRocation;
+import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
@@ -38,12 +39,17 @@ public class CCmdPositionLookingat implements CommandExecutor {
             throw new CommandException(Text.of(TextColors.RED, "✗プレイヤーのみ実行できます"));
         }
 
+        BlockRay<World> blockRay = BlockRay.from(((Player) src))
+                .skipFilter(BlockRay.continueAfterFilter(BlockRay.onlyAirFilter(), 1))
+                .stopFilter(BlockRay.allFilter())
+                .distanceLimit(100).build();
 
-        BlockRay<World> blockRay = BlockRay.from(((Player) src)).skipFilter(BlockRay.onlyAirFilter()).distanceLimit(10).build();
-        if (blockRay.hasNext()) {
-            BlockRayHit<World> next = blockRay.next();
+        Optional<BlockRayHit<World>> endOpt = blockRay.end();
 
-            Optional<WorldTagLocation> locationOptional = WorldTagLocation.fromSponge(next.getLocation());
+        if (endOpt.isPresent()) {
+            BlockRayHit<World> end = endOpt.get();
+
+            Optional<WorldTagLocation> locationOptional = WorldTagLocation.fromSponge(end.getLocation());
 
             if (!locationOptional.isPresent()) {
                 throw new CommandException(Text.of(TextColors.RED, "✗エラー、管理人にご報告ください"));

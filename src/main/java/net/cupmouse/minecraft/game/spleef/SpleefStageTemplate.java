@@ -43,6 +43,10 @@ public class SpleefStageTemplate {
         return fightingArea;
     }
 
+    public WorldTagLocation getRelativeBaseLocation() {
+        return relativeBaseLocation;
+    }
+
     /**
      * なんと外部から変更可能
      * @return
@@ -63,19 +67,20 @@ public class SpleefStageTemplate {
         this.fightingArea = fightingArea;
     }
 
+    public void setRelativeBaseLocation(WorldTagLocation relativeBaseLocation) {
+        this.relativeBaseLocation = relativeBaseLocation;
+    }
+
     /*
-    ロードとセーブ
+        ロードとセーブ
      */
     public static SpleefStageTemplate createNew() {
         SpleefStageTemplate template = new SpleefStageTemplate();
         template.defaultOptions = new SpleefStageOptions();
         template.info = new SpleefStageTemplateInfo();
+        template.spawnRocations = new ArrayList<>();
 
         return template;
-    }
-
-    public WorldTagLocation getRelativeBaseLocation() {
-        return relativeBaseLocation;
     }
 
     static class Serializer implements TypeSerializer<SpleefStageTemplate> {

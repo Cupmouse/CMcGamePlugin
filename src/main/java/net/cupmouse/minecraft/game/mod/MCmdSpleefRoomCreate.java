@@ -29,6 +29,7 @@ public class MCmdSpleefRoomCreate implements CommandExecutor {
         Integer roomNumber = args.<Integer>getOne("room_number").get();
         String templateId = args.<String>getOne("template_id").get();
 
+        src.sendMessage(Text.of(TextColors.AQUA, "⚠基準点を選んでいないと続行しません"));
         WorldTagLocation relativeBaseLocation = CreatorModule.getOrCreateBankOf(src).getPositionAsLocationOrThrow();
 
         try {

@@ -10,6 +10,7 @@ import net.cupmouse.minecraft.db.DatabaseModule;
 import net.cupmouse.minecraft.game.cmd.CommandModule;
 import net.cupmouse.minecraft.game.creator.CreatorModule;
 import net.cupmouse.minecraft.game.data.user.GameUserDataModule;
+import net.cupmouse.minecraft.game.manager.GameException;
 import net.cupmouse.minecraft.game.mod.ModeratorCommandModule;
 import net.cupmouse.minecraft.game.spleef.SpleefManager;
 import net.cupmouse.minecraft.game.spleef.SpleefRoom;
@@ -18,6 +19,7 @@ import ninja.leaping.configurate.ConfigurationOptions;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
 import ninja.leaping.configurate.objectmapping.GuiceObjectMapperFactory;
+import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import org.slf4j.Logger;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.config.ConfigDir;
@@ -120,7 +122,7 @@ public class CMcGamePlugin {
         return Optional.empty();
     }
 
-    public static void reloadConfig() {
+    public static void reloadConfig() throws GameException, ObjectMappingException {
         spleef.save();
         saveConfig();
         loadConfig();
@@ -128,6 +130,8 @@ public class CMcGamePlugin {
     }
 
     private static void saveConfig() {
+        spleef.save();
+
         try {
             gameConfigLoader.save(gameConfigNode);
         } catch (IOException e) {
@@ -145,6 +149,12 @@ public class CMcGamePlugin {
         } catch (IOException e) {
             e.printStackTrace();
             stopEternally();
+        }
+
+        try {
+            spleef.load();
+        } catch (ObjectMappingException | GameException e) {
+            e.printStackTrace();
         }
     }
 //

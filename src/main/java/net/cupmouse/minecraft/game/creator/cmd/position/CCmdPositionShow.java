@@ -55,7 +55,7 @@ public final class CCmdPositionShow implements CommandExecutor {
 
         String method = args.<String>getOne("method").get();
 
-        if (method.equals("text")) {
+        if (method.equals("info")) {
             src.sendMessage(Text.of(TextColors.GOLD,
                     "===ロードされたポジション\n",
                     "回転情報/",

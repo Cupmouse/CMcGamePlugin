@@ -30,7 +30,7 @@ public final class CCmdAreaShow {
     private static final Vector3d V3D_HALF = new Vector3d(.5, .5, .5);
 
     public static final CommandCallable CALLABLE = CommandSpec.builder()
-            .child(CCmdAreaShowText.CALLABLE, "text", "t")
+            .child(CCmdAreaShowInfo.CALLABLE, "info", "i")
             // GLOW
             .child(CCmdAreaShowDefault.callable((world, blockLocSequence) -> {
                 Set<Entity> spawnedEntities = new HashSet<>();

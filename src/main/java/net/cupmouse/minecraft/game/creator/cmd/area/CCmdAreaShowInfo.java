@@ -17,11 +17,11 @@ import org.spongepowered.api.text.format.TextColors;
 
 import static org.spongepowered.api.command.args.GenericArguments.none;
 
-public class CCmdAreaShowText implements CommandExecutor {
+public class CCmdAreaShowInfo implements CommandExecutor {
 
     public static final CommandCallable CALLABLE = CommandSpec.builder()
             .arguments(none())
-            .executor(new CCmdAreaShowText())
+            .executor(new CCmdAreaShowInfo())
             .build();
 
 

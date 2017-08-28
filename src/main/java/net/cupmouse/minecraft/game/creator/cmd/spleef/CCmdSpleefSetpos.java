@@ -3,6 +3,8 @@ package net.cupmouse.minecraft.game.creator.cmd.spleef;
 import net.cupmouse.minecraft.game.creator.CreatorBank;
 import net.cupmouse.minecraft.game.creator.CreatorModule;
 import net.cupmouse.minecraft.game.spleef.SpleefStageTemplate;
+import net.cupmouse.minecraft.worlds.WorldTagLocation;
+import net.cupmouse.minecraft.worlds.WorldTagPosition;
 import net.cupmouse.minecraft.worlds.WorldTagRocation;
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
@@ -14,7 +16,10 @@ import org.spongepowered.api.command.spec.CommandSpec;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.BiConsumer;
 
 import static org.spongepowered.api.command.args.GenericArguments.onlyOne;
 import static org.spongepowered.api.command.args.GenericArguments.string;
@@ -26,7 +31,12 @@ public class CCmdSpleefSetpos implements CommandExecutor {
             .executor(new CCmdSpleefSetpos())
             .build();
 
+    private Map<String, BiConsumer<SpleefStageTemplate, ? extends WorldTagPosition>> setters = new HashMap<>();
+
     private CCmdSpleefSetpos() {
+        // LocationとRocationがあるのでちゃんと分けて認識できるよう一番下にセッターのクラスを定義しておいた
+        LocationSetter relativeBaseLocationSetter = SpleefStageTemplate::setRelativeBaseLocation;
+        this.setters.put("rbl", relativeBaseLocationSetter);
     }
 
     @Override
@@ -79,8 +89,33 @@ public class CCmdSpleefSetpos implements CommandExecutor {
                         String.format("✓バンクからポジション%sへ設定しました", positionId)));
                 return CommandResult.success();
             }
-        }
+        } else {
+            // 例外(スポーン設定)以外はセッターを探してそれを実行
 
-        throw new CommandException(Text.of(TextColors.RED, "✗ポジションIDが間違っています"));
+            BiConsumer<SpleefStageTemplate, ? extends WorldTagPosition> setter = setters.get(positionId);
+
+            if (setter == null) {
+                // セッターがないということはそんなIDはないということ
+                throw new CommandException(Text.of(TextColors.RED, "✗ポジションIDが間違っています"));
+            } else if (setter instanceof LocationSetter) {
+                // LocationセッターなのでLocationをバンクから取ってきて与える
+                WorldTagLocation location = bank.getPositionAsLocationOrThrow();
+
+                ((LocationSetter) setter).accept(template, location);
+
+                src.sendMessage(Text.of(TextColors.GOLD,
+                        String.format("✓バンクからポジション%sへ設定しました", positionId)));
+                return CommandResult.success();
+            } else {
+                // Rocation Setter!!!
+
+                src.sendMessage(Text.of(TextColors.GOLD,
+                        String.format("✓バンクから回転情報付きポジション%sへ設定しました", positionId)));
+                return CommandResult.success();
+            }
+        }
     }
+
+    private interface LocationSetter extends BiConsumer<SpleefStageTemplate, WorldTagLocation> {}
+    private interface RocationSetter extends BiConsumer<SpleefStageTemplate, WorldTagRocation> {}
 }
