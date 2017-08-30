@@ -34,6 +34,7 @@ public final class CCmdPosition implements CommandExecutor {
             .child(CCmdPositionLookingat.CALLABLE, "lookat", "l")
             .child(CCmdPositionShow.CALLABLE, "show", "s")
             .child(CCmdPositionEntity.CALLABLE, "entity", "ent", "e")
+            .child(CCmdPositionClear.CALLABLE, "clear", "c")
             .executor(new CCmdPosition())
             .build();
 

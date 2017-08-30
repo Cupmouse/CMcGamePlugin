@@ -31,8 +31,12 @@ public class SpleefStageTemplateInfo {
         return version;
     }
 
+    /**
+     * 変更できる
+     * @return
+     */
     public List<String> getBuilders() {
-        return Collections.unmodifiableList(builders);
+        return builders;
     }
 
     public void setName(String name) {
@@ -53,7 +57,8 @@ public class SpleefStageTemplateInfo {
 
     static class Serializer implements TypeSerializer<SpleefStageTemplateInfo> {
         @Override
-        public SpleefStageTemplateInfo deserialize(TypeToken<?> type, ConfigurationNode value) throws ObjectMappingException {
+        public SpleefStageTemplateInfo deserialize(TypeToken<?> type, ConfigurationNode value)
+                throws ObjectMappingException {
             SpleefStageTemplateInfo info = new SpleefStageTemplateInfo();
 
             info.name = value.getNode("name").getString();
@@ -65,7 +70,8 @@ public class SpleefStageTemplateInfo {
         }
 
         @Override
-        public void serialize(TypeToken<?> type, SpleefStageTemplateInfo obj, ConfigurationNode value) throws ObjectMappingException {
+        public void serialize(TypeToken<?> type, SpleefStageTemplateInfo obj, ConfigurationNode value)
+                throws ObjectMappingException {
             value.getNode("name").setValue(obj.name);
             value.getNode("description").setValue(obj.description);
             value.getNode("version").setValue(obj.version);

@@ -6,9 +6,7 @@ import net.cupmouse.minecraft.game.CMcGamePlugin;
 import net.cupmouse.minecraft.game.manager.GameException;
 import net.cupmouse.minecraft.game.manager.GameManager;
 import net.cupmouse.minecraft.game.manager.GameRoomState;
-import net.cupmouse.minecraft.worlds.WorldTag;
 import net.cupmouse.minecraft.worlds.WorldTagLocation;
-import net.cupmouse.minecraft.worlds.WorldTagModule;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import ninja.leaping.configurate.objectmapping.serialize.TypeSerializerCollection;
@@ -16,13 +14,15 @@ import ninja.leaping.configurate.objectmapping.serialize.TypeSerializers;
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.spongepowered.api.Sponge;
-import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.block.InteractBlockEvent;
 import org.spongepowered.api.event.cause.Cause;
+import org.spongepowered.api.event.cause.NamedCause;
+import org.spongepowered.api.event.entity.MoveEntityEvent;
 import org.spongepowered.api.event.filter.cause.First;
+import org.spongepowered.api.event.filter.cause.Named;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.world.Location;
@@ -32,8 +32,6 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-
-import static org.spongepowered.api.block.BlockTypes.AIR;
 
 public final class SpleefManager implements GameManager {
 
@@ -129,6 +127,15 @@ public final class SpleefManager implements GameManager {
         return rooms.inverseBidiMap().entrySet();
     }
 
+    public Optional<SpleefRoom> getRoomPlayerJoin(Player player) {
+        for (SpleefRoom spleefRoom : rooms.values()) {
+            if (spleefRoom.isPlayerPlaying(player)) {
+                return Optional.of(spleefRoom);
+            }
+        }
+        return Optional.empty();
+    }
+
     @Override
     public void onInitializationProxy() throws Exception {
         // イベント登録
@@ -143,10 +150,15 @@ public final class SpleefManager implements GameManager {
         defaultSerializers.registerType(TypeToken.of(SpleefStageTemplate.class), new SpleefStageTemplate.Serializer());
 
         load();
+        CMcCore.getLogger().info("Spleefロード完了");
     }
 
+    /*
+    ゲーム進行に必要なイベントリスナー
+     */
     @Listener
-    public void onInteractBlock(InteractBlockEvent.Primary event, @First Player player) {
+    public void onInteractBlock(InteractBlockEvent.Primary event, @Named(NamedCause.SOURCE) Player player) {
+        // ゲーム中の部屋の床はぶっ壊せる
         Optional<Location<World>> locationOpt = event.getTargetBlock().getLocation();
 
         if (locationOpt.isPresent()) {
@@ -159,11 +171,38 @@ public final class SpleefManager implements GameManager {
                         && spleefRoom.getStage().getGroundArea().isInArea(worldLocation)) {
                     // 床を壊す
 
-                    worldLocation.setBlockType(BlockTypes.AIR, Cause.source(player).build());
+                    worldLocation.removeBlock(Cause.source(CMcCore.getPluginContainer()).build());
                 }
             }
         }
     }
+
+    @Listener
+    public void onPlayerMove(MoveEntityEvent event, @Named(NamedCause.SOURCE) Player player) {
+        Optional<SpleefRoom> roomOptional = getRoomPlayerJoin(player);
+
+        if (roomOptional.isPresent()) {
+            // プレイヤーが部屋でプレー中のときはfightingAreaから出ると落ちた判定とし、負け確定
+            SpleefRoom spleefRoom = roomOptional.get();
+
+            Location<World> playerLocation = player.getLocation();
+
+            SpleefPlayer spleefPlayer = spleefRoom.getSpleefPlayer(player).get();
+
+            if (spleefRoom.getState() == GameRoomState.IN_PROGRESS &&
+                    !spleefPlayer.dead && !spleefRoom.stage.getFightingArea().isInArea(playerLocation)) {
+                // 落ちた！
+                spleefRoom.playerDied(player);
+            } else if (!spleefRoom.stage.getSpectetorArea().isInArea(playerLocation)) {
+                // 見物範囲内しか移動できない
+                event.setToTransform(event.getFromTransform());
+            }
+        }
+    }
+
+    /*
+    セーブとロード
+     */
 
     public void load() throws ObjectMappingException, IllegalStateException, NumberFormatException, GameException {
         // TODO
@@ -207,19 +246,27 @@ public final class SpleefManager implements GameManager {
         }
     }
 
-    public void save() {
+    public void save() throws ObjectMappingException {
         CommentedConfigurationNode nodeSpleef = CMcGamePlugin.getGameConfigNode().getNode("spleef");
 
         // TODO クリエイターモードのみ？
         // テンプレートの保存
-        nodeSpleef.getNode("templates").setValue(stageTemplates);
+        CommentedConfigurationNode nodeTemplates = nodeSpleef.getNode("templates");
+
+        for (Map.Entry<String, SpleefStageTemplate> entry : stageTemplates.entrySet()) {
+            nodeTemplates.getNode(entry.getKey()).setValue(TypeToken.of(SpleefStageTemplate.class), entry.getValue());
+        }
 
         // 部屋の保存
         CommentedConfigurationNode nodeRooms = nodeSpleef.getNode("rooms");
 
         for (Map.Entry<Integer, SpleefRoom> entry : rooms.entrySet()) {
-            nodeRooms.getNode(entry.getKey().toString())
-                    .setValue(stageTemplates.getKey(entry.getValue().getStage().getTemplate()));
+            CommentedConfigurationNode nodeRoom = nodeRooms.getNode(entry.getKey().toString());
+            SpleefRoom room = entry.getValue();
+
+            nodeRoom.getNode("template").setValue(stageTemplates.getKey(room.getStage().getTemplate()));
+            nodeRoom.getNode("relative_base_location")
+                    .setValue(TypeToken.of(WorldTagLocation.class), room.stage.getRelativeBaseLocation());
         }
     }
 

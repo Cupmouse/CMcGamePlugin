@@ -28,18 +28,20 @@ public class CCmdSpleefSetarea implements CommandExecutor {
             .executor(new CCmdSpleefSetarea())
             .build();
 
-    private Map<String, BiConsumer<SpleefStageTemplate, WorldTagArea>> setter = new HashMap<>();
+    private Map<String, BiConsumer<SpleefStageTemplate, WorldTagArea>> setters = new HashMap<>();
 
     private CCmdSpleefSetarea() {
         BiConsumer<SpleefStageTemplate, WorldTagArea> fightingAreaSetter = SpleefStageTemplate::setFightingArea;
-        this.setter.put("f", fightingAreaSetter);
-        this.setter.put("fighting", fightingAreaSetter);
+        this.setters.put("f", fightingAreaSetter);
+        this.setters.put("fighting", fightingAreaSetter);
 
         BiConsumer<SpleefStageTemplate, WorldTagArea> groundAreaSetter = SpleefStageTemplate::setGroundArea;
-        this.setter.put("g", groundAreaSetter);
-        this.setter.put("ground", groundAreaSetter);
+        this.setters.put("g", groundAreaSetter);
+        this.setters.put("ground", groundAreaSetter);
 
-
+        BiConsumer<SpleefStageTemplate, WorldTagArea> setSpectatorAreaSetter = SpleefStageTemplate::setSpectatorArea;
+        this.setters.put("s", setSpectatorAreaSetter);
+        this.setters.put("spectator", setSpectatorAreaSetter);
     }
 
     @Override
@@ -51,7 +53,7 @@ public class CCmdSpleefSetarea implements CommandExecutor {
         WorldTagArea loadedArea = bank.getAreaOrThrow();
         SpleefStageTemplate template = bank.getSpleefSelectedTemplateOrThrow();
 
-        BiConsumer<SpleefStageTemplate, WorldTagArea> setter = this.setter.get(areaId);
+        BiConsumer<SpleefStageTemplate, WorldTagArea> setter = this.setters.get(areaId);
 
         if (setter == null) {
             throw new CommandException(

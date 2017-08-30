@@ -11,6 +11,7 @@ import net.cupmouse.minecraft.game.cmd.CommandModule;
 import net.cupmouse.minecraft.game.creator.CreatorModule;
 import net.cupmouse.minecraft.game.data.user.GameUserDataModule;
 import net.cupmouse.minecraft.game.manager.GameException;
+import net.cupmouse.minecraft.game.manager.GameRoom;
 import net.cupmouse.minecraft.game.mod.ModeratorCommandModule;
 import net.cupmouse.minecraft.game.spleef.SpleefManager;
 import net.cupmouse.minecraft.game.spleef.SpleefRoom;
@@ -27,7 +28,9 @@ import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.game.state.GamePreInitializationEvent;
 import org.spongepowered.api.event.game.state.GameStoppedServerEvent;
+import org.spongepowered.api.event.network.ClientConnectionEvent;
 import org.spongepowered.api.plugin.Plugin;
+import org.spongepowered.api.plugin.PluginContainer;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -51,7 +54,7 @@ public class CMcGamePlugin {
     private static SpleefManager spleef;
 
     @Inject
-    public CMcGamePlugin(Logger logger, @ConfigDir(sharedRoot = false) Path configDir,
+    public CMcGamePlugin(PluginContainer pluginContainer, Logger logger, @ConfigDir(sharedRoot = false) Path configDir,
                          GuiceObjectMapperFactory objectMapperFactory) {
         CMcGamePlugin.objectMapperFactory = objectMapperFactory;
         PluginModule[] moduleArray = {
@@ -67,7 +70,7 @@ public class CMcGamePlugin {
                 new CreatorModule()
         };
 
-        core = new CMcCore(this, logger, configDir, moduleArray);
+        core = new CMcCore(this, pluginContainer, logger, configDir, moduleArray);
     }
 
     public static CommentedConfigurationNode getGameConfigNode() {
@@ -111,12 +114,26 @@ public class CMcGamePlugin {
         saveConfig();
     }
 
-    public static Optional<SpleefRoom> getRoomPlayerJoin(Player player) {
-        // TODO
-        for (SpleefRoom spleefRoom : spleef.getRooms()) {
-            if (spleefRoom.isPlayerPlaying(player)) {
-                return Optional.of(spleefRoom);
+    @Listener
+    public void onClientDisconnected(ClientConnectionEvent.Disconnect event) {
+        Optional<GameRoom> roomOptional = getRoomPlayerJoin(event.getTargetEntity());
+
+        if (roomOptional.isPresent()) {
+            try {
+                roomOptional.get().tryLeaveRoom(event.getTargetEntity());
+            } catch (GameException e) {
+                e.printStackTrace();
             }
+        }
+    }
+
+    public static Optional<GameRoom> getRoomPlayerJoin(Player player) {
+        // TODO
+
+        Optional<SpleefRoom> roomOptional = spleef.getRoomPlayerJoin(player);
+
+        if (roomOptional.isPresent()) {
+            return Optional.of(roomOptional.get());
         }
 
         return Optional.empty();
@@ -126,12 +143,9 @@ public class CMcGamePlugin {
         spleef.save();
         saveConfig();
         loadConfig();
-        spleef.load();
     }
 
     private static void saveConfig() {
-        spleef.save();
-
         try {
             gameConfigLoader.save(gameConfigNode);
         } catch (IOException e) {

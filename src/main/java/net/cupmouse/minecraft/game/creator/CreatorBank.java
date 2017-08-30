@@ -90,6 +90,10 @@ public final class CreatorBank {
      * ロードされていなくても通ります
      */
     public WorldTagRocation getPositionAsRocationOrThrow() throws CommandException {
+        if (position == null) {
+            return null;
+        }
+
         if (!(position instanceof WorldTagRocation)) {
             throw new CommandException(Text.of(TextColors.RED,
                     "✗バンクにロードされているポジションは回転要素を", TextStyles.BOLD, "含んでいません"),

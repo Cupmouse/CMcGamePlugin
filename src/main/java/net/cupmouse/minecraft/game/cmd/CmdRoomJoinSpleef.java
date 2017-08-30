@@ -22,9 +22,7 @@ public class CmdRoomJoinSpleef implements CommandExecutor {
 
     // TODO おすすめ一発参加とかしたい(占有率が60％以下の部屋に送る)
     public static final CommandCallable CALLABLE = CommandSpec.builder()
-            .arguments(onlyOne(integer(Text.of("room_number"))),
-                    requiringPermission(optional(player(Text.of("player"))),
-                            "cmcgame.mod.spleef.cmd.room.join"))
+            .arguments(onlyOne(integer(Text.of("room_number"))))
             .executor(new CmdRoomJoinSpleef())
             .build();
 
@@ -32,6 +30,7 @@ public class CmdRoomJoinSpleef implements CommandExecutor {
     public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
         Player player;
 
+        // TODO
         if (args.hasAny("player")) {
             // モデレータ権限でプレイヤーが指定された場合はそのプレイヤーを指定のルームに強制収容する。
             player = args.<Player>getOne("player").get();

@@ -37,6 +37,16 @@ public class CCmdSpleefSetpos implements CommandExecutor {
         // LocationとRocationがあるのでちゃんと分けて認識できるよう一番下にセッターのクラスを定義しておいた
         LocationSetter relativeBaseLocationSetter = SpleefStageTemplate::setRelativeBaseLocation;
         this.setters.put("rbl", relativeBaseLocationSetter);
+        this.setters.put("relativeBaseLocation", relativeBaseLocationSetter);
+
+        LocationSetter groundSampleSetter = (spleefStageTemplate, worldTagLocation) ->
+                spleefStageTemplate.setGroundSample(worldTagLocation.convertToSpongeLocation().get().getBlock());
+        this.setters.put("gs", groundSampleSetter);
+        this.setters.put("groundSample", groundSampleSetter);
+
+        RocationSetter waitingSpawnSetter = SpleefStageTemplate::setWaitingSpawnRocation;
+        this.setters.put("wsr", waitingSpawnSetter);
+        this.setters.put("waitingSpawnRocation", waitingSpawnSetter);
     }
 
     @Override
@@ -108,6 +118,10 @@ public class CCmdSpleefSetpos implements CommandExecutor {
                 return CommandResult.success();
             } else {
                 // Rocation Setter!!!
+
+                WorldTagRocation rocation = bank.getPositionAsRocationOrThrow();
+
+                ((RocationSetter) setter).accept(template, rocation);
 
                 src.sendMessage(Text.of(TextColors.GOLD,
                         String.format("✓バンクから回転情報付きポジション%sへ設定しました", positionId)));

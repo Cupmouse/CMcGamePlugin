@@ -23,6 +23,7 @@ public final class CCmdArea implements CommandExecutor {
             .permission("cmc.game.creator")
             .arguments(none())
             .child(CCmdAreaShow.CALLABLE, "show", "s")
+            .child(CCmdAreaClear.CALLABLE, "clear", "c")
             .executor(new CCmdArea())
             .build();
 

@@ -80,7 +80,6 @@ public final class SpleefClockManager implements Runnable {
         // 前回からいくら時間が経過したか確認する
         long currentTimeMillis = System.currentTimeMillis();
         long elapsedMilliAfterPrevTick = currentTimeMillis - prevTickTimeMilli;
-        CMcCore.getLogger().debug(Long.toString(elapsedMilliAfterPrevTick));
 
         // 一秒以上の判定をする。
         if (elapsedMilliAfterPrevTick >= 1000) {

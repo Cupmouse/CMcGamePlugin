@@ -38,12 +38,16 @@ public class CCmdSpleefLoadarea implements CommandExecutor {
         // ローダーを設定する
 
         Function<SpleefStageTemplate, WorldTagArea> groundAreaLoader = SpleefStageTemplate::getGroundArea;
-        loaders.put("ground", groundAreaLoader);
-        loaders.put("g", groundAreaLoader);
+        this.loaders.put("ground", groundAreaLoader);
+        this.loaders.put("g", groundAreaLoader);
 
         Function<SpleefStageTemplate, WorldTagArea> fightingAreaLoader = SpleefStageTemplate::getFightingArea;
-        loaders.put("fighting", fightingAreaLoader);
-        loaders.put("f", fightingAreaLoader);
+        this.loaders.put("fighting", fightingAreaLoader);
+        this.loaders.put("f", fightingAreaLoader);
+
+        Function<SpleefStageTemplate, WorldTagArea> spectatorAreaLoader = SpleefStageTemplate::getSpectatorArea;
+        this.loaders.put("s", spectatorAreaLoader);
+        this.loaders.put("spectator", spectatorAreaLoader);
     }
 
     @Override

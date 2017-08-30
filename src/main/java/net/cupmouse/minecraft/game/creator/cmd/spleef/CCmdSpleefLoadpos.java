@@ -3,6 +3,8 @@ package net.cupmouse.minecraft.game.creator.cmd.spleef;
 import net.cupmouse.minecraft.game.creator.CreatorBank;
 import net.cupmouse.minecraft.game.creator.CreatorModule;
 import net.cupmouse.minecraft.game.spleef.SpleefStageTemplate;
+import net.cupmouse.minecraft.worlds.WorldTagArea;
+import net.cupmouse.minecraft.worlds.WorldTagPosition;
 import net.cupmouse.minecraft.worlds.WorldTagRocation;
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
@@ -14,7 +16,10 @@ import org.spongepowered.api.command.spec.CommandSpec;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 
 import static org.spongepowered.api.command.args.GenericArguments.onlyOne;
 import static org.spongepowered.api.command.args.GenericArguments.string;
@@ -25,6 +30,20 @@ public class CCmdSpleefLoadpos implements CommandExecutor {
             .arguments(onlyOne(string(Text.of("position_id"))))
             .executor(new CCmdSpleefLoadpos())
             .build();
+
+    private Map<String, Function<SpleefStageTemplate, WorldTagPosition>> loaders = new HashMap<>();
+
+    private CCmdSpleefLoadpos() {
+        Function<SpleefStageTemplate, WorldTagPosition> relativeBaseLocationLoader =
+                SpleefStageTemplate::getRelativeBaseLocation;
+        this.loaders.put("rbl", relativeBaseLocationLoader);
+        this.loaders.put("relativeBaseLocation", relativeBaseLocationLoader);
+
+        Function<SpleefStageTemplate, WorldTagPosition> waitingSpawnRocationLoader =
+                SpleefStageTemplate::getWaitingSpawnRocation;
+        this.loaders.put("wsr", waitingSpawnRocationLoader);
+        this.loaders.put("waitingSpawnRocation", waitingSpawnRocationLoader);
+    }
 
     @Override
     public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
@@ -57,11 +76,18 @@ public class CCmdSpleefLoadpos implements CommandExecutor {
             // 実際にバンクに設定する
             bank.setPosition(relativeSpawnRocations.get(spawnIndex));
         } else {
-            // TODO
+            // ローダーに任せる
+            Function<SpleefStageTemplate, WorldTagPosition> loader = this.loaders.get(positionId);
 
-            throw new CommandException(Text.of(TextColors.RED, "✗ポジションIDが間違っています"));
+            if (loader == null) {
+                throw new CommandException(Text.of(TextColors.RED, "✗ポジションIDが間違っています"));
+            }
+
+            SpleefStageTemplate template = bank.getSpleefSelectedTemplateOrThrow();
+
+            bank.setPosition(loader.apply(template));
+
         }
-
 
         // ここまで来ると正常にロードされている。コマンド正常終了
         src.sendMessage(Text.of(TextColors.GOLD, String.format("✓バンクに位置%sをロードしました", positionId)));

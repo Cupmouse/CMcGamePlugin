@@ -1,10 +1,18 @@
 package net.cupmouse.minecraft.game.spleef;
 
+import com.flowpowered.math.vector.Vector3i;
+import net.cupmouse.minecraft.CMcCore;
+import net.cupmouse.minecraft.game.CMcGamePlugin;
 import net.cupmouse.minecraft.game.manager.GameException;
 import net.cupmouse.minecraft.game.manager.GameRoom;
 import net.cupmouse.minecraft.game.manager.GameRoomState;
+import net.cupmouse.minecraft.worlds.WorldTagModule;
 import net.cupmouse.minecraft.worlds.WorldTagRocation;
+import org.spongepowered.api.Sponge;
+import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.entity.living.player.gamemode.GameModes;
+import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.item.ItemTypes;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.text.Text;
@@ -16,6 +24,7 @@ import org.spongepowered.api.text.chat.ChatType;
 import org.spongepowered.api.text.chat.ChatTypes;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.text.format.TextStyles;
+import org.spongepowered.api.world.World;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -67,7 +76,7 @@ public final class SpleefRoom implements GameRoom {
 
     public Optional<SpleefPlayer> getSpleefPlayer(Player player) {
         for (SpleefPlayer spleefPlayer : players.values()) {
-            if (spleefPlayer.spongePlayer == player) {
+            if (spleefPlayer.playerUUID.equals(player.getUniqueId())) {
                 return Optional.of(spleefPlayer);
             }
         }
@@ -78,7 +87,7 @@ public final class SpleefRoom implements GameRoom {
     @Override
     public boolean isPlayerPlaying(Player player) {
         for (SpleefPlayer spleefPlayer : players.values()) {
-            if (spleefPlayer.spongePlayer == player) {
+            if (spleefPlayer.playerUUID.equals(player.getUniqueId())) {
                 return true;
             }
         }
@@ -94,34 +103,41 @@ public final class SpleefRoom implements GameRoom {
 
     @Override
     public void tryJoinRoom(Player player) throws GameException {
+        CMcCore.getLogger().debug("tryJoinRoom");
         if (state != GameRoomState.WAITING_PLAYERS) {
             // プレイヤーを募集していないので無理
-            throw new GameException(Text.of(""));
-        }
-        if (isPlayerPlaying(player)) {
-            // すでにプレイ中
             throw new GameException(
-                    Text.of(TextColors.RED, "✗あなたはすでに参加しています。"));
+                    Text.of("✗ゲームがすでに開始しています。終了するまで入室できません"));
+        }
+        if (CMcGamePlugin.getRoomPlayerJoin(player).isPresent()) {
+            // すでに何処かでプレイ中
+            throw new GameException(
+                    Text.of(TextColors.RED, "✗あなたはすでに参加しています"));
         }
         if (stage.getSpawnRocations().size() <= players.size()) {
             // ステージのプレイ最大人数を超えているので参加不可
             throw new GameException(
-                    Text.of(TextColors.RED, "✗部屋の最大人数に達しています。参加できませんでした。"));
+                    Text.of(TextColors.RED,
+                            String.format("✗部屋に入れる人数は%d人までです", stage.getSpawnRocations().size())));
         }
 
         // プレイヤーを参加させる
         int spawnId = players.size();
         // テレポートできるか確かめてから
-        WorldTagRocation spawnRoc = stage.getSpawnRocations().get(spawnId);
+        WorldTagRocation spawnRoc = stage.getWaitingSpawnRocation();
         if (!spawnRoc.teleportHere(player)) {
             throw new GameException(
                     Text.of(TextColors.RED, "✗テレポートできませんでした。参加できませんでした。"));
         }
 
-        players.put(spawnId, new SpleefPlayer(player, spawnId));
+        players.put(spawnId, new SpleefPlayer(player.getUniqueId(), spawnId));
 
         // TODO メッセージチャンネルをセットするが、解除を忘れないように
         player.setMessageChannel(messageChannel);
+        // サバイバルに変更
+        player.offer(Keys.GAME_MODE, GameModes.SURVIVAL);
+        // インベントリ全削除
+        player.getInventory().clear();
 
         // 全員にプレイヤーが入室したことを通知
         messageChannel.send(
@@ -135,54 +151,151 @@ public final class SpleefRoom implements GameRoom {
         // プレイヤー人数が、ちょうど最低人数に達したら、プレイヤー待ちカウントダウンを開始する。
         if (players.size() == stage.getOptions().getMinimumPlayerCount()) {
             startCountdown();
+        } else if (players.size() == stage.getSpawnRocations().size()) {
+            // プレイヤー人数が最高人数に達したら、プレイヤーは待たないですぐReadyカウントダウンする
+            ready();
         }
     }
 
+    /*
+    ゲームをプレイ中の機能
+     */
 
     @Override
     public void tryLeaveRoom(Player player) throws GameException {
+        CMcCore.getLogger().debug("tryLeaveRoom");
         Optional<SpleefPlayer> optional = getSpleefPlayer(player);
 
         // プレイヤーはこの部屋にいて、削除されたか。
         if (optional.isPresent() && players.values().remove(optional.get())) {
             messageChannel.send(
-                    Text.of(TextColors.GRAY, player.getName(), "が退出しました(" + players.size() + "/"
-                            + stage.getOptions().getMinimumPlayerCount() + "-"
-                            + stage.getSpawnRocations().size() + ")")
-                    , ChatTypes.SYSTEM);
+                    Text.of(TextColors.GRAY,
+                            String.format("%sが退出しました(%d/%d-%d)",
+                                    player.getName(),
+                                    players.size(),
+                                    stage.getOptions().getMinimumPlayerCount(),
+                                    stage.getSpawnRocations().size())
+                    ), ChatTypes.SYSTEM);
 
-            if (players.size() < 2) {
+            if (players.size() < stage.getOptions().getMinimumPlayerCount()) {
                 // プレイヤーが足りないならゲームを終了する
-                abortGame();
+                interruptGame();
             }
         } else {
-            throw new GameException(Text.of(TextColors.RED, "✗部屋へ入室していません。"));
+            throw new GameException(Text.of(TextColors.RED, "✗部屋へ入室していません"));
         }
     }
 
+    public int countPlayersLiving() {
+        int count = 0;
+        for (SpleefPlayer spleefPlayer : players.values()) {
+            if (!spleefPlayer.dead) {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
+    public void playerDied(Player player) {
+        CMcCore.getLogger().debug("playerDied");
+        // 指定したプレイヤーが死ぬ
+        getSpleefPlayer(player).get().dead = true;
+        messageChannel.send(Text.of(TextColors.GRAY,
+                String.format("%sが落ちました！さよーならー (%d/%d)",
+                        player.getName(), countPlayersLiving(), players.size())));
+
+        if (players.size() - countPlayersLiving() == 1) {
+            // 最後の一人が残ったら終了
+            finishGame();
+        } else {
+            // それ以外なら死んだプレイヤーをスペクテーターモードにする
+            player.offer(Keys.GAME_MODE, GameModes.SPECTATOR);
+        }
+    }
+
+
     /**
-     * どのような状態でもゲームを終了させる
+     * どのような状態でもゲームを終了させる。勝敗は決まらなかったことになる。
+     * 次回は開催しない
      */
     public void abortGame() {
+        // TODO closeRoomだけでいいよ
+        CMcCore.getLogger().debug("abort");
         stopGame();
-        // プレイヤーの移動
+        // TODO プレイヤーの移動
     }
 
     /**
-     * ゲームを正常に終了させる。
+     * どのような状態でもゲームを終了させる、勝敗は決まらなかったことになる。
+     * 次回が開催されるかどうかが即時に判定され、即時に開催される
      */
-    public void finishGame() {
+    public void interruptGame() {
+        CMcCore.getLogger().debug("interruptGame");
+        // ゲームを終了
         stopGame();
 
-        // TODO プレイヤーの移動と結果発表
+        // 全員移動
+        teleportAllToWaitingSpawn();
+
+        // 瞬時に次のゲームの準備
+        prepareGame();
+
+        // 次のゲームの開催を試行する
+        tryHoldNextGame();
+    }
+
+    /**
+     * ゲームを正常に終了させる。制限時間が過ぎたもしくは残り一人になったときに呼ぶ。勝敗もしくはドローが決まる。
+     * 次回も続けて開催され、開催までのカウントダウンが始まる
+     */
+    public void finishGame() {
+        CMcCore.getLogger().debug("finished");
+        // ゲームを終了
+        stopGame();
+
+        // 全員移動
+        teleportAllToWaitingSpawn();
+
+        // 瞬時に次のゲームの準備
+        prepareGame();
+
+        // 次のゲームの開催試行までカウントダウンを開始する
         clock.setClock(new SpleefClockPrepare());
         clock.start();
+    }
+
+    private void teleportAllToWaitingSpawn() {
+        for (SpleefPlayer spleefPlayer : players.values()) {
+            // サバイバルモードにする
+            Player player = Sponge.getServer().getPlayer(spleefPlayer.playerUUID).get();
+            player.offer(Keys.GAME_MODE, GameModes.SURVIVAL);
+            stage.getWaitingSpawnRocation().teleportHere(player);
+        }
     }
 
     // 内部向け処理
 
     void prepareGame() {
-        // TODO ステージの整備
+        CMcCore.getLogger().debug("prepareGame");
+        this.state = GameRoomState.PREPARING;
+        // 床を埋め直す
+        for (Vector3i blockPos : stage.getGroundArea().getEveryBlocks().blockLocs) {
+            World world = WorldTagModule.getTaggedWorld(stage.getGroundArea().getEveryBlocks().worldTag).get();
+
+            world.setBlock(blockPos, stage.getGroundSample(), Cause.source(CMcCore.getPluginContainer()).build());
+        }
+        // プレイヤーのスポーン位置をランダムに変更
+        ArrayList<SpleefPlayer> newPlayerList = new ArrayList<>(players.values());
+        Collections.shuffle(newPlayerList);
+
+        this.players.clear();
+
+        for (int i = 0; i < newPlayerList.size(); i++) {
+            this.players.put(i, new SpleefPlayer(newPlayerList.get(i).playerUUID, i));
+        }
+
+        this.state = GameRoomState.PREPARED;
     }
 
     /**
@@ -191,6 +304,7 @@ public final class SpleefRoom implements GameRoom {
      * @return
      */
     boolean tryHoldNextGame() {
+        CMcCore.getLogger().debug("tryHoldNextGame");
         if (state == GameRoomState.PREPARED) {
             if (players.size() >= stage.getSpawnRocations().size()) {
                 // すでに最高人数揃っているならすぐスタートカウントダウン
@@ -212,6 +326,7 @@ public final class SpleefRoom implements GameRoom {
     }
 
     void waitPlayers() {
+        CMcCore.getLogger().debug("waitPlayers");
         this.state = GameRoomState.WAITING_PLAYERS;
         this.clock.cancel();
     }
@@ -220,6 +335,7 @@ public final class SpleefRoom implements GameRoom {
      * カウントダウンを開始する
      */
     void startCountdown() {
+        CMcCore.getLogger().debug("startCountdown");
         this.state = GameRoomState.WAITING_PLAYERS;
         this.clock.setClock(new SpleefClockWaitCountdown());
         this.clock.start();
@@ -229,11 +345,15 @@ public final class SpleefRoom implements GameRoom {
      * ゲームスタートへカウントダウンを開始する
      */
     void ready() {
+        CMcCore.getLogger().debug("ready");
         this.state = GameRoomState.READY;
 
-        // プレイヤーに必要物資を配る
         for (SpleefPlayer spleefPlayer : this.players.values()) {
-            spleefPlayer.spongePlayer.getInventory().offer(ItemStack.of(ItemTypes.IRON_SHOVEL, 1));
+            Player player = Sponge.getServer().getPlayer(spleefPlayer.playerUUID).get();
+            // プレイヤーを各スポーン位置に移動する
+            stage.getSpawnRocations().get(spleefPlayer.spawnLocationNumber).teleportHere(player);
+            // プレイヤーに必要物資を配る
+            player.getInventory().offer(ItemStack.of(ItemTypes.IRON_SHOVEL, 1));
         }
 
         this.clock.setClock(new SpleefClockReadyCountdown());
@@ -241,15 +361,17 @@ public final class SpleefRoom implements GameRoom {
     }
 
     void startGame() {
+        CMcCore.getLogger().debug("startGame");
         this.state = GameRoomState.IN_PROGRESS;
         this.clock.setClock(new SpleefClockGame(stage.getOptions().getGameTime()));
         this.clock.start();
     }
 
     /**
-     * 内部的にゲームを終了させる
+     * 内部的にゲームを終了する
      */
     void stopGame() {
+        CMcCore.getLogger().debug("stopGame");
         this.state = GameRoomState.FINISHED;
         this.clock.cancel();
 
@@ -260,6 +382,7 @@ public final class SpleefRoom implements GameRoom {
      * ルームを入室不可にする
      */
     public void closeRoom() {
+        CMcCore.getLogger().debug("closeRoom");
         switch (state) {
             case WAITING_PLAYERS:
 
@@ -291,16 +414,16 @@ public final class SpleefRoom implements GameRoom {
         @Override
         public void send(Text original) {
             for (SpleefPlayer spleefPlayer : players.values()) {
-                Player spongePlayer = spleefPlayer.spongePlayer;
-                spongePlayer.sendMessage(transformMessage(null, spongePlayer, original, null).get());
+                Player player = Sponge.getServer().getPlayer(spleefPlayer.playerUUID).get();
+                player.sendMessage(transformMessage(null, player, original, null).get());
             }
         }
 
         @Override
         public void send(Text original, ChatType type) {
             for (SpleefPlayer spleefPlayer : players.values()) {
-                Player spongePlayer = spleefPlayer.spongePlayer;
-                spongePlayer.sendMessage(type, transformMessage(null, spongePlayer, original, type).get());
+                Player player = Sponge.getServer().getPlayer(spleefPlayer.playerUUID).get();
+                player.sendMessage(type, transformMessage(null, player, original, type).get());
             }
         }
 
@@ -325,7 +448,8 @@ public final class SpleefRoom implements GameRoom {
         @Override
         public Collection<MessageReceiver> getMembers() {
             // ここで不変のCollectionを返す必要はない？
-            return players.values().stream().map(spleefPlayer -> spleefPlayer.spongePlayer)
+            return players.values().stream()
+                    .map(spleefPlayer -> Sponge.getServer().getPlayer(spleefPlayer.playerUUID).get())
                     .collect(Collectors.toCollection(HashSet::new));
         }
 

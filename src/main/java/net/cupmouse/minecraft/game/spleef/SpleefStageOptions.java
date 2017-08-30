@@ -30,6 +30,15 @@ public class SpleefStageOptions {
         this.minimumPlayerCount = minimumPlayerCount;
     }
 
+    public SpleefStageOptions copy() {
+        SpleefStageOptions copied = new SpleefStageOptions();
+
+        copied.gameTime = this.gameTime;
+        copied.minimumPlayerCount = this.minimumPlayerCount;
+
+        return copied;
+    }
+
     static class Serializer implements TypeSerializer<SpleefStageOptions> {
 
         @Override

@@ -29,10 +29,10 @@ public class MCmdSpleefRoomRemove implements CommandExecutor {
         try {
             CMcGamePlugin.getSpleef().removeRoom(roomNumber);
         } catch (GameException e) {
-            throw new CommandException(Text.of(TextColors.RED, "✗ステージを削除できませんでした。", e.getText()),
+            throw new CommandException(Text.of(TextColors.RED, "✗部屋を削除できませんでした", e.getText()),
                     e, false);
         }
-        src.sendMessage(Text.of(TextColors.GOLD, "✓ステージを削除しました。"));
+        src.sendMessage(Text.of(TextColors.GOLD, "✓部屋を削除しました"));
         return CommandResult.success();
     }
 }
