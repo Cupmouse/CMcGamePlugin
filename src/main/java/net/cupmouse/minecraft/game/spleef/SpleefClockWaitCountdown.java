@@ -17,6 +17,6 @@ public final class SpleefClockWaitCountdown implements SpleefClock {
 
     @Override
     public int getInitialClockTick() {
-        return 1;
+        return 10;
     }
 }
