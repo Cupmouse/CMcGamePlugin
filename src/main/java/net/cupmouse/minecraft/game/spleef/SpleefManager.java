@@ -6,6 +6,7 @@ import net.cupmouse.minecraft.game.CMcGamePlugin;
 import net.cupmouse.minecraft.game.manager.GameException;
 import net.cupmouse.minecraft.game.manager.GameManager;
 import net.cupmouse.minecraft.game.manager.GameRoomState;
+import net.cupmouse.minecraft.worlds.WorldTag;
 import net.cupmouse.minecraft.worlds.WorldTagLocation;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
@@ -15,6 +16,7 @@ import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
+import org.spongepowered.api.entity.Transform;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.block.InteractBlockEvent;
@@ -34,6 +36,8 @@ import java.util.Optional;
 import java.util.Set;
 
 public final class SpleefManager implements GameManager {
+
+    public static final WorldTag WORLD_TAG_SPLEEF = WorldTag.byName("spleef");
 
     /**
      * 部屋番号とSpleefRoomのマップ
@@ -172,6 +176,7 @@ public final class SpleefManager implements GameManager {
                     // 床を壊す
 
                     worldLocation.removeBlock(Cause.source(CMcCore.getPluginContainer()).build());
+                    event.setCancelled(true);
                 }
             }
         }
@@ -184,18 +189,19 @@ public final class SpleefManager implements GameManager {
         if (roomOptional.isPresent()) {
             // プレイヤーが部屋でプレー中のときはfightingAreaから出ると落ちた判定とし、負け確定
             SpleefRoom spleefRoom = roomOptional.get();
-
             Location<World> playerLocation = player.getLocation();
+            SpleefMatch match = spleefRoom.getMatch();
 
-            SpleefPlayer spleefPlayer = spleefRoom.getSpleefPlayer(player).get();
-
-            if (spleefRoom.getState() == GameRoomState.IN_PROGRESS &&
-                    !spleefPlayer.dead && !spleefRoom.stage.getFightingArea().isInArea(playerLocation)) {
+            if (match.getState() == GameRoomState.IN_PROGRESS
+                    && !match.getSpleefPlayer(player.getUniqueId()).dead
+                    && !spleefRoom.stage.getFightingArea().isInArea(playerLocation)) {
                 // 落ちた！
-                spleefRoom.playerDied(player);
-            } else if (!spleefRoom.stage.getSpectetorArea().isInArea(playerLocation)) {
+                match.playerDied(player);
+             } else if (!spleefRoom.stage.getSpectetorArea().isInArea(playerLocation)) {
                 // 見物範囲内しか移動できない
-                event.setToTransform(event.getFromTransform());
+                // ここでevent.setToTransform(event.getFromTransform())とすると動けなくなる
+                // (onPlayerMoveがまた呼ばれて…)
+                event.setToTransform(spleefRoom.stage.getWaitingSpawnRocation().convertToTransform().get());
             }
         }
     }
@@ -219,7 +225,7 @@ public final class SpleefManager implements GameManager {
         }
 
         // 部屋のロード
-        CommentedConfigurationNode nodeRooms = nodeSpleef.getNode("spleef", "rooms");
+        CommentedConfigurationNode nodeRooms = nodeSpleef.getNode("rooms");
 
         Map<Object, ? extends CommentedConfigurationNode> childrenMap = nodeRooms.getChildrenMap();
 

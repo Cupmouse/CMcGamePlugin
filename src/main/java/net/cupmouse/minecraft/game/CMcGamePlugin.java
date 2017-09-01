@@ -8,6 +8,7 @@ import net.cupmouse.minecraft.PongPingModule;
 import net.cupmouse.minecraft.beam.BeamModule;
 import net.cupmouse.minecraft.db.DatabaseModule;
 import net.cupmouse.minecraft.game.cmd.CommandModule;
+import net.cupmouse.minecraft.game.creator.CreatorBank;
 import net.cupmouse.minecraft.game.creator.CreatorModule;
 import net.cupmouse.minecraft.game.data.user.GameUserDataModule;
 import net.cupmouse.minecraft.game.manager.GameException;
@@ -15,6 +16,7 @@ import net.cupmouse.minecraft.game.manager.GameRoom;
 import net.cupmouse.minecraft.game.mod.ModeratorCommandModule;
 import net.cupmouse.minecraft.game.spleef.SpleefManager;
 import net.cupmouse.minecraft.game.spleef.SpleefRoom;
+import net.cupmouse.minecraft.worlds.WorldTag;
 import net.cupmouse.minecraft.worlds.WorldTagModule;
 import ninja.leaping.configurate.ConfigurationOptions;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
@@ -24,18 +26,26 @@ import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import org.slf4j.Logger;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.config.ConfigDir;
+import org.spongepowered.api.data.DataQuery;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
+import org.spongepowered.api.event.Order;
+import org.spongepowered.api.event.block.ChangeBlockEvent;
 import org.spongepowered.api.event.game.state.GamePreInitializationEvent;
 import org.spongepowered.api.event.game.state.GameStoppedServerEvent;
 import org.spongepowered.api.event.network.ClientConnectionEvent;
 import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.plugin.PluginContainer;
+import org.spongepowered.api.world.GeneratorType;
+import org.spongepowered.api.world.GeneratorTypes;
+import org.spongepowered.api.world.WorldArchetype;
+import org.spongepowered.api.world.storage.WorldProperties;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.UUID;
 
 import static net.cupmouse.minecraft.CMcCore.stopEternally;
 
@@ -43,6 +53,8 @@ import static net.cupmouse.minecraft.CMcCore.stopEternally;
         description = "CMc game server plugin",
         authors = "Cupmouse", url = "http://www.cupmouse.net/")
 public class CMcGamePlugin {
+
+    private static final WorldTag WORLD_TAG_LOBBY = WorldTag.byName("lobby");
 
     private final CMcCore core;
     private final GameUserDataModule userm;
@@ -89,6 +101,12 @@ public class CMcGamePlugin {
     public void onPreInitialization(GamePreInitializationEvent event) {
         core.onPreInitialization(event);
 
+//        WorldProperties worldProperties = Sponge.getServer().createWorldProperties("lobby",
+//                WorldArchetype.builder()
+//                        .generator(GeneratorTypes.FLAT)
+//                        .generatorSettings(GeneratorTypes.FLAT.getGeneratorSettings().set(DataQuery.of())).build());
+//        Sponge.getServer().loadWorld(worldProperties);
+
         configGamePath = CMcCore.getConfigDir().resolve("game.conf");
 
         // 設定ファイルが存在しない場合、jarファイル内のアセットフォルダからコピーする。
@@ -124,6 +142,21 @@ public class CMcGamePlugin {
             } catch (GameException e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    @Listener(order = Order.FIRST)
+    public void onBlockChange(ChangeBlockEvent event) {
+        UUID worldUniqueId = event.getTransactions().get(0).getOriginal().getWorldUniqueId();
+        WorldTagModule.isThis(WORLD_TAG_LOBBY, worldUniqueId);
+
+        // ロビーは権限を持っている人物しか壊せない
+        Optional<Player> playerOptional = event.getCause().first(Player.class);
+
+        if (!playerOptional.isPresent() || !playerOptional.get().hasPermission("cmc.game.modify_lobby")) {
+            // 人間じゃないならどんな変更も不可
+            // 人間でも権限ないと不可
+            event.setCancelled(true);
         }
     }
 
@@ -163,12 +196,6 @@ public class CMcGamePlugin {
         } catch (IOException e) {
             e.printStackTrace();
             stopEternally();
-        }
-
-        try {
-            spleef.load();
-        } catch (ObjectMappingException | GameException e) {
-            e.printStackTrace();
         }
     }
 //

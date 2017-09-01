@@ -9,7 +9,7 @@ import org.spongepowered.api.scheduler.Task;
  */
 public final class SpleefClockManager implements Runnable {
 
-    private final SpleefRoom room;
+    private final SpleefMatch match;
     // これは実際の時間
     private long prevTickTimeMilli;
     private Task task;
@@ -19,8 +19,8 @@ public final class SpleefClockManager implements Runnable {
     // 現実時間と比べると小数点繰り上げになる
     private int ctickLeft;
 
-    SpleefClockManager(SpleefRoom room) {
-        this.room = room;
+    SpleefClockManager(SpleefMatch match) {
+        this.match = match;
     }
 
     public int getClockTickLeft() {
@@ -42,6 +42,7 @@ public final class SpleefClockManager implements Runnable {
         this.task = Sponge.getScheduler().createTaskBuilder()
                 .intervalTicks(1)
                 .execute(this).submit(CMcCore.getPlugin());
+        CMcCore.getLogger().debug(Thread.currentThread().getName());
     }
 
     /**
@@ -83,10 +84,16 @@ public final class SpleefClockManager implements Runnable {
 
         // 一秒以上の判定をする。
         if (elapsedMilliAfterPrevTick >= 1000) {
+            CMcCore.getLogger().debug(clock + " " + elapsedMilliAfterPrevTick + " " + Thread.currentThread().getName() + " " + ctickLeft);
             // 経過した秒だけ実行する。
             for (int i = 0; i < elapsedMilliAfterPrevTick / 1000; i++) {
-                CMcCore.getLogger().debug("DO/" + i);
-                clock.clockTick(room, ctickLeft);
+                clock.clockTick(match, ctickLeft);
+                CMcCore.getLogger().debug(clock + "DID !" + String.valueOf(ctickLeft));
+
+                if (task == null) {
+                    CMcCore.getLogger().debug("CANCELLED");
+                    return;
+                }
 
                 // 1減らす
                 ctickLeft--;
@@ -96,6 +103,7 @@ public final class SpleefClockManager implements Runnable {
             // 0.5秒分はどこへ行くのか。それを修正する。
             this.prevTickTimeMilli = currentTimeMillis - (elapsedMilliAfterPrevTick % 1000);
 
+            CMcCore.getLogger().debug("");
         } else {
             // 一秒に満たしていなかったらやめる
             return;

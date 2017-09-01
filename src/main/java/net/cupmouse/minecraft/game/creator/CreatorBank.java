@@ -22,6 +22,7 @@ public final class CreatorBank {
     private WorldTagArea area;
 
     public boolean isSelectionEnabled;
+    public boolean isBlockChangeEnabled;
     private Location<World> firstLoc;
     private Location<World> secondLoc;
 

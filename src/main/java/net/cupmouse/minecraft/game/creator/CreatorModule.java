@@ -42,11 +42,11 @@ public final class CreatorModule implements PluginModule {
 
     private static Map<CommandSource, CreatorBank> creatorSessionMap = new HashMap<>();
 
-    private boolean creatorEnabled;
+    private static boolean creatorEnabled;
 
     @Override
     public void onInitializationProxy() throws Exception {
-        this.creatorEnabled = CMcGamePlugin.getGameConfigNode().getNode("creator_enabled").getBoolean();
+        creatorEnabled = CMcGamePlugin.getGameConfigNode().getNode("creator_enabled").getBoolean();
 
         if (!creatorEnabled) {
             return;
@@ -75,6 +75,10 @@ public final class CreatorModule implements PluginModule {
         CMcCore.getLogger().warn("クリエイターモードが有効化されました！");
         CMcCore.getLogger().warn("=========================================");
 
+    }
+
+    public static boolean isCreatorEnabled() {
+        return creatorEnabled;
     }
 
     public static CreatorBank getOrCreateBankOf(CommandSource commandSource) {

@@ -11,28 +11,28 @@ public class SpleefClockGame implements SpleefClock {
     }
 
     @Override
-    public void clockTick(SpleefRoom room, int ctickLeft) {
+    public void clockTick(SpleefMatch match, int ctickLeft) {
 
         if (ctickLeft <= 0) {
-            // ゲームを終了する
-            room.finishGame();
+            // 試合を終了する
+            match.finish();
         } else if (ctickLeft <= 10) {
             // 十秒以内で毎秒カウントダウン
-            room.messageChannel.send(Text.of("あと残り" + ctickLeft + "秒"));
+            match.messageChannel.send(Text.of("あと残り" + ctickLeft + "秒"));
 
         } else if (ctickLeft <= 30) {
             if (ctickLeft % 10 == 0) {
                 // 30秒以内なら10秒づつカウントダウン
-                room.messageChannel.send(Text.of("あと残り" + ctickLeft + "秒"));
+                match.messageChannel.send(Text.of("あと残り" + ctickLeft + "秒"));
             }
         } else if (ctickLeft % 60 == 0) {
             // それ以上のときは１分づつカウントダウン
-            room.messageChannel.send(Text.of("あと残り" + ctickLeft + "秒"));
+            match.messageChannel.send(Text.of("あと残り" + ctickLeft + "秒"));
         }
     }
 
     @Override
     public int getInitialClockTick() {
-        return gameTime;
+        return 1;
     }
 }

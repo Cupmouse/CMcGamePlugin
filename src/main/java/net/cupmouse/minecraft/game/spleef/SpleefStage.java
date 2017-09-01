@@ -99,6 +99,10 @@ public class SpleefStage {
         return Collections.unmodifiableList(spawnRocations);
     }
 
+    public void shuffleSpawnRocations() {
+        Collections.shuffle(spawnRocations);
+    }
+
     public WorldTagRocation getWaitingSpawnRocation() {
         return waitingSpawnRocation;
     }

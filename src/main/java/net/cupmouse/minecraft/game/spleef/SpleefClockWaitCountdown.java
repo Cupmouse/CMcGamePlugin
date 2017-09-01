@@ -5,16 +5,18 @@ import org.spongepowered.api.text.Text;
 public final class SpleefClockWaitCountdown implements SpleefClock {
 
     @Override
-    public void clockTick(SpleefRoom room, int ctickLeft) {
-        room.messageChannel.send(Text.of("wait_countdown ", ctickLeft));
+    public void clockTick(SpleefMatch match, int ctickLeft) {
+        if ((ctickLeft > 5 && ctickLeft % 5 == 0) || ctickLeft <= 5) {
+            match.messageChannel.send(Text.of("プレイヤーの参加を待っています... ", ctickLeft));
+        }
 
         if (ctickLeft <= 0) {
-            room.ready();
+            match.ready();
         }
     }
 
     @Override
     public int getInitialClockTick() {
-        return 20;
+        return 1;
     }
 }
