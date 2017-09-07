@@ -7,30 +7,17 @@ import net.cupmouse.minecraft.game.manager.GameException;
 import net.cupmouse.minecraft.game.manager.GameRoom;
 import net.cupmouse.minecraft.game.manager.GameRoomState;
 import net.cupmouse.minecraft.worlds.WorldTagModule;
-import net.cupmouse.minecraft.worlds.WorldTagRocation;
 import org.spongepowered.api.Sponge;
-import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.entity.living.player.Player;
-import org.spongepowered.api.entity.living.player.gamemode.GameModes;
 import org.spongepowered.api.event.cause.Cause;
-import org.spongepowered.api.item.ItemTypes;
-import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.text.Text;
-import org.spongepowered.api.text.channel.MessageChannel;
-import org.spongepowered.api.text.channel.MessageReceiver;
-import org.spongepowered.api.text.channel.MutableMessageChannel;
-import org.spongepowered.api.text.channel.impl.SimpleMutableMessageChannel;
-import org.spongepowered.api.text.chat.ChatType;
-import org.spongepowered.api.text.chat.ChatTypes;
 import org.spongepowered.api.text.format.TextColors;
-import org.spongepowered.api.text.format.TextStyles;
 import org.spongepowered.api.world.World;
 
-import javax.annotation.Nullable;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.Map;
 
 /**
+ * ****Outdated***
  * Hold game - ゲーム自体のカウントダウンを始める
  * Start game - ゲーム自体を開始する。試合開始。プレー開始。
  * Stop game - 内部的にゲーム自体を終了させる。それ以外のことはしない。プレイヤーを移動もしない。
@@ -99,9 +86,11 @@ public final class SpleefRoom implements GameRoom {
     public void tryLeaveRoom(Player player) throws GameException {
         CMcCore.getLogger().debug("tryLeaveRoom");
         match.tryToQuit(player);
+        // TODO ロビーに移動
     }
 
     public void nextMatch() {
+        CMcCore.getLogger().debug("nextMatch");
         // ステージの整備を行う
         prepareStage();
 
@@ -143,12 +132,15 @@ public final class SpleefRoom implements GameRoom {
     public void closeRoom() {
         CMcCore.getLogger().debug("closeRoom");
 
-        Map<Integer, SpleefPlayer> players = this.match.close();
+        if (match != null) {
+            Map<Integer, SpleefPlayer> players = this.match.close();
 
-        for (SpleefPlayer spleefPlayer : players.values()) {
-            // TODO ロビーに移動
-            Sponge.getServer().getPlayer(spleefPlayer.playerUUID).get();
+            for (SpleefPlayer spleefPlayer : players.values()) {
+                // TODO ロビーに移動
+                Sponge.getServer().getPlayer(spleefPlayer.playerUUID).get();
+            }
         }
+        // 何もしなくていい
     }
 
     public int getPlayerCount() {

@@ -8,7 +8,6 @@ import net.cupmouse.minecraft.PongPingModule;
 import net.cupmouse.minecraft.beam.BeamModule;
 import net.cupmouse.minecraft.db.DatabaseModule;
 import net.cupmouse.minecraft.game.cmd.CommandModule;
-import net.cupmouse.minecraft.game.creator.CreatorBank;
 import net.cupmouse.minecraft.game.creator.CreatorModule;
 import net.cupmouse.minecraft.game.data.user.GameUserDataModule;
 import net.cupmouse.minecraft.game.manager.GameException;
@@ -18,7 +17,6 @@ import net.cupmouse.minecraft.game.spleef.SpleefManager;
 import net.cupmouse.minecraft.game.spleef.SpleefRoom;
 import net.cupmouse.minecraft.worlds.WorldTag;
 import net.cupmouse.minecraft.worlds.WorldTagModule;
-import ninja.leaping.configurate.ConfigurationOptions;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
 import ninja.leaping.configurate.objectmapping.GuiceObjectMapperFactory;
@@ -26,19 +24,22 @@ import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import org.slf4j.Logger;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.config.ConfigDir;
-import org.spongepowered.api.data.DataQuery;
+import org.spongepowered.api.entity.Transform;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.Order;
 import org.spongepowered.api.event.block.ChangeBlockEvent;
+import org.spongepowered.api.event.entity.DamageEntityEvent;
+import org.spongepowered.api.event.game.state.GameAboutToStartServerEvent;
 import org.spongepowered.api.event.game.state.GamePreInitializationEvent;
+import org.spongepowered.api.event.game.state.GameStartedServerEvent;
 import org.spongepowered.api.event.game.state.GameStoppedServerEvent;
 import org.spongepowered.api.event.network.ClientConnectionEvent;
 import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.plugin.PluginContainer;
-import org.spongepowered.api.world.GeneratorType;
-import org.spongepowered.api.world.GeneratorTypes;
-import org.spongepowered.api.world.WorldArchetype;
+import org.spongepowered.api.scheduler.Task;
+import org.spongepowered.api.world.World;
+import org.spongepowered.api.world.gamerule.DefaultGameRules;
 import org.spongepowered.api.world.storage.WorldProperties;
 
 import java.io.IOException;
@@ -101,12 +102,6 @@ public class CMcGamePlugin {
     public void onPreInitialization(GamePreInitializationEvent event) {
         core.onPreInitialization(event);
 
-//        WorldProperties worldProperties = Sponge.getServer().createWorldProperties("lobby",
-//                WorldArchetype.builder()
-//                        .generator(GeneratorTypes.FLAT)
-//                        .generatorSettings(GeneratorTypes.FLAT.getGeneratorSettings().set(DataQuery.of())).build());
-//        Sponge.getServer().loadWorld(worldProperties);
-
         configGamePath = CMcCore.getConfigDir().resolve("game.conf");
 
         // 設定ファイルが存在しない場合、jarファイル内のアセットフォルダからコピーする。
@@ -125,6 +120,93 @@ public class CMcGamePlugin {
         CMcCore.getLogger().info("ゲーム設定を読み込みました！");
 
         core.onPrePostInitialization();
+    }
+
+    @Listener
+    public void onServerAboutToStart(GameAboutToStartServerEvent event) {
+        // ワールドを作成する
+        // TODO 動きません https://github.com/SpongePowered/SpongeCommon/issues/1169
+
+//        // Setting generator option from WorldInfo
+//
+//        if (archetype.getGeneratorType() == GeneratorTypes.FLAT) {
+//            Optional<String> generatorSettingStringOpt = archetype.getGeneratorSettings().getString(DataQueries.WORLD_CUSTOM_SETTINGS);
+//
+//            // The key customSettings is used for just FLAT world for now (1.12).
+//            // It contains settings in custom format for flat world also known as preset.
+//            generatorSettingStringOpt.ifPresent(s -> this.generatorOptions = s);
+//        } else {
+//            if (archetype.getGeneratorSettings().) {
+//                // If customSetting were not set, then it could be setting for the customized world type which you can change
+//                // ore placement to terrain noise stuff and some other various things.
+//
+//            }
+//        }
+//        if (this.generatorOptions.isEmpty()) {
+//            // No settings for world generator
+//            this.generatorOptions = "";
+//        }
+
+//        // generatorSettingsはCUSTOMワールド生成を使用したときにjsonをぶっこむ、FLATのときはcustomSettingsがキーで
+//        // 値はそのまま独自フォーマットを入れる
+//        WorldArchetype worldArchetypeTemplate = WorldArchetype.builder()
+//                .enabled(true)
+//                .loadsOnStartup(true)
+//                .keepsSpawnLoaded(true)
+//                .commandsAllowed(true)
+//                .dimension(DimensionTypes.OVERWORLD)
+//                .gameMode(GameModes.SURVIVAL)
+//                .difficulty(Difficulties.EASY)
+//                .generateBonusChest(false)
+//                .generateSpawnOnLoad(true)
+//                .usesMapFeatures(false)
+//                .hardcore(false)
+//                // TODO これ以外無いのか
+////                            .portalAgent(null)
+//                .seed(0)
+//                .generator(GeneratorTypes.FLAT)
+//                .generatorSettings(DataContainer.createNew().set(DataQuery.of("customSettings"),
+//                        "3;30*minecraft:bedrock;1"))
+//                .build("cmc:template", "CMc World Template Settings");
+//
+//        try {
+//            WorldProperties spleefWorldProperties = Sponge.getServer().createWorldProperties("game",
+//                    WorldArchetype.builder().from(worldArchetypeTemplate)
+//                            .difficulty(Difficulties.PEACEFUL)
+//                            .build("cmc:spleef", "CMc Spleef World Settings"));
+//
+//            setGameRule(spleefWorldProperties);
+//
+//            Sponge.getServer().loadWorld(spleefWorldProperties);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+    }
+
+    private void setGameRule(WorldProperties worldProperties) {
+        worldProperties.setGameRule(DefaultGameRules.ANNOUNCE_ADVANCEMENTS, "false");
+        worldProperties.setGameRule(DefaultGameRules.COMMAND_BLOCK_OUTPUT, "true");
+        worldProperties.setGameRule(DefaultGameRules.DISABLE_ELYTRA_MOVEMENT_CHECK, "false");
+        worldProperties.setGameRule(DefaultGameRules.DO_DAYLIGHT_CYCLE, "false");
+        worldProperties.setGameRule(DefaultGameRules.DO_ENTITY_DROPS, "false");
+        worldProperties.setGameRule(DefaultGameRules.DO_FIRE_TICK, "false");
+        worldProperties.setGameRule(DefaultGameRules.DO_LIMITED_CRAFTING, "false");
+        worldProperties.setGameRule(DefaultGameRules.DO_MOB_LOOT, "false");
+        worldProperties.setGameRule(DefaultGameRules.DO_TILE_DROPS, "false");
+        worldProperties.setGameRule(DefaultGameRules.DO_WEATHER_CYCLE, "false");
+        worldProperties.setGameRule(DefaultGameRules.GAME_LOOP_FUNCTION, "false");
+        worldProperties.setGameRule(DefaultGameRules.KEEP_INVENTORY, "false");
+        worldProperties.setGameRule(DefaultGameRules.LOG_ADMIN_COMMANDS, "true");
+        worldProperties.setGameRule(DefaultGameRules.MAX_COMMAND_CHAIN_LENGTH, "0");
+        worldProperties.setGameRule(DefaultGameRules.MAX_ENTITY_CRAMMING, "4");
+        worldProperties.setGameRule(DefaultGameRules.MOB_GRIEFING, "false");
+        worldProperties.setGameRule(DefaultGameRules.NATURAL_REGENERATION, "true");
+        worldProperties.setGameRule(DefaultGameRules.RANDOM_TICK_SPEED, "0"); // Disable random tick
+        worldProperties.setGameRule(DefaultGameRules.REDUCED_DEBUG_INFO, "false");
+        worldProperties.setGameRule(DefaultGameRules.SEND_COMMAND_FEEDBACK, "true");
+        worldProperties.setGameRule(DefaultGameRules.SHOW_DEATH_MESSAGES, "false");
+        worldProperties.setGameRule(DefaultGameRules.SPAWN_RADIUS, "0");
+        worldProperties.setGameRule(DefaultGameRules.SPECTATORS_GENERATE_CHUNKS, "false");
     }
 
     @Listener
@@ -148,6 +230,7 @@ public class CMcGamePlugin {
     @Listener(order = Order.FIRST)
     public void onBlockChange(ChangeBlockEvent event) {
         UUID worldUniqueId = event.getTransactions().get(0).getOriginal().getWorldUniqueId();
+        // TODO
         WorldTagModule.isThis(WORLD_TAG_LOBBY, worldUniqueId);
 
         // ロビーは権限を持っている人物しか壊せない
@@ -158,6 +241,34 @@ public class CMcGamePlugin {
             // 人間でも権限ないと不可
             event.setCancelled(true);
         }
+    }
+
+    @Listener
+    public void onEntityDamaged(DamageEntityEvent event) {
+        // ダメージを受けない
+        if (event.getTargetEntity() instanceof Player) {
+            event.setBaseDamage(0);
+        }
+    }
+
+    @Listener
+    public void onClientConnect(ClientConnectionEvent.Login event) {
+        // ロビーに戻す
+        event.setToTransform(new Transform<>(WorldTagModule.getTaggedWorld(WORLD_TAG_LOBBY).get().getSpawnLocation()));
+    }
+
+    @Listener
+    public void onServerStarted(GameStartedServerEvent event) {
+        // プレイヤーを自動回復する。TODO Sponge対応待ち
+        Task.builder().name("Player Healing")
+                .intervalTicks(120)
+                .execute(() -> {
+                    for (Player player : Sponge.getServer().getOnlinePlayers()) {
+                        player.foodLevel().set(20);
+                        player.saturation().set(20D);
+                        player.health().set(20D);
+                    }
+                }).submit(CMcCore.getPlugin());
     }
 
     public static Optional<GameRoom> getRoomPlayerJoin(Player player) {

@@ -1,14 +1,7 @@
 package net.cupmouse.minecraft.game.creator.cmd.spleef;
 
 import net.cupmouse.minecraft.game.creator.CreatorModule;
-import net.cupmouse.minecraft.game.spleef.SpleefStageOptions;
-import net.cupmouse.minecraft.game.spleef.SpleefStageTemplate;
 import net.cupmouse.minecraft.game.spleef.SpleefStageTemplateInfo;
-import net.cupmouse.minecraft.util.CEThrowableDualConsumer;
-import net.cupmouse.minecraft.util.CEThrowableFunction;
-import net.cupmouse.minecraft.worlds.WorldTagLocation;
-import net.cupmouse.minecraft.worlds.WorldTagPosition;
-import net.cupmouse.minecraft.worlds.WorldTagRocation;
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
@@ -26,9 +19,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static org.spongepowered.api.command.args.GenericArguments.onlyOne;
-import static org.spongepowered.api.command.args.GenericArguments.optional;
-import static org.spongepowered.api.command.args.GenericArguments.string;
+import static org.spongepowered.api.command.args.GenericArguments.*;
 
 public class CCmdSpleefInfo implements CommandExecutor {
 

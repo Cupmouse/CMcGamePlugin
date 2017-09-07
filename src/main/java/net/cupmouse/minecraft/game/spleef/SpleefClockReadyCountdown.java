@@ -1,7 +1,6 @@
 package net.cupmouse.minecraft.game.spleef;
 
 import org.spongepowered.api.Sponge;
-import org.spongepowered.api.boss.ServerBossBar;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;

@@ -3,7 +3,6 @@ package net.cupmouse.minecraft.game.cmd;
 import net.cupmouse.minecraft.game.CMcGamePlugin;
 import net.cupmouse.minecraft.game.manager.GameException;
 import net.cupmouse.minecraft.game.manager.GameRoom;
-import net.cupmouse.minecraft.game.spleef.SpleefRoom;
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;

@@ -16,14 +16,12 @@ import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
-import org.spongepowered.api.entity.Transform;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.block.InteractBlockEvent;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.event.cause.NamedCause;
 import org.spongepowered.api.event.entity.MoveEntityEvent;
-import org.spongepowered.api.event.filter.cause.First;
 import org.spongepowered.api.event.filter.cause.Named;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
@@ -202,6 +200,12 @@ public final class SpleefManager implements GameManager {
                 // ここでevent.setToTransform(event.getFromTransform())とすると動けなくなる
                 // (onPlayerMoveがまた呼ばれて…)
                 event.setToTransform(spleefRoom.stage.getWaitingSpawnRocation().convertToTransform().get());
+            } else if (match.getState() == GameRoomState.READY) {
+                // 試合開始直前は、位置を動いた場合のみ無効とする。よって首を回転させても大丈夫。
+                if (!event.getFromTransform().getPosition().equals(event.getToTransform().getPosition())) {
+                    // 無効にする
+                    event.setToTransform(event.getFromTransform());
+                }
             }
         }
     }

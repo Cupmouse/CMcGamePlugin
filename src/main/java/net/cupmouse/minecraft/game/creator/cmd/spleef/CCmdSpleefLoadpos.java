@@ -3,7 +3,6 @@ package net.cupmouse.minecraft.game.creator.cmd.spleef;
 import net.cupmouse.minecraft.game.creator.CreatorBank;
 import net.cupmouse.minecraft.game.creator.CreatorModule;
 import net.cupmouse.minecraft.game.spleef.SpleefStageTemplate;
-import net.cupmouse.minecraft.worlds.WorldTagArea;
 import net.cupmouse.minecraft.worlds.WorldTagPosition;
 import net.cupmouse.minecraft.worlds.WorldTagRocation;
 import org.spongepowered.api.command.CommandCallable;

@@ -16,7 +16,8 @@ import org.spongepowered.api.text.format.TextColors;
 
 import java.util.Optional;
 
-import static org.spongepowered.api.command.args.GenericArguments.*;
+import static org.spongepowered.api.command.args.GenericArguments.integer;
+import static org.spongepowered.api.command.args.GenericArguments.onlyOne;
 
 public class CmdRoomJoinSpleef implements CommandExecutor {
 

@@ -1,7 +1,5 @@
 package net.cupmouse.minecraft.game.spleef;
 
-import org.spongepowered.api.entity.living.player.Player;
-
 import java.util.UUID;
 
 public final class SpleefPlayer {

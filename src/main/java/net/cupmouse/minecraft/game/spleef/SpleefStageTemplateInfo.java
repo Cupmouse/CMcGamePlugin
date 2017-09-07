@@ -3,10 +3,8 @@ package net.cupmouse.minecraft.game.spleef;
 import com.google.common.reflect.TypeToken;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
-import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
 import ninja.leaping.configurate.objectmapping.serialize.TypeSerializer;
 
-import java.util.Collections;
 import java.util.List;
 
 public class SpleefStageTemplateInfo {

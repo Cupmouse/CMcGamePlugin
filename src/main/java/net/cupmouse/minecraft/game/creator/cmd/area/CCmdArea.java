@@ -2,7 +2,6 @@ package net.cupmouse.minecraft.game.creator.cmd.area;
 
 import net.cupmouse.minecraft.game.creator.CreatorBank;
 import net.cupmouse.minecraft.game.creator.CreatorModule;
-import net.cupmouse.minecraft.game.creator.cmd.spleef.CCmdSpleefSetarea;
 import net.cupmouse.minecraft.worlds.WorldTagAreaSquare;
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;

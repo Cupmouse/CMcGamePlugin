@@ -229,6 +229,11 @@ public class SpleefMatch {
                 case READY:
                     // ラッキー。まだ開始してないのでなかったコトにしてまた最低人数以上になるまでプレイヤー募集する
                     waitPlayers();
+
+                    for (SpleefPlayer spleefPlayer : players.values()) {
+                        room.stage.getWaitingSpawnRocation()
+                                .teleportHere(Sponge.getServer().getPlayer(spleefPlayer.playerUUID).get());
+                    }
                     break;
                 case IN_PROGRESS:
                     // これは迷惑。試合は止まってなかったことになる。かわいそう

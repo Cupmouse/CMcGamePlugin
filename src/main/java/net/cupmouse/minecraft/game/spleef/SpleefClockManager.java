@@ -4,7 +4,6 @@ import net.cupmouse.minecraft.CMcCore;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.scheduler.Task;
 
-import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 
 /**
