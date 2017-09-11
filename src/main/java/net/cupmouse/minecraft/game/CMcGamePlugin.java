@@ -24,12 +24,16 @@ import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import org.slf4j.Logger;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.config.ConfigDir;
+import org.spongepowered.api.entity.Entity;
+import org.spongepowered.api.entity.EntityTypes;
 import org.spongepowered.api.entity.Transform;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.Order;
 import org.spongepowered.api.event.block.ChangeBlockEvent;
+import org.spongepowered.api.event.entity.ConstructEntityEvent;
 import org.spongepowered.api.event.entity.DamageEntityEvent;
+import org.spongepowered.api.event.entity.SpawnEntityEvent;
 import org.spongepowered.api.event.game.state.GameAboutToStartServerEvent;
 import org.spongepowered.api.event.game.state.GamePreInitializationEvent;
 import org.spongepowered.api.event.game.state.GameStartedServerEvent;
@@ -229,6 +233,10 @@ public class CMcGamePlugin {
 
     @Listener(order = Order.FIRST)
     public void onBlockChange(ChangeBlockEvent event) {
+        if (CreatorModule.isCreatorEnabled()) {
+            // クリエイターモードがONならどんな変更も許される
+            return;
+        }
         UUID worldUniqueId = event.getTransactions().get(0).getOriginal().getWorldUniqueId();
         // TODO
         WorldTagModule.isThis(WORLD_TAG_LOBBY, worldUniqueId);
@@ -269,6 +277,16 @@ public class CMcGamePlugin {
                         player.health().set(20D);
                     }
                 }).submit(CMcCore.getPlugin());
+    }
+
+    @Listener
+    public void onTNTPrimeSpawn(SpawnEntityEvent event) {
+        for (Entity entity : event.getEntities()) {
+            if (entity.getType() == EntityTypes.PRIMED_TNT || entity.getType() == EntityTypes.TNT_MINECART) {
+                event.setCancelled(true);
+                return;
+            }
+        }
     }
 
     public static Optional<GameRoom> getRoomPlayerJoin(Player player) {
