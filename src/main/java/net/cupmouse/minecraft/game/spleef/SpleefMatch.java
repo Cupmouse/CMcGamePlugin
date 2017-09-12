@@ -1,8 +1,10 @@
 package net.cupmouse.minecraft.game.spleef;
 
 import net.cupmouse.minecraft.CMcCore;
+import net.cupmouse.minecraft.game.CMcGamePlugin;
 import net.cupmouse.minecraft.game.manager.GameException;
 import net.cupmouse.minecraft.game.manager.GameRoomState;
+import net.cupmouse.minecraft.worlds.WorldTagModule;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.entity.living.player.Player;
@@ -262,8 +264,10 @@ public class SpleefMatch {
     private void playerQuit(Player player) {
         player.getInventory().clear();
         player.setMessageChannel(Sponge.getServer().getBroadcastChannel());
+        player.offer(Keys.GAME_MODE, GameModes.SURVIVAL);
 
-        // TODO ロビーに移動
+        // ロビーに移動
+        WorldTagModule.getTaggedWorld(CMcGamePlugin.WORLD_TAG_LOBBY).ifPresent(player::transferToWorld);
     }
 
     public int countPlayersLiving() {
@@ -440,7 +444,7 @@ public class SpleefMatch {
                 // アイテム発生
 
                 // TODO
-                this.item = new SpleefItemTNT();
+                this.item = new SpleefItemTNT(this);
                 this.messageChannel.send(Text.of(String.format("アイテム[%s]が発生しました!", item.getName())));
                 this.item.init();
                 this.item.doTick();

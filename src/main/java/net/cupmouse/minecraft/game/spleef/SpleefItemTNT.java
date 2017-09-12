@@ -3,7 +3,6 @@ package net.cupmouse.minecraft.game.spleef;
 import net.cupmouse.minecraft.worlds.WorldTagModule;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.Entity;
-import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.item.ItemTypes;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.world.World;
@@ -18,7 +17,8 @@ public class SpleefItemTNT implements SpleefItem {
     private final SpleefMatch match;
     private final Set<UUID> primedTNTs = new HashSet<>();
 
-    private int ticks = 20;
+    // 20秒
+    private int ticks = 21;
 
     public SpleefItemTNT(SpleefMatch match) {
         this.match = match;
@@ -29,30 +29,33 @@ public class SpleefItemTNT implements SpleefItem {
         // すべてのプレイヤーにTNTを与える
 
         for (SpleefPlayer spleefPlayer : match.getPlayers()) {
-            Optional<Player> playerOptional = Sponge.getServer().getPlayer(spleefPlayer.playerUUID);
-
-            playerOptional.ifPresent(player -> player.getInventory().offer(ItemStack.of(ItemTypes.TNT, 3)));
+            Sponge.getServer().getPlayer(spleefPlayer.playerUUID)
+                    .ifPresent(player -> player.getInventory().offer(ItemStack.of(ItemTypes.TNT, 3)));
         }
     }
 
     @Override
     public boolean doTick() {
-
-        return false;
+        return --ticks > 0;
     }
 
     @Override
     public void clear() {
-        Optional<World> worldOptional = WorldTagModule.getTaggedWorld(SpleefManager.WORLD_TAG_SPLEEF);
+        final Optional<World> worldOptional = WorldTagModule.getTaggedWorld(SpleefManager.WORLD_TAG_SPLEEF);
 
         if (!worldOptional.isPresent()) {
             return;
         }
 
-        World world = worldOptional.get();
+        final World world = worldOptional.get();
 
         // このTNTアイテムに関連するすべてのTNTを削除する
         this.primedTNTs.forEach(uuid -> world.getEntity(uuid).ifPresent(Entity::remove));
+
+        // 全てのプレイヤーからTNTを没収
+        for (SpleefPlayer spleefPlayer : match.getPlayers()) {
+            Sponge.getServer().getPlayer(spleefPlayer.playerUUID).ifPresent(player -> player.getInventory().query(ItemTypes.TNT).poll());
+        }
     }
 
     @Override

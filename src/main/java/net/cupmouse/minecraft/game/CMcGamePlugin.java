@@ -31,7 +31,6 @@ import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.Order;
 import org.spongepowered.api.event.block.ChangeBlockEvent;
-import org.spongepowered.api.event.entity.ConstructEntityEvent;
 import org.spongepowered.api.event.entity.DamageEntityEvent;
 import org.spongepowered.api.event.entity.SpawnEntityEvent;
 import org.spongepowered.api.event.game.state.GameAboutToStartServerEvent;
@@ -42,7 +41,6 @@ import org.spongepowered.api.event.network.ClientConnectionEvent;
 import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.plugin.PluginContainer;
 import org.spongepowered.api.scheduler.Task;
-import org.spongepowered.api.world.World;
 import org.spongepowered.api.world.gamerule.DefaultGameRules;
 import org.spongepowered.api.world.storage.WorldProperties;
 
@@ -54,12 +52,12 @@ import java.util.UUID;
 
 import static net.cupmouse.minecraft.CMcCore.stopEternally;
 
-@Plugin(id = "cmcgameplugin", name = "CMcGamePlugin", version = "alpha-0.1",
-        description = "CMc game server plugin",
+@Plugin(id = "cmcgameplugin", name = "CMcGamePlugin", version = "alpha-0.1.1",
+        description = "CMc Minigame plugin",
         authors = "Cupmouse", url = "http://www.cupmouse.net/")
 public class CMcGamePlugin {
 
-    private static final WorldTag WORLD_TAG_LOBBY = WorldTag.byName("lobby");
+    public static final WorldTag WORLD_TAG_LOBBY = WorldTag.byName("lobby");
 
     private final CMcCore core;
     private final GameUserDataModule userm;

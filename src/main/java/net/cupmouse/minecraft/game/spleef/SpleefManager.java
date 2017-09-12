@@ -21,6 +21,7 @@ import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.command.CommandException;
+import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.EntityTypes;
 import org.spongepowered.api.entity.explosive.PrimedTNT;
@@ -169,6 +170,7 @@ public final class SpleefManager implements GameManager {
     /*
     ゲーム進行に必要なイベントリスナー
      */
+
     @Listener
     public void onInteractBlock(InteractBlockEvent.Primary event, @Last Player player) {
         // ゲーム中の部屋の床はぶっ壊せる
@@ -183,6 +185,16 @@ public final class SpleefManager implements GameManager {
                     // 床を壊す
 
                     worldLocation.setBlockType(BlockTypes.AIR, BlockChangeFlag.NONE);
+
+                    // 上にトーチがあるなら削除
+                    Location<World> up = worldLocation.getRelative(Direction.UP);
+                    if (up.getBlockType() == BlockTypes.TORCH) {
+                        up.setBlockType(BlockTypes.AIR, BlockChangeFlag.NONE);
+                        spleefRoom.getMatch().ifPresent(match ->match.getItem()
+                                        .filter(spleefItem -> spleefItem instanceof SpleefItemTorch)
+                                        .ifPresent(spleefItem -> ((SpleefItemTorch) spleefItem).torchBroke(up)));
+                    }
+
                     event.setCancelled(true);
                 }
             }
@@ -238,15 +250,24 @@ public final class SpleefManager implements GameManager {
                 spawnLocation.spawnEntity(entity);
             });
         } else if (snapshot.getState().getType() == BlockTypes.TORCH) {
-            // トーチが置かれたなら
+            // トーチが置かれたならトーチアイテム発生中だとして進む
+            Optional<Location<World>> locationOptional = snapshot.getLocation();
+            if (!locationOptional.isPresent()) {
+                return;
+            }
+            Location<World> location = locationOptional.get();
 
-            getRoomPlayerJoin(player).ifPresent(room -> {
-                room.getMatch().ifPresent(match -> {
-                    match.getItem().ifPresent(item -> {
+            Optional<Direction> directionOptional = snapshot.getState().get(Keys.DIRECTION);
+            if (!directionOptional.isPresent()) {
+                return;
+            }
 
-                    });
+
+            getRoomPlayerJoin(player).ifPresent(room -> room.getMatch().ifPresent(match -> {
+                match.getItem().filter(spleefItem -> spleefItem instanceof SpleefItemTorch).ifPresent(item -> {
+                    ((SpleefItemTorch) item).torchPlaced(location);
                 });
-            });
+            }));
         }
     }
 
@@ -261,8 +282,8 @@ public final class SpleefManager implements GameManager {
 
         final PrimedTNT primedTNT = (PrimedTNT) event.getTargetEntity();
 
+        // どの試合のものか判定する
         SpleefMatch match = null;
-
         for (SpleefRoom room : rooms.values()) {
             final Optional<SpleefMatch> spleefMatchOptional = room.getMatch();
             if (!spleefMatchOptional.isPresent()) {
@@ -292,15 +313,16 @@ public final class SpleefManager implements GameManager {
             return;
         }
 
-        Location<World> centerLocation = event.getOriginalExplosion().getLocation().getBlockRelative(Direction.DOWN);
-        World world = centerLocation.getExtent();
-        Vector3i center = centerLocation.getPosition().toInt();
+        final Location<World> centerLocation =
+                event.getOriginalExplosion().getLocation().getBlockRelative(Direction.DOWN);
+        final World world = centerLocation.getExtent();
+        final Vector3i center = centerLocation.getPosition().toInt();
 
-        int x = center.getX();
-        int y = center.getY();
-        int z = center.getZ();
+        final int x = center.getX();
+        final int y = center.getY();
+        final int z = center.getZ();
 
-        SpleefRoom room = match.getRoom();
+        final SpleefRoom room = match.getRoom();
 
         tryRemovingGround(room, world, x - 2, y, z);
 
