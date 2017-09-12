@@ -30,27 +30,31 @@ import java.util.stream.Collectors;
  */
 public class SpleefMatch {
 
+    private static final int ITEM_COOLDOWN_TIME = 10;
     private final Object playersLocker = new Object();
+    private final Random rand;
     private final SpleefRoom room;
     public final SpleefRoomMessageChannel messageChannel;
 
     private SpleefClockManager clock;
     private GameRoomState state;
-
     // 切断されたらtryToQuitが呼ばれるのでこのリスト内にはオンラインのしかも試合に参加中のプレイヤーしか入ってない
     private Map<Integer, SpleefPlayer> players;
     private Map<UUID, SpleefPlayer> playerMap;
+    private SpleefItem item;
+    private int nextItemSpawnTime;
 
     SpleefMatch(SpleefRoom room) {
         this.room = room;
+        this.rand = new Random();
         this.clock = new SpleefClockManager(this);
         this.messageChannel = new SpleefRoomMessageChannel();
     }
 
     public void init() {
         this.state = GameRoomState.WAITING_PLAYERS;
-        players = new HashMap<>();
-        playerMap = new HashMap<>();
+        this.players = new HashMap<>();
+        this.playerMap = new HashMap<>();
     }
 
     /**
@@ -98,6 +102,10 @@ public class SpleefMatch {
 
     public GameRoomState getState() {
         return state;
+    }
+
+    public Optional<SpleefItem> getItem() {
+        return Optional.ofNullable(item);
     }
 
     /**
@@ -326,8 +334,11 @@ public class SpleefMatch {
         messageChannel.send(Text.of(TextColors.GOLD, "試合開始！"));
 
         // 試合開始！
-        this.clock.setClock(new SpleefClockGame(room.stage.getOptions().getGameTime()));
+        int gameTime = room.stage.getOptions().getGameTime();
+        this.clock.setClock(new SpleefClockGame(gameTime));
         this.clock.start();
+        // 初回のアイテム発生時刻を決定する
+        decideNextItemSpawnTime(gameTime, false);
     }
 
     /**
@@ -378,6 +389,77 @@ public class SpleefMatch {
 
     private void showResult() {
         // TODO
+    }
+
+    private void decideNextItemSpawnTime(int ctickLeft, boolean cooldown) {
+        // 次のアイテム発生時刻を決定する
+
+        // TODO 最後の5秒とかでアイテム渡されても困るわ
+        if (cooldown && ctickLeft <= ITEM_COOLDOWN_TIME) {
+            // クールダウンの時間が残っていないので、次のアイテムはない
+            this.nextItemSpawnTime = 0;
+        } else {
+            int working = ctickLeft;
+
+            if (cooldown) {
+                // クールダウンタイムは過ぎなければならない
+                working -= ITEM_COOLDOWN_TIME - 1;
+            }
+
+            // 次のアイテム発生時間を決定する
+            while (working >= 0) {
+                int itemRandomConstant = room.getStage().getOptions().getItemRandomConstant();
+
+                working -= rand.nextInt(itemRandomConstant);
+
+                if (rand.nextInt(itemRandomConstant) == itemRandomConstant / 2) {
+                    break;
+                }
+            }
+
+            // whileで決定したworkingを設定する
+
+            if (working < 0) {
+                working = 0;
+            }
+
+            this.nextItemSpawnTime = working;
+        }
+    }
+
+    void doItemTick(int ctickLeft) {
+        if (ctickLeft == 0) {
+            // ゲームが終了するときにアイテムが存在しているなら削除する
+            this.item.clear();
+            this.item = null;
+        } else if (item == null) {
+            // アイテムがないとき、アイテム発生時刻ならアイテムを発生させる
+            // 同時にctickLeft==nextItemSpawnTime==0のときは実行されない
+
+            if (ctickLeft == nextItemSpawnTime) {
+                // アイテム発生
+
+                // TODO
+                this.item = new SpleefItemTNT();
+                this.messageChannel.send(Text.of(String.format("アイテム[%s]が発生しました!", item.getName())));
+                this.item.init();
+                this.item.doTick();
+            }
+        } else {
+            // アイテムが存在するときはアイテム独自のtickを行う
+            if (!item.doTick()) {
+                // 返り値がfalseのとき今後呼ばれなくなる
+                // アイテムを削除する
+                this.item.clear();
+                this.item = null;
+                // 次のアイテム発生時刻を設定する
+                decideNextItemSpawnTime(ctickLeft, true);
+            }
+        }
+    }
+
+    void clearItem() {
+        this.item = null;
     }
 
     public class SpleefRoomMessageChannel implements MessageChannel {

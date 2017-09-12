@@ -1,5 +1,7 @@
 package net.cupmouse.minecraft.game.spleef;
 
+import com.flowpowered.math.vector.Vector3d;
+import com.flowpowered.math.vector.Vector3i;
 import com.google.common.reflect.TypeToken;
 import net.cupmouse.minecraft.CMcCore;
 import net.cupmouse.minecraft.game.CMcGamePlugin;
@@ -8,6 +10,7 @@ import net.cupmouse.minecraft.game.manager.GameManager;
 import net.cupmouse.minecraft.game.manager.GameRoomState;
 import net.cupmouse.minecraft.worlds.WorldTag;
 import net.cupmouse.minecraft.worlds.WorldTagLocation;
+import net.cupmouse.minecraft.worlds.WorldTagModule;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import ninja.leaping.configurate.objectmapping.serialize.TypeSerializerCollection;
@@ -15,16 +18,24 @@ import ninja.leaping.configurate.objectmapping.serialize.TypeSerializers;
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.spongepowered.api.Sponge;
+import org.spongepowered.api.block.BlockSnapshot;
+import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.command.CommandException;
+import org.spongepowered.api.entity.Entity;
+import org.spongepowered.api.entity.EntityTypes;
+import org.spongepowered.api.entity.explosive.PrimedTNT;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
+import org.spongepowered.api.event.block.ChangeBlockEvent;
 import org.spongepowered.api.event.block.InteractBlockEvent;
-import org.spongepowered.api.event.cause.Cause;
-import org.spongepowered.api.event.cause.NamedCause;
 import org.spongepowered.api.event.entity.MoveEntityEvent;
-import org.spongepowered.api.event.filter.cause.Named;
+import org.spongepowered.api.event.entity.explosive.DetonateExplosiveEvent;
+import org.spongepowered.api.event.filter.cause.Last;
+import org.spongepowered.api.item.ItemTypes;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
+import org.spongepowered.api.util.Direction;
+import org.spongepowered.api.world.BlockChangeFlag;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
@@ -159,13 +170,11 @@ public final class SpleefManager implements GameManager {
     ゲーム進行に必要なイベントリスナー
      */
     @Listener
-    public void onInteractBlock(InteractBlockEvent.Primary event, @Named(NamedCause.SOURCE) Player player) {
+    public void onInteractBlock(InteractBlockEvent.Primary event, @Last Player player) {
         // ゲーム中の部屋の床はぶっ壊せる
         Optional<Location<World>> locationOpt = event.getTargetBlock().getLocation();
 
-        if (locationOpt.isPresent()) {
-            Location<World> worldLocation = locationOpt.get();
-
+        locationOpt.ifPresent(worldLocation -> {
             for (SpleefRoom spleefRoom : rooms.values()) {
                 // Spleefの部屋にある床か確認
                 // ゲームが進行中でなければ壊せない
@@ -173,40 +182,150 @@ public final class SpleefManager implements GameManager {
                         && spleefRoom.getStage().getGroundArea().isInArea(worldLocation)) {
                     // 床を壊す
 
-                    worldLocation.removeBlock(Cause.source(CMcCore.getPluginContainer()).build());
+                    worldLocation.setBlockType(BlockTypes.AIR, BlockChangeFlag.NONE);
                     event.setCancelled(true);
                 }
             }
+        });
+    }
+
+    @Listener
+    public void onPlayerMove(MoveEntityEvent event, @Last Player player) {
+        getRoomPlayerJoin(player).ifPresent(spleefRoom -> {
+            // プレイヤーが部屋でプレー中のときはfightingAreaから出ると落ちた判定とし、負け確定
+            Location<World> playerLocation = player.getLocation();
+
+            spleefRoom.getMatch().ifPresent(match -> {
+                if (match.getState() == GameRoomState.IN_PROGRESS
+                        && !match.getSpleefPlayer(player.getUniqueId()).dead
+                        && !spleefRoom.stage.getFightingArea().isInArea(playerLocation)) {
+                    // 落ちた！
+                    match.playerDied(player);
+                } else if (!spleefRoom.stage.getSpectetorArea().isInArea(playerLocation)) {
+                    // 見物範囲内しか移動できない
+                    // ここでevent.setToTransform(event.getFromTransform())とすると動けなくなる
+                    // (onPlayerMoveがまた呼ばれて…)
+                    event.setToTransform(spleefRoom.stage.getWaitingSpawnRocation().convertToTransform().get());
+                } else if (match.getState() == GameRoomState.READY) {
+                    // 試合開始直前は、位置を動いた場合のみ無効とする。よって首を回転させても大丈夫。
+                    if (!event.getFromTransform().getPosition().equals(event.getToTransform().getPosition())) {
+                        // 無効にする
+                        event.setToTransform(event.getFromTransform());
+                    }
+                }
+            });
+        });
+    }
+
+    @Listener
+    public void onBlockPlaced(ChangeBlockEvent.Place event, @Last Player player) {
+        BlockSnapshot snapshot = event.getTransactions().get(0).getFinal();
+
+        if (!WorldTagModule.isThis(WORLD_TAG_SPLEEF, snapshot.getWorldUniqueId())) {
+            // spleefワールドでないならさようなら
+            return;
+        }
+
+        if (snapshot.getState().getType() == BlockTypes.TNT) {
+            // TNTが置かれたなら
+
+            // インベントリから削除する
+            player.getInventory().query(ItemTypes.TNT).poll(1);
+            snapshot.getLocation().ifPresent(worldLocation -> {
+                // 着火TNTをスポーンさせる
+                Location<World> spawnLocation = worldLocation.add(new Vector3d(.5, .5, .5));
+                Entity entity = spawnLocation.createEntity(EntityTypes.PRIMED_TNT);
+                spawnLocation.spawnEntity(entity);
+            });
+        } else if (snapshot.getState().getType() == BlockTypes.TORCH) {
+            // トーチが置かれたなら
+
+            getRoomPlayerJoin(player).ifPresent(room -> {
+                room.getMatch().ifPresent(match -> {
+                    match.getItem().ifPresent(item -> {
+
+                    });
+                });
+            });
         }
     }
 
     @Listener
-    public void onPlayerMove(MoveEntityEvent event, @Named(NamedCause.SOURCE) Player player) {
-        Optional<SpleefRoom> roomOptional = getRoomPlayerJoin(player);
+    public void onTNTExplode(DetonateExplosiveEvent event) {
+        // 爆発は基本的にキャンセル
+        event.setCancelled(true);
+        // TNTが試合中のものならその試合の地面を破壊する
+        if (!(event.getTargetEntity() instanceof PrimedTNT)) {
+            return;
+        }
 
-        if (roomOptional.isPresent()) {
-            // プレイヤーが部屋でプレー中のときはfightingAreaから出ると落ちた判定とし、負け確定
-            SpleefRoom spleefRoom = roomOptional.get();
-            Location<World> playerLocation = player.getLocation();
-            SpleefMatch match = spleefRoom.getMatch();
+        final PrimedTNT primedTNT = (PrimedTNT) event.getTargetEntity();
 
-            if (match.getState() == GameRoomState.IN_PROGRESS
-                    && !match.getSpleefPlayer(player.getUniqueId()).dead
-                    && !spleefRoom.stage.getFightingArea().isInArea(playerLocation)) {
-                // 落ちた！
-                match.playerDied(player);
-             } else if (!spleefRoom.stage.getSpectetorArea().isInArea(playerLocation)) {
-                // 見物範囲内しか移動できない
-                // ここでevent.setToTransform(event.getFromTransform())とすると動けなくなる
-                // (onPlayerMoveがまた呼ばれて…)
-                event.setToTransform(spleefRoom.stage.getWaitingSpawnRocation().convertToTransform().get());
-            } else if (match.getState() == GameRoomState.READY) {
-                // 試合開始直前は、位置を動いた場合のみ無効とする。よって首を回転させても大丈夫。
-                if (!event.getFromTransform().getPosition().equals(event.getToTransform().getPosition())) {
-                    // 無効にする
-                    event.setToTransform(event.getFromTransform());
+        SpleefMatch match = null;
+
+        for (SpleefRoom room : rooms.values()) {
+            final Optional<SpleefMatch> spleefMatchOptional = room.getMatch();
+            if (!spleefMatchOptional.isPresent()) {
+                continue;
+            }
+
+            final SpleefMatch spleefMatch = spleefMatchOptional.get();
+
+            final Optional<SpleefItem> spleefItemOptional = spleefMatch.getItem();
+            if (!spleefItemOptional.isPresent()) {
+                continue;
+            }
+
+            final SpleefItem item = spleefItemOptional.get();
+            if (item instanceof SpleefItemTNT) {
+                if (((SpleefItemTNT) item).getPrimedTNTs().contains(event.getTargetEntity().getUniqueId())) {
+                    // この試合のTNTだ！
+
+                    match = spleefMatch;
+                    break;
                 }
             }
+        }
+
+        if (match == null) {
+            // どの試合にも属さない
+            return;
+        }
+
+        Location<World> centerLocation = event.getOriginalExplosion().getLocation().getBlockRelative(Direction.DOWN);
+        World world = centerLocation.getExtent();
+        Vector3i center = centerLocation.getPosition().toInt();
+
+        int x = center.getX();
+        int y = center.getY();
+        int z = center.getZ();
+
+        SpleefRoom room = match.getRoom();
+
+        tryRemovingGround(room, world, x - 2, y, z);
+
+        tryRemovingGround(room, world, x - 1, y, z - 1);
+        tryRemovingGround(room, world, x - 1, y, z);
+        tryRemovingGround(room, world, x - 1, y, z + 1);
+
+        tryRemovingGround(room, world, x, y, z - 2);
+        tryRemovingGround(room, world, x, y, z - 1);
+        tryRemovingGround(room, world, x, y, z);
+        tryRemovingGround(room, world, x, y, z + 1);
+        tryRemovingGround(room, world, x, y, z + 2);
+
+        tryRemovingGround(room, world, x + 1, y, z - 1);
+        tryRemovingGround(room, world, x + 1, y, z);
+        tryRemovingGround(room, world, x + 1, y, z + 1);
+
+        tryRemovingGround(room, world, x + 2, y, z);
+    }
+
+    private void tryRemovingGround(SpleefRoom room, World world, int x, int y, int z) {
+        if (room.getStage().getGroundArea().isInArea(x, y, z)) {
+            // 地面内なら削除
+
+            world.setBlockType(x, y, z, BlockTypes.AIR, BlockChangeFlag.NONE);
         }
     }
 

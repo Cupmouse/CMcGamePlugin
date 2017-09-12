@@ -10,11 +10,14 @@ import net.cupmouse.minecraft.worlds.WorldTagModule;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.cause.Cause;
+import org.spongepowered.api.event.cause.EventContext;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
+import org.spongepowered.api.world.BlockChangeFlag;
 import org.spongepowered.api.world.World;
 
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * ****Outdated***
@@ -50,8 +53,8 @@ public final class SpleefRoom implements GameRoom {
         return match == null ? GameRoomState.CLOSED : match.getState();
     }
 
-    SpleefMatch getMatch() {
-        return match;
+    Optional<SpleefMatch> getMatch() {
+        return Optional.ofNullable(match);
     }
 
     @Override
@@ -120,8 +123,9 @@ public final class SpleefRoom implements GameRoom {
         // 床を埋め直す
         for (Vector3i blockPos : stage.getGroundArea().getEveryBlocks().blockLocs) {
             World world = WorldTagModule.getTaggedWorld(stage.getGroundArea().getEveryBlocks().worldTag).get();
-            world.setBlock(blockPos, stage.getGroundSample(), Cause.source(CMcCore.getPluginContainer()).build());
+            world.setBlock(blockPos, stage.getGroundSample(), BlockChangeFlag.NONE);
         }
+
         // スポーン位置をシャフルする
         stage.shuffleSpawnRocations();
     }

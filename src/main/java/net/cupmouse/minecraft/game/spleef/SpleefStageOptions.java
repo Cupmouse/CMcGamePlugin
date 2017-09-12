@@ -8,6 +8,8 @@ import ninja.leaping.configurate.objectmapping.serialize.TypeSerializer;
 // 今のところプレイヤーがステージのデフォルト設定を変更できない。
 public class SpleefStageOptions {
 
+    private int itemRandomConstant;
+
     SpleefStageOptions() {
     }
 
@@ -37,6 +39,10 @@ public class SpleefStageOptions {
         copied.minimumPlayerCount = this.minimumPlayerCount;
 
         return copied;
+    }
+
+    public int getItemRandomConstant() {
+        return itemRandomConstant;
     }
 
     static class Serializer implements TypeSerializer<SpleefStageOptions> {

@@ -38,6 +38,8 @@ public class SpleefClockGame implements SpleefClock {
                 player.sendTitle(Title.of(Text.EMPTY, Text.of(TextColors.LIGHT_PURPLE, "Go!")));
             }
         }
+
+        match.doItemTick(ctickLeft);
     }
 
     @Override
