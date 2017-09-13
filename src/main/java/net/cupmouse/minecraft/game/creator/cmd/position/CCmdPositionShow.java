@@ -18,9 +18,6 @@ import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.EntityTypes;
 import org.spongepowered.api.entity.living.ArmorStand;
 import org.spongepowered.api.entity.living.player.Player;
-import org.spongepowered.api.event.cause.Cause;
-import org.spongepowered.api.event.cause.entity.spawn.EntitySpawnCause;
-import org.spongepowered.api.event.cause.entity.spawn.SpawnTypes;
 import org.spongepowered.api.item.ItemTypes;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.text.Text;
@@ -90,9 +87,7 @@ public final class CCmdPositionShow implements CommandExecutor {
                 ((ArmorStand) armorEnt).setHelmet(ItemStack.of(ItemTypes.LEATHER_HELMET, 1));
             }
 
-            EntitySpawnCause spawnCause = EntitySpawnCause.builder().entity(armorEnt).type(SpawnTypes.CUSTOM).build();
-
-            world.spawnEntity(armorEnt, Cause.source(spawnCause).build());
+            world.spawnEntity(armorEnt);
 
             // 20秒後に消す
             Sponge.getScheduler().createTaskBuilder()

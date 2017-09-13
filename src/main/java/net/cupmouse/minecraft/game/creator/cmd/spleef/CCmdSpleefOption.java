@@ -16,6 +16,7 @@ import org.spongepowered.api.text.format.TextColors;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.BiConsumer;
 
 import static org.spongepowered.api.command.args.GenericArguments.*;
 
@@ -42,29 +43,43 @@ public class CCmdSpleefOption implements CommandExecutor {
         this.getters.put("minimumPlayerCount", minimumPlayerCountGetter);
         this.getters.put("mpc", minimumPlayerCountGetter);
 
+        CEThrowableFunction<SpleefStageOptions, Object> itemRandomConstantGetter =
+                SpleefStageOptions::getItemRandomConstant;
+        this.getters.put("itemRandomConstant", itemRandomConstantGetter);
+        this.getters.put("irc", itemRandomConstantGetter);
 
         // SETTER
 
-        IntSetter defaultGameTimeSetter = new IntSetter((optionsMutable, integer) -> {
+        IntSetter defaultGameTimeSetter = new IntSetter((options, integer) -> {
             if (integer < 1) {
                 throw new CommandException(Text.of(TextColors.RED, "✗整数で1以上を指定してください"));
             }
 
-            optionsMutable.setGameTime(integer);
+            options.setGameTime(integer);
         });
         this.setters.put("gameTime", defaultGameTimeSetter);
         this.setters.put("gt", defaultGameTimeSetter);
 
-        IntSetter minimumPlayerCountSetter = new IntSetter((stage, integer) -> {
+        IntSetter minimumPlayerCountSetter = new IntSetter((options, integer) -> {
             if (integer < 2) {
                 throw new CommandException(Text.of(TextColors.RED, "✗整数で2以上を指定してください"), false);
             }
 
-            stage.setMinimumPlayerCount(integer);
+            options.setMinimumPlayerCount(integer);
         });
 
         this.setters.put("minimumPlayerCount", minimumPlayerCountSetter);
         this.setters.put("mpc", minimumPlayerCountSetter);
+
+        IntSetter itemRandomConstantSetter = new IntSetter((options, integer) -> {
+            if (integer < 1) {
+                throw new CommandException(Text.of(TextColors.RED, "✗正の整数を指定して下さい"), false);
+            }
+
+            options.setItemRandomConstant(integer);
+        });
+        this.setters.put("itemRandomConstant", itemRandomConstantSetter);
+        this.setters.put("irc", itemRandomConstantSetter);
     }
 
     @Override

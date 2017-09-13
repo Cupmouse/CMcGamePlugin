@@ -135,12 +135,7 @@ public final class SpleefRoom implements GameRoom {
         CMcCore.getLogger().debug("closeRoom");
 
         if (match != null) {
-            Map<Integer, SpleefPlayer> players = this.match.close();
-
-            for (SpleefPlayer spleefPlayer : players.values()) {
-                // TODO ロビーに移動
-                Sponge.getServer().getPlayer(spleefPlayer.playerUUID).get();
-            }
+            Map<Integer, SpleefPlayer> players = this.match.close(true);
         }
         // 何もしなくていい
     }

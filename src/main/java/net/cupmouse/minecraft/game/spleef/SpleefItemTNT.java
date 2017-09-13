@@ -3,6 +3,7 @@ package net.cupmouse.minecraft.game.spleef;
 import net.cupmouse.minecraft.worlds.WorldTagModule;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.Entity;
+import org.spongepowered.api.entity.explosive.PrimedTNT;
 import org.spongepowered.api.item.ItemTypes;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.world.World;
@@ -63,7 +64,11 @@ public class SpleefItemTNT implements SpleefItem {
         return "TNT";
     }
 
-    public Set<UUID> getPrimedTNTs() {
+    Set<UUID> getPrimedTNTs() {
         return primedTNTs;
+    }
+
+    void tntPlaced(UUID uuid) {
+        this.primedTNTs.add(uuid);
     }
 }

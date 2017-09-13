@@ -203,6 +203,15 @@ public final class SpleefManager implements GameManager {
 
     @Listener
     public void onPlayerMove(MoveEntityEvent event, @Last Player player) {
+        // FIXME クライアント上ではspleefワールドにいるのにサーバーにはlobbyにいるというわけのわからない状態になる
+        if (!WorldTagModule.isThis(WORLD_TAG_SPLEEF, event.getFromTransform().getExtent())) {
+            return;
+        }
+
+//        if (event.getFromTransform().getExtent() != event.getToTransform().getExtent()) {
+//            return;
+//        }
+
         getRoomPlayerJoin(player).ifPresent(spleefRoom -> {
             // プレイヤーが部屋でプレー中のときはfightingAreaから出ると落ちた判定とし、負け確定
             Location<World> playerLocation = player.getLocation();
@@ -238,17 +247,32 @@ public final class SpleefManager implements GameManager {
             return;
         }
 
+        event.setCancelled(true);
+
         if (snapshot.getState().getType() == BlockTypes.TNT) {
             // TNTが置かれたなら
 
-            // インベントリから削除する
-            player.getInventory().query(ItemTypes.TNT).poll(1);
-            snapshot.getLocation().ifPresent(worldLocation -> {
-                // 着火TNTをスポーンさせる
-                Location<World> spawnLocation = worldLocation.add(new Vector3d(.5, .5, .5));
-                Entity entity = spawnLocation.createEntity(EntityTypes.PRIMED_TNT);
-                spawnLocation.spawnEntity(entity);
-            });
+            Optional<Location<World>> locationOptional = snapshot.getLocation();
+
+            if (!locationOptional.isPresent()) {
+                return;
+            }
+
+            Location<World> location = locationOptional.get();
+            Location<World> spawnLocation = location.add(new Vector3d(.5, .5, .5));
+            Entity entity = spawnLocation.createEntity(EntityTypes.PRIMED_TNT);
+
+            Optional<SpleefRoom> roomPlayerJoin = getRoomPlayerJoin(player);
+            roomPlayerJoin.ifPresent(
+                    r -> r.getMatch()
+                    .ifPresent(m -> m.getItem().filter(i -> i instanceof SpleefItemTNT).ifPresent(item -> {
+                        ((SpleefItemTNT) item).tntPlaced(entity.getUniqueId());
+
+                        // インベントリから削除する
+                        player.getInventory().query(ItemTypes.TNT).poll(1);
+                        // 着火TNTをスポーンさせる
+                        spawnLocation.spawnEntity(entity);
+                    })));
         } else if (snapshot.getState().getType() == BlockTypes.TORCH) {
             // トーチが置かれたならトーチアイテム発生中だとして進む
             Optional<Location<World>> locationOptional = snapshot.getLocation();
@@ -261,7 +285,6 @@ public final class SpleefManager implements GameManager {
             if (!directionOptional.isPresent()) {
                 return;
             }
-
 
             getRoomPlayerJoin(player).ifPresent(room -> room.getMatch().ifPresent(match -> {
                 match.getItem().filter(spleefItem -> spleefItem instanceof SpleefItemTorch).ifPresent(item -> {

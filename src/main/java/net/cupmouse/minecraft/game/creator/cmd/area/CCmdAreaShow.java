@@ -11,9 +11,6 @@ import org.spongepowered.api.command.spec.CommandSpec;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.EntityTypes;
-import org.spongepowered.api.event.cause.Cause;
-import org.spongepowered.api.event.cause.entity.spawn.EntitySpawnCause;
-import org.spongepowered.api.event.cause.entity.spawn.SpawnTypes;
 import org.spongepowered.api.item.FireworkEffect;
 import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.util.Color;
@@ -43,9 +40,7 @@ public final class CCmdAreaShow {
                     shulker.offer(Keys.INVULNERABILITY_TICKS, 100000);
                     shulker.offer(Keys.AI_ENABLED, false);
 
-                    EntitySpawnCause spawnCause = EntitySpawnCause.builder().entity(shulker)
-                            .type(SpawnTypes.CUSTOM).build();
-                    world.spawnEntity(shulker, Cause.source(spawnCause).build());
+                    world.spawnEntity(shulker);
                     spawnedEntities.add(shulker);
                 }
 
@@ -65,9 +60,7 @@ public final class CCmdAreaShow {
 
                 armorEnt.offer(Keys.HAS_GRAVITY, false);
 
-                EntitySpawnCause spawnCause = EntitySpawnCause.builder().entity(armorEnt)
-                        .type(SpawnTypes.CUSTOM).build();
-                world.spawnEntity(armorEnt, Cause.source(spawnCause).build());
+                world.spawnEntity(armorEnt);
 
                 Task armorStandTask = Sponge.getScheduler().createTaskBuilder()
                         .delayTicks(5)
@@ -94,9 +87,7 @@ public final class CCmdAreaShow {
                     effects.add(fireworkEffect);
 
                     fireworkEnt.offer(Keys.FIREWORK_EFFECTS, effects);
-                    EntitySpawnCause spawnCause = EntitySpawnCause.builder().entity(fireworkEnt)
-                            .type(SpawnTypes.CUSTOM).build();
-                    world.spawnEntity(fireworkEnt, Cause.source(spawnCause).build());
+                    world.spawnEntity(fireworkEnt);
                 }
             }), "fireworks", "f")
             // Fakeblocks

@@ -24,6 +24,10 @@ public class SpleefStageOptions {
         this.gameTime = gameTime;
     }
 
+    public void setItemRandomConstant(int itemRandomConstant) {
+        this.itemRandomConstant = itemRandomConstant;
+    }
+
     public int getMinimumPlayerCount() {
         return minimumPlayerCount;
     }
@@ -32,17 +36,18 @@ public class SpleefStageOptions {
         this.minimumPlayerCount = minimumPlayerCount;
     }
 
+    public int getItemRandomConstant() {
+        return itemRandomConstant;
+    }
+
     public SpleefStageOptions copy() {
         SpleefStageOptions copied = new SpleefStageOptions();
 
         copied.gameTime = this.gameTime;
         copied.minimumPlayerCount = this.minimumPlayerCount;
+        copied.itemRandomConstant = this.itemRandomConstant;
 
         return copied;
-    }
-
-    public int getItemRandomConstant() {
-        return itemRandomConstant;
     }
 
     static class Serializer implements TypeSerializer<SpleefStageOptions> {
@@ -53,6 +58,7 @@ public class SpleefStageOptions {
 
             options.gameTime = value.getNode("game_time").getInt();
             options.minimumPlayerCount = value.getNode("minimum_player_count").getInt();
+            options.itemRandomConstant = value.getNode("item_random_constant").getInt();
 
             return options;
         }
@@ -61,6 +67,7 @@ public class SpleefStageOptions {
         public void serialize(TypeToken<?> type, SpleefStageOptions obj, ConfigurationNode value) throws ObjectMappingException {
             value.getNode("game_time").setValue(obj.gameTime);
             value.getNode("minimum_player_count").setValue(obj.minimumPlayerCount);
+            value.getNode("item_random_constant").setValue(obj.itemRandomConstant);
         }
     }
 }
