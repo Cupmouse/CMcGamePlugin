@@ -23,6 +23,7 @@ public class SpleefClockGame implements SpleefClock {
         if (ctickLeft <= 0) {
             // 試合を終了する
             match.finish();
+            return;
         } else {
             BossBarColor color;
 
@@ -37,25 +38,11 @@ public class SpleefClockGame implements SpleefClock {
             ServerBossBar bossBar = match.getBossBar();
             bossBar.setName(Text.of("あと残り" + ctickLeft + "秒"));
             bossBar.setColor(color);
-
-            if (match.getNextItemSpawnTime() != 0) {
-                if (ctickLeft == match.getNextItemSpawnTime()) {
-                    // 現在アイテム発生中
-
-                    match.messageChannel.send(Text.of(
-                            String.format("アイテム[%s]発生中!", match.getItem().map(SpleefItem::getName).orElse("")))
-                            , ChatTypes.ACTION_BAR);
-                } else if (!match.getItem().isPresent()) {
-                    // 次のアイテムが有る！のでいつ起きるのかわかるようにする
-
-                    match.messageChannel.send(Text.of(
-                            String.format("次のアイテム発生: %d秒後", ctickLeft - match.getNextItemSpawnTime()))
-                            , ChatTypes.ACTION_BAR);
-                }
-            }
+            bossBar.setPercent(ctickLeft / ((float) gameTime));
         }
 
         match.doItemTick(ctickLeft);
+
     }
 
     @Override

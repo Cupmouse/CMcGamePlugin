@@ -12,6 +12,7 @@ public class SpleefClockResult implements SpleefClock {
             ServerBossBar bossBar = match.getBossBar();
             bossBar.setName(Text.of("次の試合まで", ctickLeft, "秒..."));
             bossBar.setColor(BossBarColors.BLUE);
+            bossBar.setPercent(ctickLeft / ((float) getInitialClockTick()));
         }
 
         if (ctickLeft <= 0) {
@@ -21,6 +22,6 @@ public class SpleefClockResult implements SpleefClock {
 
     @Override
     public int getInitialClockTick() {
-        return 10;
+        return 5;
     }
 }

@@ -24,20 +24,25 @@ import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import org.slf4j.Logger;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.config.ConfigDir;
+import org.spongepowered.api.data.key.Keys;
+import org.spongepowered.api.data.value.mutable.OptionalValue;
 import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.EntityTypes;
 import org.spongepowered.api.entity.Transform;
+import org.spongepowered.api.entity.explosive.Explosive;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.Order;
 import org.spongepowered.api.event.block.ChangeBlockEvent;
 import org.spongepowered.api.event.entity.DamageEntityEvent;
 import org.spongepowered.api.event.entity.SpawnEntityEvent;
+import org.spongepowered.api.event.entity.explosive.DetonateExplosiveEvent;
 import org.spongepowered.api.event.game.state.GameAboutToStartServerEvent;
 import org.spongepowered.api.event.game.state.GamePreInitializationEvent;
 import org.spongepowered.api.event.game.state.GameStartedServerEvent;
 import org.spongepowered.api.event.game.state.GameStoppedServerEvent;
 import org.spongepowered.api.event.network.ClientConnectionEvent;
+import org.spongepowered.api.event.world.ExplosionEvent;
 import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.plugin.PluginContainer;
 import org.spongepowered.api.scheduler.Task;
@@ -216,7 +221,7 @@ public class CMcGamePlugin {
         saveConfig();
     }
 
-    @Listener
+    @Listener(order = Order.FIRST)
     public void onClientDisconnected(ClientConnectionEvent.Disconnect event) {
         Optional<GameRoom> roomOptional = getRoomPlayerJoin(event.getTargetEntity());
 
@@ -249,7 +254,7 @@ public class CMcGamePlugin {
         }
     }
 
-    @Listener
+    @Listener(order = Order.EARLY)
     public void onEntityDamaged(DamageEntityEvent event) {
         // ダメージを受けない
         if (event.getTargetEntity() instanceof Player) {
@@ -257,34 +262,19 @@ public class CMcGamePlugin {
         }
     }
 
-    @Listener
+    @Listener(order = Order.EARLY)
     public void onClientConnect(ClientConnectionEvent.Login event) {
         // ロビーに戻す
         event.setToTransform(new Transform<>(WorldTagModule.getTaggedWorld(WORLD_TAG_LOBBY).get().getSpawnLocation()));
     }
 
-    @Listener
-    public void onServerStarted(GameStartedServerEvent event) {
-        // プレイヤーを自動回復する。TODO Sponge対応待ち
-        Task.builder().name("Player Healing")
-                .intervalTicks(120)
-                .execute(() -> {
-                    for (Player player : Sponge.getServer().getOnlinePlayers()) {
-                        player.foodLevel().set(20);
-                        player.saturation().set(20D);
-                        player.health().set(20D);
-                    }
-                }).submit(CMcCore.getPlugin());
-    }
-
-    @Listener
-    public void onTNTPrimeSpawn(SpawnEntityEvent event) {
-        for (Entity entity : event.getEntities()) {
-            if (entity.getType() == EntityTypes.PRIMED_TNT || entity.getType() == EntityTypes.TNT_MINECART) {
-                event.setCancelled(true);
-                return;
-            }
-        }
+    @Listener(order = Order.EARLY)
+    public void onDetonateExplosive(DetonateExplosiveEvent event) {
+        event.getExplosionBuilder().shouldBreakBlocks(false)
+                .shouldDamageEntities(false)
+                .canCauseFire(false)
+                .shouldPlaySmoke(false);
+//        event.setCancelled(true);
     }
 
     public static Optional<GameRoom> getRoomPlayerJoin(Player player) {

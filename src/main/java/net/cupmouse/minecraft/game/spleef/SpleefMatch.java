@@ -4,17 +4,23 @@ import net.cupmouse.minecraft.CMcCore;
 import net.cupmouse.minecraft.game.CMcGamePlugin;
 import net.cupmouse.minecraft.game.manager.GameException;
 import net.cupmouse.minecraft.game.manager.GameRoomState;
+import net.cupmouse.minecraft.worlds.WorldTagArea;
 import net.cupmouse.minecraft.worlds.WorldTagModule;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.boss.BossBarColors;
 import org.spongepowered.api.boss.BossBarOverlays;
 import org.spongepowered.api.boss.ServerBossBar;
 import org.spongepowered.api.data.key.Keys;
+import org.spongepowered.api.data.manipulator.mutable.item.EnchantmentData;
+import org.spongepowered.api.data.meta.ItemEnchantment;
+import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.entity.living.player.gamemode.GameModes;
+import org.spongepowered.api.item.Enchantments;
 import org.spongepowered.api.item.ItemTypes;
 import org.spongepowered.api.item.inventory.ItemStack;
+import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.channel.MessageChannel;
 import org.spongepowered.api.text.channel.MessageReceiver;
@@ -24,9 +30,12 @@ import org.spongepowered.api.text.chat.ChatType;
 import org.spongepowered.api.text.chat.ChatTypes;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.text.format.TextStyles;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
@@ -43,10 +52,12 @@ public class SpleefMatch {
     public final SpleefRoomMessageChannel messageChannel;
 
     private SpleefClockManager clock;
+    private Task playerTrackerTask;
     private GameRoomState state = GameRoomState.CLOSED;
     // 切断されたらtryToQuitが呼ばれるのでこのリスト内にはオンラインのしかも試合に参加中のプレイヤーしか入ってない
     private Map<Integer, SpleefPlayer> players;
     private Map<UUID, SpleefPlayer> playerMap;
+    private Set<UUID> arrows;
     private ServerBossBar bossBar;
     private SpleefItem item;
     private int nextItemSpawnTime;
@@ -61,6 +72,7 @@ public class SpleefMatch {
     public void init() {
         this.players = new HashMap<>();
         this.playerMap = new HashMap<>();
+        this.arrows = new HashSet<>();
 
         // 上部にバーを表示する
         initBossBar();
@@ -84,11 +96,12 @@ public class SpleefMatch {
         // プレイヤーリストを初期化
         this.players = new HashMap<>();
         this.playerMap = new HashMap<>();
+        this.arrows = new HashSet<>();
 
         initBossBar();
 
         // 引き継いだプレイヤーで試合が進行できるか確認しできるのなら即時に実行
-        if (previousPlayers.size() == room.stage.getSpawnRocations().size()) {
+        if (previousPlayers.size() == room.getStage().getSpawnRocations().size()) {
             // 最大人数だけちょうどいるのですぐにready、移動もしてもらえる
             ready();
         } else {
@@ -96,17 +109,17 @@ public class SpleefMatch {
             for (SpleefPlayer previousPlayer : previousPlayers.values()) {
                 Player player = Sponge.getServer().getPlayer(previousPlayer.playerUUID).get();
                 playerJoined(player);
-                room.stage.getWaitingSpawnRocation().teleportHere(player);
+                room.getStage().getWaitingSpawnRocation().teleportHere(player);
             }
 
-            if (players.size() >= room.stage.getOptions().getMinimumPlayerCount()) {
+            if (players.size() >= room.getStage().getOptions().getMinimumPlayerCount()) {
                 // 最少人数以上いるのでwaitMorePlayersでさらなる参加待ち
                 waitMorePlayers();
+            } else {
+                // それ以外は最少人数に達していないのでプレイヤーの参加待ち
+                waitPlayers();
             }
-            // それ以外は最少人数に達していないのでプレイヤーの参加待ち
         }
-
-        this.state = GameRoomState.WAITING_PLAYERS;
     }
 
     private void initBossBar() {
@@ -161,7 +174,7 @@ public class SpleefMatch {
 
         // ここまでくれば参加できる試合の状態
         // だけど、部屋の人数が最大なら蹴らなければならない
-        if (players.size() == room.stage.getSpawnRocations().size()) {
+        if (players.size() == room.getStage().getSpawnRocations().size()) {
             throw new GameException(Text.of(TextColors.RED, "✗部屋に空きがありません"));
         }
 
@@ -175,8 +188,8 @@ public class SpleefMatch {
                 Text.of(TextColors.AQUA, String.format("%sが入室しました(%d/%d-%d)",
                         player.getName(),
                         players.size(),
-                        room.stage.getOptions().getMinimumPlayerCount(),
-                        room.stage.getSpawnRocations().size())
+                        room.getStage().getOptions().getMinimumPlayerCount(),
+                        room.getStage().getSpawnRocations().size())
                 ), ChatTypes.SYSTEM);
 
         // データ登録されたので、このプレイヤーが参加したことで試合の進行が変わるかどうかチェックし
@@ -185,14 +198,14 @@ public class SpleefMatch {
             // 試合がまだ始まっていないしプレイヤー募集中のときしか影響がない、終わった試合にプレイヤーが加わっても
             // 意味ないから
 
-            if (players.size() == room.stage.getSpawnRocations().size()) {
+            if (players.size() == room.getStage().getSpawnRocations().size()) {
                 // 用意されているスポーンの数とプレイヤーが同じということは、これ以上プレイヤーは試合に参加できない
                 // なので瞬時に新規参加が不可能なreadyモードになる
                 ready();
 
                 // このときは待機地点に送ってほしくない
                 return;
-            } else if (players.size() >= room.stage.getOptions().getMinimumPlayerCount()) {
+            } else if (players.size() >= room.getStage().getOptions().getMinimumPlayerCount()) {
                 // 最低人数以上いるのでとりあえずゲームが開催できる。更にプレイヤーが入るかもしれないので一応待つ
                 // waitMorePlayersモードになる
                 waitMorePlayers();
@@ -200,7 +213,7 @@ public class SpleefMatch {
         }
         // それ以外は試合の進行に変化なし
         // プレイヤー次の試合までの待機場所に移動する TODO 多分変える
-        if (!room.stage.getWaitingSpawnRocation().teleportHere(player)) {
+        if (!room.getStage().getWaitingSpawnRocation().teleportHere(player)) {
             throw new GameException(Text.of(TextColors.RED, "✗移動できませんでした"));
         }
     }
@@ -263,13 +276,13 @@ public class SpleefMatch {
                         String.format("%sが退出しました(%d/%d-%d)",
                                 player.getName(),
                                 players.size(),
-                                room.stage.getOptions().getMinimumPlayerCount(),
-                                room.stage.getSpawnRocations().size())
+                                room.getStage().getOptions().getMinimumPlayerCount(),
+                                room.getStage().getSpawnRocations().size())
                 ), ChatTypes.SYSTEM);
 
         // いつ抜けてもOKだが、残された人間は困るかも
         // ゲームの進行が変わってしまうかチェックする
-        if (room.stage.getOptions().getMinimumPlayerCount() - players.size() == 1) {
+        if (room.getStage().getOptions().getMinimumPlayerCount() - players.size() == 1) {
             // ちょうど最低人数より少なくなってしまったので試合が続行できない
             // 現在の試合の状態によって対応が異なる
 
@@ -285,7 +298,7 @@ public class SpleefMatch {
                     waitPlayers();
 
                     for (SpleefPlayer spleefPlayer : players.values()) {
-                        room.stage.getWaitingSpawnRocation()
+                        room.getStage().getWaitingSpawnRocation()
                                 .teleportHere(Sponge.getServer().getPlayer(spleefPlayer.playerUUID).get());
                     }
                     break;
@@ -302,7 +315,7 @@ public class SpleefMatch {
                     break;
                 default:
                     // ありえない！！！
-                    close(true);
+                    CMcCore.getLogger().error("Spleef不明なステート: {}", state.toString());
                     break;
             }
         }
@@ -349,6 +362,26 @@ public class SpleefMatch {
         } else {
             // それ以外なら死んだプレイヤーをスペクテーターモードにする
             player.offer(Keys.GAME_MODE, GameModes.SPECTATOR);
+
+            // 残り二人なら弓矢を支給
+            if (countPlayersLiving() == 2) {
+                players.values().stream().filter(spleefPlayer -> !spleefPlayer.dead).forEach(spleefPlayer -> {
+                    Sponge.getServer().getPlayer(spleefPlayer.playerUUID).ifPresent(playerLiving -> {
+                        final ItemStack bow = ItemStack.builder()
+                                .itemType(ItemTypes.BOW)
+                                .quantity(1)
+                                .build();
+
+                        bow.offer(Keys.UNBREAKABLE, true);
+                        final EnchantmentData enchantmentData = bow.getOrCreate(EnchantmentData.class).get();
+                        enchantmentData.enchantments().add(new ItemEnchantment(Enchantments.INFINITY, 1));
+                        bow.offer(enchantmentData);
+
+                        playerLiving.getInventory().offer(bow);
+                        playerLiving.getInventory().offer(ItemStack.of(ItemTypes.ARROW, 1));
+                    });
+                });
+            }
         }
     }
 
@@ -356,6 +389,8 @@ public class SpleefMatch {
         this.state = GameRoomState.WAITING_PLAYERS;
 
         this.bossBar.setName(Text.of("プレイヤーを待っています"));
+        this.bossBar.setColor(BossBarColors.YELLOW);
+        this.bossBar.setPercent(1f);
 
         this.clock.cancel();
     }
@@ -372,7 +407,7 @@ public class SpleefMatch {
         for (SpleefPlayer spleefPlayer : players.values()) {
             Player player = Sponge.getServer().getPlayer(spleefPlayer.playerUUID).get();
             // 移動
-            room.stage.getSpawnRocations().get(spleefPlayer.spawnLocationNumber).teleportHere(player);
+            this.room.getStage().getSpawnRocations().get(spleefPlayer.spawnLocationNumber).teleportHere(player);
             // インベントリを削除
             player.getInventory().clear();
             // シャベルを与える
@@ -391,10 +426,16 @@ public class SpleefMatch {
     public void start() {
         this.state = GameRoomState.IN_PROGRESS;
 
-        messageChannel.send(Text.of(TextColors.GOLD, "試合開始！"));
+        this.messageChannel.send(Text.of(TextColors.GOLD, "試合開始！"));
 
         // 試合開始！
-        int gameTime = room.stage.getOptions().getGameTime();
+        this.playerTrackerTask = Task.builder()
+                .name("プレイヤートラッカータスク")
+                .intervalTicks(1)
+                .execute(new PlayerTracker())
+                .submit(CMcCore.getPlugin());
+
+        int gameTime = room.getStage().getOptions().getGameTime();
         this.clock.setClock(new SpleefClockGame(gameTime));
         this.clock.start();
         // 初回のアイテム発生時刻を決定する
@@ -405,12 +446,22 @@ public class SpleefMatch {
      * 試合が正常終了した。結果を表示し、次の試合の試行までのカウントダウンを始める
      */
     public void finish() {
+        // プレイヤートラッカーを停止
+        this.playerTrackerTask.cancel();
+
+        // 残っているアイテムを削除する
+        if (item != null) {
+            this.item.clear();
+        }
+
+        removeArrows();
+
         this.state = GameRoomState.FINISHED;
-        messageChannel.send(Text.of(TextColors.AQUA, TextStyles.BOLD, "ゲーム終了！"), ChatTypes.SYSTEM);
+        this.messageChannel.send(Text.of(TextColors.AQUA, TextStyles.BOLD, "ゲーム終了！"), ChatTypes.SYSTEM);
 
         // 全員待機場所に移動する
         for (SpleefPlayer spleefPlayer : players.values()) {
-            room.stage.getWaitingSpawnRocation()
+            this.room.getStage().getWaitingSpawnRocation()
                     .teleportHere(Sponge.getServer().getPlayer(spleefPlayer.playerUUID).get());
         }
 
@@ -424,15 +475,53 @@ public class SpleefMatch {
      * カウントダウンせず即時に次の試合の開始を試行する
      */
     public void interrupt() {
+        // プレイヤートラッカーを停止
+        this.playerTrackerTask.cancel();
+
+        // 残っているアイテムを削除する
+        if (item != null) {
+            this.item.clear();
+        }
+
+        removeArrows();
+
         this.state = GameRoomState.FINISHED;
-        messageChannel.send(Text.of(TextColors.AQUA, TextStyles.BOLD, "ゲーム終了！"), ChatTypes.SYSTEM);
-        room.nextMatch();
+        this.messageChannel.send(Text.of(TextColors.AQUA, TextStyles.BOLD, "ゲーム終了！"), ChatTypes.SYSTEM);
+        this.room.nextMatch();
+    }
+
+    private void removeArrows() {
+        // 矢を削除する
+        final Optional<World> worldOptional = WorldTagModule.getTaggedWorld(SpleefManager.WORLD_TAG_SPLEEF);
+
+        if (worldOptional.isPresent()) {
+            final World world = worldOptional.get();
+
+            for (UUID arrow : this.arrows) {
+                world.getEntity(arrow).ifPresent(Entity::remove);
+            }
+
+        } else {
+            CMcCore.getLogger().error("SPLEEFワールドが見つからない、矢を削除できない");
+        }
+    }
+
+    void arrowShot(UUID arrowUUID) {
+        this.arrows.add(arrowUUID);
+    }
+
+    void arrowRemoved(UUID arrowUUID) {
+        this.arrows.remove(arrowUUID);
     }
 
     /**
      * この試合をもう使えなくする。移動などは発生しない
      */
     public Map<Integer, SpleefPlayer> close(boolean teleport) {
+        if (state == GameRoomState.IN_PROGRESS) {
+            throw new IllegalStateException();
+        }
+
         this.state = GameRoomState.CLOSED;
 
         Map<Integer, SpleefPlayer> players = this.players;
@@ -441,6 +530,8 @@ public class SpleefMatch {
             this.players = null;
             this.playerMap = null;
         }
+
+        this.arrows = null;
 
         this.clock.cancel();
         this.clock = null;
@@ -490,7 +581,7 @@ public class SpleefMatch {
 
             if (cooldown) {
                 // クールダウンタイムは過ぎなければならない
-                working -= ITEM_COOLDOWN_TIME - 1;
+                working -= ITEM_COOLDOWN_TIME + 1;
             }
 
             // 次のアイテム発生時間を決定する
@@ -528,8 +619,17 @@ public class SpleefMatch {
             if (ctickLeft == nextItemSpawnTime) {
                 // アイテム発生
 
-                // TODO
-                this.item = new SpleefItemTNT(this);
+                // ランダムでアイテムを選定する
+                final int itemType = rand.nextInt(6);
+                switch (itemType % 2) {
+                    case 0:
+                        this.item = new SpleefItemTNT(this);
+                        break;
+                    case 1:
+                        this.item = new SpleefItemTorch(this);
+                        break;
+                }
+
                 this.messageChannel.send(Text.of(String.format("アイテム[%s]が発生しました!", item.getName())));
                 this.item.init();
                 this.item.doTick();
@@ -551,6 +651,24 @@ public class SpleefMatch {
                                 .ifPresent(player -> this.messageChannel.send(Text.of("", ChatTypes.ACTION_BAR)));
                     }
                 }
+            }
+        }
+
+        if (nextItemSpawnTime != 0) {
+            if (ctickLeft <= nextItemSpawnTime) {
+                // 現在アイテム発生中
+
+                this.messageChannel.send(Text.of(
+                        String.format("アイテム[%s]発生中! %d",
+                                item == null ? "" : item.getName(),
+                                nextItemSpawnTime - ctickLeft))
+                        , ChatTypes.ACTION_BAR);
+            } else if (item != null) {
+                // 次のアイテムが有る！のでいつ起きるのかわかるようにする
+
+                this.messageChannel.send(Text.of(
+                        String.format("次のアイテム発生: %d秒後", ctickLeft - nextItemSpawnTime))
+                        , ChatTypes.ACTION_BAR);
             }
         }
     }
@@ -592,7 +710,7 @@ public class SpleefMatch {
 
                     if (playerOptional.isPresent()) {
                         Player player = playerOptional.get();
-                        player.sendMessage(transformMessage(null, player, original, type).get());
+                        player.sendMessage(type, transformMessage(null, player, original, type).get());
                     }
                 }
             }
@@ -613,7 +731,7 @@ public class SpleefMatch {
         @Override
         public Optional<Text> transformMessage(@Nullable Object sender, MessageReceiver recipient, Text original, ChatType type) {
             // TODO
-            return Optional.of(Text.of(TextColors.AQUA, "[Sp] ", original));
+            return Optional.of(type != ChatTypes.ACTION_BAR ? Text.of(TextColors.AQUA, "[Sp] ", original) : original);
         }
 
         @Override
@@ -633,6 +751,37 @@ public class SpleefMatch {
         @Override
         public MutableMessageChannel asMutable() {
             return new SimpleMutableMessageChannel(getMembers());
+        }
+    }
+
+    private class PlayerTracker implements Consumer<Task> {
+        @Override
+        public void accept(Task task) {
+            final WorldTagArea fightingArea = room.getStage().getFightingArea();
+
+            for (SpleefPlayer spleefPlayer : players.values()) {
+                final Optional<Player> playerOptional = Sponge.getServer().getPlayer(spleefPlayer.playerUUID);
+
+                if (!playerOptional.isPresent()) {
+                    continue;
+                }
+
+                final Player player = playerOptional.get();
+
+                // プレイヤーが部屋でプレー中のときはfightingAreaから出ると落ちた判定とし、負け確定
+                final Location<World> playerLocation = player.getLocation();
+
+                if (!getSpleefPlayer(player.getUniqueId()).dead && !fightingArea.isInArea(playerLocation)) {
+                    // 落ちた！
+                    playerDied(player);
+
+                    // プレイヤーが死んでゲームが終了していたら終わりにする
+                    if (state != GameRoomState.IN_PROGRESS) {
+                        task.cancel();
+                        return;
+                    }
+                }
+            }
         }
     }
 }
