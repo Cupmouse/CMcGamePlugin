@@ -34,7 +34,7 @@ import java.util.Optional;
  */
 public final class SpleefRoom implements GameRoom {
 
-    public final SpleefStage stage;
+    private final SpleefStage stage;
 
     private SpleefMatch match;
 

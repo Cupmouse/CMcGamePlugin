@@ -37,7 +37,7 @@ public class CmdRoomListSpleef implements CommandExecutor {
             int roomNumber = entry.getValue();
 
             int playersInRoom = room.getPlayerCount();
-            int maxPlayersInRoom = room.stage.getSpawnRocations().size();
+            int maxPlayersInRoom = room.getStage().getSpawnRocations().size();
             float occupRate = ((float) playersInRoom) / maxPlayersInRoom;
 
             TextColor color;

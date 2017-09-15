@@ -12,6 +12,7 @@ public final class SpleefClockWaitCountdown implements SpleefClock {
             ServerBossBar bossBar = match.getBossBar();
             bossBar.setName(Text.of("プレイヤーの参加を待っています... ", ctickLeft));
             bossBar.setColor(BossBarColors.BLUE);
+            bossBar.setPercent(ctickLeft / ((float) getInitialClockTick()));
         }
 
         if (ctickLeft <= 0) {

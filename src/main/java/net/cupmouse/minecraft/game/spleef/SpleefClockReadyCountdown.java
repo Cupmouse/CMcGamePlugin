@@ -16,6 +16,7 @@ public class SpleefClockReadyCountdown implements SpleefClock {
             ServerBossBar bossBar = match.getBossBar();
             bossBar.setName(Text.of("試合開始まであと", ctickLeft, "秒..."));
             bossBar.setColor(BossBarColors.BLUE);
+            bossBar.setPercent(ctickLeft / ((float) getInitialClockTick()));
         }
 
         if (ctickLeft == 4) {

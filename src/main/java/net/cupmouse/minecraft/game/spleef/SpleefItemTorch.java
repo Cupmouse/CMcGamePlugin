@@ -62,12 +62,12 @@ public class SpleefItemTorch implements SpleefItem {
 
                 } else if (dyeColor == DyeColors.YELLOW) {
                     // 赤色にする
-                    root.setBlock(BlockState.builder().blockType(BlockTypes.GLASS)
+                    root.setBlock(BlockState.builder().blockType(BlockTypes.STAINED_GLASS)
                             .add(Keys.DYE_COLOR, DyeColors.RED).build(), BlockChangeFlag.NONE);
                 }
             } else {
                 // 黄色にする
-                root.setBlock(BlockState.builder().blockType(BlockTypes.GLASS)
+                root.setBlock(BlockState.builder().blockType(BlockTypes.STAINED_GLASS)
                         .add(Keys.DYE_COLOR, DyeColors.YELLOW).build(), BlockChangeFlag.NONE);
             }
 
